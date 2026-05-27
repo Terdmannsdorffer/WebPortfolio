@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PINN Playground — Burgers Equation in the Browser · Tomás Erdmannsdörffer</title>
+<meta name="description" content="Train a physics-informed neural network in your browser. Solves the 1D viscous Burgers equation in real time using TensorFlow.js.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<style>
+:root{
+  --bg:#0a0a0b; --bg-elev:#111114; --bg-card:#0e0e10;
+  --line:#1f1f23; --line-hi:#2a2a30;
+  --ink:#e8e6e1; --ink-dim:#9b988f; --ink-faint:#5a584f;
+  --accent:#ff8a3d; --accent-soft:rgba(255,138,61,.12);
+  --good:#7fb069; --bad:#e07b66;
+  --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --display:'Fraunces', Georgia, serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--mono); font-size:13px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(800px 400px at 80% -10%, rgba(255,138,61,.06), transparent 60%),
+    radial-gradient(600px 600px at -10% 30%, rgba(120,140,255,.04), transparent 60%);
+}
+a{color:inherit;border-bottom:1px solid var(--line-hi);text-decoration:none;transition:.2s}
+a:hover{color:var(--accent);border-color:var(--accent)}
+a.bare{border:0}
+a.bare:hover{border:0}
+::selection{background:var(--accent);color:#0a0a0b}
+
+.shell{max-width:1200px;margin:0 auto;padding:0 24px}
+
+header.top{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(10px);
+  background:rgba(10,10,11,.7);
+  border-bottom:1px solid var(--line);
+}
+.top-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;max-width:1200px;margin:0 auto;font-size:12px;
+}
+.top .brand{color:var(--ink)}
+.top .brand .dot{color:var(--accent)}
+.top .back{color:var(--ink-dim)}
+
+/* HERO */
+.hero{padding:48px 0 32px;border-bottom:1px solid var(--line)}
+.hero .crumb{font-size:11px;color:var(--ink-faint);margin-bottom:16px;letter-spacing:.04em}
+.hero .crumb a{color:var(--ink-dim);border:0}
+.hero .crumb a:hover{color:var(--accent)}
+.hero h1{
+  font-family:var(--display);font-weight:500;
+  font-size:clamp(32px,4.5vw,52px);line-height:1.05;letter-spacing:-.02em;
+  margin:0 0 16px;
+}
+.hero h1 em{color:var(--accent);font-style:italic}
+.hero .lede{color:var(--ink-dim);max-width:760px;font-size:14px;line-height:1.75;margin:0 0 16px}
+.hero .lede b{color:var(--ink);font-weight:500}
+.hero .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.tag{font-size:11px;padding:4px 9px;border:1px solid var(--line-hi);color:var(--ink-dim);letter-spacing:.04em}
+
+/* LAYOUT */
+.workspace{
+  display:grid;grid-template-columns:300px 1fr;gap:24px;
+  padding:32px 0 48px;
+}
+@media (max-width:900px){.workspace{grid-template-columns:1fr}}
+
+.panel{
+  background:var(--bg-card);border:1px solid var(--line);
+  padding:20px;
+}
+.panel h3{
+  font-family:var(--mono);font-size:11px;font-weight:500;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 16px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel h3 .n{color:var(--ink-faint)}
+
+/* CONTROLS */
+.ctrl{margin-bottom:18px}
+.ctrl label{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:11px;color:var(--ink-dim);margin-bottom:6px;letter-spacing:.03em;
+}
+.ctrl label .val{color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums}
+.ctrl input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:3px;background:var(--line-hi);outline:none;cursor:pointer;
+}
+.ctrl input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:12px;height:12px;background:var(--accent);border:0;border-radius:50%;cursor:pointer;
+}
+.ctrl input[type=range]::-moz-range-thumb{
+  width:12px;height:12px;background:var(--accent);border:0;border-radius:50%;cursor:pointer;
+}
+.ctrl select{
+  width:100%;background:var(--bg-elev);color:var(--ink);
+  border:1px solid var(--line-hi);padding:7px 9px;
+  font-family:var(--mono);font-size:12px;cursor:pointer;
+}
+.ctrl .hint{font-size:10px;color:var(--ink-faint);margin-top:4px}
+
+.btns{display:flex;gap:8px;margin-top:8px}
+button.btn{
+  flex:1;background:transparent;color:var(--ink);
+  border:1px solid var(--line-hi);font-family:var(--mono);
+  font-size:11px;padding:10px;cursor:pointer;letter-spacing:.06em;
+  transition:.15s;text-transform:uppercase;
+}
+button.btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+button.btn.primary{background:var(--accent);color:#0a0a0b;border-color:var(--accent);font-weight:500}
+button.btn.primary:hover{background:#ff9d5a;color:#0a0a0b}
+button.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:24px}
+.stat{background:var(--bg-card);padding:14px 16px}
+.stat .k{font-size:10px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase}
+.stat .v{font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:4px}
+.stat .v.accent{color:var(--accent)}
+
+/* VIZ */
+.viz-grid{display:grid;grid-template-columns:1fr;gap:24px}
+.viz-card{background:var(--bg-card);border:1px solid var(--line);padding:18px}
+.viz-card .head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:12px;
+}
+.viz-card .ttl{font-size:11px;color:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+.viz-card .sub{font-size:11px;color:var(--ink-faint)}
+canvas{display:block;width:100%;background:#0a0a0b;border:1px solid var(--line);image-rendering:pixelated}
+#loss-canvas{height:160px;image-rendering:auto}
+#sol-canvas{height:260px}
+
+.colorbar{display:flex;align-items:center;gap:12px;margin-top:8px;font-size:10px;color:var(--ink-faint)}
+.colorbar .grad{flex:1;height:8px;background:linear-gradient(to right, #053061, #2166ac, #4393c3, #92c5de, #f7f7f7, #fddbc7, #f4a582, #d6604d, #b2182b, #67001f);}
+
+/* EXPLAIN */
+.explain{margin-top:48px;padding:32px;background:var(--bg-card);border:1px solid var(--line)}
+.explain h2{font-family:var(--display);font-weight:500;font-size:28px;margin:0 0 16px;letter-spacing:-.01em}
+.explain h2 em{color:var(--accent);font-style:italic}
+.explain p{color:var(--ink-dim);margin:0 0 14px;max-width:780px}
+.explain p b{color:var(--ink);font-weight:500}
+.explain .eq{
+  background:var(--bg-elev);padding:14px 20px;margin:16px 0;
+  border-left:2px solid var(--accent);font-family:var(--mono);font-size:13px;color:var(--ink);
+  overflow-x:auto;
+}
+.explain h4{font-size:12px;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin:24px 0 10px}
+
+footer{
+  border-top:1px solid var(--line);padding:24px 0;
+  font-size:11px;color:var(--ink-faint);
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+footer .blink{color:var(--accent);animation:blink 1.2s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+
+.status-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;background:var(--bg-elev);border:1px solid var(--line);
+  font-size:11px;color:var(--ink-dim);margin-bottom:18px;
+}
+.status-bar .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint)}
+.status-bar.training .dot{background:var(--good);box-shadow:0 0 0 0 rgba(127,176,105,.7);animation:pulse 1.4s infinite}
+.status-bar.error .dot{background:var(--bad)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,176,105,.55)}70%{box-shadow:0 0 0 6px rgba(127,176,105,0)}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <a href="../../" class="brand bare">tomás<span class="dot">.</span>erdmannsdörffer</a>
+    <a href="../../" class="back">← back to portfolio</a>
+  </div>
+</header>
+
+<main class="shell">
+
+<section class="hero">
+  <div class="crumb"><a href="../../">portfolio</a> / projects / pinn-playground</div>
+  <h1>Watch a neural network <em>learn physics</em>.</h1>
+  <p class="lede">
+    This page trains a <b>Physics-Informed Neural Network</b> in your browser to solve the
+    1D viscous Burgers equation — the canonical benchmark from Raissi et al. (2019).
+    No data labels, no ground truth: the network learns purely from the PDE residual,
+    boundary conditions, and initial condition. Running entirely on your device via
+    <a href="https://www.tensorflow.org/js" target="_blank" rel="noopener">TensorFlow.js</a> with WebGL acceleration.
+  </p>
+  <div class="tags">
+    <span class="tag">PINN</span>
+    <span class="tag">Burgers equation</span>
+    <span class="tag">TensorFlow.js</span>
+    <span class="tag">WebGL</span>
+    <span class="tag">Automatic differentiation</span>
+    <span class="tag">Zero data</span>
+  </div>
+</section>
+
+<div class="workspace">
+
+  <!-- CONTROLS PANEL -->
+  <div>
+    <div class="panel">
+      <h3><span class="n">[01]</span> Controls</h3>
+
+      <div class="ctrl">
+        <label>Viscosity ν <span class="val" id="visc-val">0.01/π</span></label>
+        <input type="range" id="visc" min="0" max="4" step="1" value="1">
+        <div class="hint">smaller ν → sharper shock</div>
+      </div>
+
+      <div class="ctrl">
+        <label>Hidden width <span class="val" id="width-val">32</span></label>
+        <input type="range" id="width" min="8" max="64" step="8" value="32">
+      </div>
+
+      <div class="ctrl">
+        <label>Hidden layers <span class="val" id="depth-val">4</span></label>
+        <input type="range" id="depth" min="2" max="6" step="1" value="4">
+      </div>
+
+      <div class="ctrl">
+        <label>Learning rate <span class="val" id="lr-val">1e-3</span></label>
+        <input type="range" id="lr" min="0" max="4" step="1" value="2">
+      </div>
+
+      <div class="ctrl">
+        <label>Collocation points <span class="val" id="nf-val">2000</span></label>
+        <input type="range" id="nf" min="500" max="5000" step="500" value="2000">
+      </div>
+
+      <div class="ctrl">
+        <label>PDE loss weight λ <span class="val" id="lam-val">1.0</span></label>
+        <input type="range" id="lam" min="0" max="6" step="1" value="3">
+      </div>
+
+      <div class="btns">
+        <button class="btn primary" id="btn-train">▶ Train</button>
+        <button class="btn" id="btn-reset">Reset</button>
+      </div>
+      <div class="btns" style="margin-top:6px">
+        <button class="btn" id="btn-rebuild">Rebuild model</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h3><span class="n">[02]</span> The PDE</h3>
+      <div style="font-size:12px;color:var(--ink-dim);line-height:1.8">
+        <div>∂u/∂t + u·∂u/∂x = ν·∂²u/∂x²</div>
+        <div style="margin-top:10px;color:var(--ink-faint);font-size:11px">
+          x ∈ [−1, 1] &nbsp; t ∈ [0, 1]<br>
+          u(0, x) = −sin(πx)<br>
+          u(t, ±1) = 0
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIZ AREA -->
+  <div>
+    <div class="status-bar" id="status">
+      <div class="dot"></div>
+      <span id="status-text">Idle — press <b style="color:var(--ink)">Train</b> to start</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="k">Iteration</div>
+        <div class="v" id="stat-iter">0</div>
+      </div>
+      <div class="stat">
+        <div class="k">Total loss</div>
+        <div class="v accent" id="stat-loss">—</div>
+      </div>
+      <div class="stat">
+        <div class="k">PDE residual</div>
+        <div class="v" id="stat-pde">—</div>
+      </div>
+      <div class="stat">
+        <div class="k">Boundary + IC</div>
+        <div class="v" id="stat-bc">—</div>
+      </div>
+    </div>
+
+    <div class="viz-grid">
+      <div class="viz-card">
+        <div class="head">
+          <div class="ttl">Predicted solution u(t, x)</div>
+          <div class="sub">x → horizontal, t → vertical (0 top, 1 bottom)</div>
+        </div>
+        <canvas id="sol-canvas" width="400" height="240"></canvas>
+        <div class="colorbar">
+          <span>u = −1</span>
+          <div class="grad"></div>
+          <span>u = +1</span>
+        </div>
+      </div>
+
+      <div class="viz-card">
+        <div class="head">
+          <div class="ttl">Loss curve (log scale)</div>
+          <div class="sub" id="loss-sub">— total · — pde · — boundary</div>
+        </div>
+        <canvas id="loss-canvas" width="800" height="160"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPLAINER -->
+<section class="explain">
+  <h2>What's a <em>Physics-Informed Neural Network</em>?</h2>
+  <p>
+    A standard neural network learns from input/output pairs. A <b>PINN</b> learns from a
+    differential equation. Instead of asking <i>"what's the right answer for this input?"</i>
+    it asks <i>"how badly does my prediction violate the laws of physics?"</i> and uses that
+    violation as the loss.
+  </p>
+  <p>
+    Concretely, we build a network u<sub>θ</sub>(t, x) that takes a point in spacetime and
+    predicts the solution value. We then use automatic differentiation to compute its partial
+    derivatives — exactly, not numerically — and plug them into the PDE residual:
+  </p>
+  <div class="eq">r(t, x) = ∂u/∂t + u · ∂u/∂x − ν · ∂²u/∂x²</div>
+  <p>
+    A perfect solution satisfies r = 0 everywhere. So the training loss is just the mean
+    squared residual at a sample of random collocation points in the domain, plus penalty
+    terms for the initial and boundary conditions:
+  </p>
+  <div class="eq">L = λ · ‖r‖² + ‖u(0, x) + sin(πx)‖² + ‖u(t, ±1)‖²</div>
+
+  <h4>Why this is interesting</h4>
+  <p>
+    <b>No training data is required.</b> The "supervision" is the physics itself. This makes
+    PINNs valuable for inverse problems (recovering hidden parameters from sparse measurements),
+    high-dimensional PDEs where mesh-based solvers explode, and problems where governing equations
+    are known but measurements are scarce — like cardiac biomechanics, my MSc research area.
+  </p>
+
+  <h4>Things to try</h4>
+  <p>
+    <b>·</b> Crank viscosity down (ν = 0.001/π) and watch a shock form near t ≈ 0.4.<br>
+    <b>·</b> Set the PDE weight λ to zero and watch the network only learn the boundaries.<br>
+    <b>·</b> Drop hidden width to 8 and see the solution become unstable.<br>
+    <b>·</b> Increase collocation points to 5000 for cleaner residuals at higher cost per step.
+  </p>
+
+  <h4>Implementation notes</h4>
+  <p>
+    The network is a fully-connected MLP with tanh activations. First derivatives
+    (u<sub>t</sub>, u<sub>x</sub>) are computed by automatic differentiation via
+    <code>tf.grad</code>. The second derivative u<sub>xx</sub> is approximated by a
+    central difference of u<sub>x</sub> evaluated at x ± ε — TensorFlow.js doesn't
+    support differentiating through <code>tf.grad</code> like PyTorch's
+    <code>create_graph=True</code> or JAX's <code>jacfwd/jacrev</code>, so we use a
+    hybrid scheme. Gradients still flow correctly through the FD stencil because each
+    u<sub>x</sub> evaluation is itself a full autodiff result. Training uses Adam.
+    Solution rendered to a 400×240 canvas with the RdBu_r diverging colormap on a 100×80
+    grid. Everything runs locally on your device's GPU via WebGL.
+  </p>
+</section>
+
+<footer class="shell" style="border:0;padding:24px 0">
+  <div>built by tomás erdmannsdörffer · <a href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener">github</a></div>
+  <div>tensorflow.js v4.22<span class="blink">_</span></div>
+</footer>
+
+</main>
+
+<script>
+'use strict';
+
+/* ------------------------------------------------------------------ */
+/*  PINN for 1D viscous Burgers' equation                              */
+/*  u_t + u u_x = nu u_xx,   x in [-1,1], t in [0,1]                  */
+/*  u(0,x) = -sin(pi x),   u(t,-1) = u(t,1) = 0                       */
+/* ------------------------------------------------------------------ */
+
+const VISC_OPTS = [
+  {label:'1.0/π',      value: 1.0/Math.PI},
+  {label:'0.01/π',     value: 0.01/Math.PI},
+  {label:'0.005/π',    value: 0.005/Math.PI},
+  {label:'0.002/π',    value: 0.002/Math.PI},
+  {label:'0.001/π',    value: 0.001/Math.PI},
+];
+const LR_OPTS  = [1e-4, 5e-4, 1e-3, 3e-3, 1e-2];
+const LAM_OPTS = [0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0];
+
+/* State */
+const state = {
+  visc: 0.01/Math.PI,
+  width: 32,
+  depth: 4,
+  lr: 1e-3,
+  nF: 2000,
+  lambda: 1.0,
+  vars: [],           // tf.Variables for the MLP
+  optimizer: null,
+  iter: 0,
+  training: false,
+  history: [],        // {iter, total, pde, bc}
+};
+
+/* ------------------------ Model construction ----------------------- */
+function buildModel(width, depth) {
+  // Glorot init MLP: input(2) -> [width]*depth -> 1
+  // Activation: tanh
+  disposeVars();
+  const vars = [];
+  const sizes = [2];
+  for (let i = 0; i < depth; i++) sizes.push(width);
+  sizes.push(1);
+  for (let i = 0; i < sizes.length - 1; i++) {
+    const fanIn = sizes[i], fanOut = sizes[i+1];
+    const limit = Math.sqrt(6 / (fanIn + fanOut));
+    const W = tf.variable(tf.randomUniform([fanIn, fanOut], -limit, limit), true, `W${i}`);
+    const b = tf.variable(tf.zeros([fanOut]), true, `b${i}`);
+    vars.push({W, b});
+  }
+  state.vars = vars;
+  state.optimizer = tf.train.adam(state.lr);
+  state.iter = 0;
+  state.history = [];
+}
+
+function disposeVars() {
+  if (state.vars && state.vars.length) {
+    for (const {W, b} of state.vars) { W.dispose(); b.dispose(); }
+  }
+  state.vars = [];
+}
+
+function forward(tx) {
+  // tx: [N, 2]  (t, x)
+  let h = tx;
+  const L = state.vars.length;
+  for (let i = 0; i < L; i++) {
+    const {W, b} = state.vars[i];
+    h = tf.add(tf.matMul(h, W), b);
+    if (i < L - 1) h = tf.tanh(h);
+  }
+  return h; // [N, 1]
+}
+
+/* ------------------------ Derivatives ------------------------------ */
+// We compute u_t, u_x by tf.grad of scalar-summed outputs w.r.t. t and x
+// separately. For u_xx we re-apply tf.grad on u_x w.r.t. x.
+
+function uOfTX(t, x) {
+  // t, x: [N, 1]
+  return forward(tf.concat([t, x], 1)); // [N,1]
+}
+
+
+
+/* ------------------------ Loss + Step ------------------------------ */
+function sampleCollocation(nF) {
+  // Random interior points
+  const t = tf.randomUniform([nF, 1], 0, 1);
+  const x = tf.randomUniform([nF, 1], -1, 1);
+  return {t, x};
+}
+
+function sampleIC(n) {
+  // t=0, x in [-1,1]
+  const x = tf.randomUniform([n, 1], -1, 1);
+  const t = tf.zeros([n, 1]);
+  // target: -sin(pi x)
+  const u_target = tf.neg(tf.sin(tf.mul(x, Math.PI)));
+  return {t, x, u_target};
+}
+
+function sampleBC(n) {
+  // x = -1 or x = 1, t in [0,1]
+  const tA = tf.randomUniform([n, 1], 0, 1);
+  const tB = tf.randomUniform([n, 1], 0, 1);
+  const xA = tf.fill([n, 1], -1);
+  const xB = tf.fill([n, 1],  1);
+  const t = tf.concat([tA, tB], 0);
+  const x = tf.concat([xA, xB], 0);
+  const u_target = tf.zeros([2*n, 1]);
+  return {t, x, u_target};
+}
+
+function trainStep() {
+  const nu = state.visc;
+  const lam = state.lambda;
+  const nF = state.nF;
+  const nIC = 200;
+  const nBC = 100;
+
+  let pdeLossScalar = 0, bcLossScalar = 0, totalScalar = 0;
+
+  // Finite-difference step for u_xx (tfjs cannot autodiff through tf.grad,
+  // so we compute u_x via autodiff at x, x+eps, x-eps and finite-diff for u_xx).
+  // The gradient w.r.t. network weights still flows correctly because u_x at
+  // the perturbed points is itself an autodiff result.
+  const FD_EPS = 1e-3;
+
+  state.optimizer.minimize(() => {
+    return tf.tidy(() => {
+      // PDE residual loss
+      const {t: tF, x: xF} = sampleCollocation(nF);
+
+      const u_t  = tf.grad(tIn => uOfTX(tIn, xF).sum())(tF);
+      const u_x  = tf.grad(xIn => uOfTX(tF, xIn).sum())(xF);
+
+      // u_xx via central difference of u_x
+      const u_x_p = tf.grad(xIn => uOfTX(tF, xIn).sum())(xF.add(FD_EPS));
+      const u_x_m = tf.grad(xIn => uOfTX(tF, xIn).sum())(xF.sub(FD_EPS));
+      const u_xx  = tf.div(tf.sub(u_x_p, u_x_m), 2*FD_EPS);
+
+      const u = uOfTX(tF, xF);
+      const r = tf.add(tf.add(u_t, tf.mul(u, u_x)), tf.mul(-nu, u_xx));
+      const pdeLoss = tf.mean(tf.square(r));
+
+      // IC loss
+      const {t: tI, x: xI, u_target: uI} = sampleIC(nIC);
+      const uIpred = uOfTX(tI, xI);
+      const icLoss = tf.mean(tf.square(tf.sub(uIpred, uI)));
+
+      // BC loss
+      const {t: tB, x: xB, u_target: uB} = sampleBC(nBC);
+      const uBpred = uOfTX(tB, xB);
+      const bcLossT = tf.mean(tf.square(tf.sub(uBpred, uB)));
+
+      const bcCombined = tf.add(icLoss, bcLossT);
+      const total = tf.add(tf.mul(lam, pdeLoss), bcCombined);
+
+      // Snapshot for stats (tidy will dispose all intermediates after)
+      pdeLossScalar = pdeLoss.dataSync()[0];
+      bcLossScalar  = bcCombined.dataSync()[0];
+      totalScalar   = total.dataSync()[0];
+
+      return total;
+    });
+  }, false, state.vars.flatMap(({W,b}) => [W, b]));
+
+  state.iter++;
+  state.history.push({
+    iter: state.iter,
+    total: totalScalar,
+    pde:   pdeLossScalar,
+    bc:    bcLossScalar,
+  });
+  if (state.history.length > 2000) state.history.shift();
+}
+
+/* ------------------------ Visualization ---------------------------- */
+const solCanvas = document.getElementById('sol-canvas');
+const solCtx = solCanvas.getContext('2d');
+const lossCanvas = document.getElementById('loss-canvas');
+const lossCtx = lossCanvas.getContext('2d');
+
+// RdBu_r-ish diverging colormap; t in [-1, 1] -> rgb
+function cmap(v) {
+  v = Math.max(-1, Math.min(1, v));
+  const stops = [
+    [-1.0,   5,  48, 97],
+    [-0.66, 33,102,172],
+    [-0.33, 67,147,195],
+    [ 0.0, 247,247,247],
+    [ 0.33,244,165,130],
+    [ 0.66,214, 96, 77],
+    [ 1.0, 103,  0, 31],
+  ];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (v <= stops[i+1][0]) {
+      const t = (v - stops[i][0]) / (stops[i+1][0] - stops[i][0]);
+      const r = stops[i][1] + t * (stops[i+1][1] - stops[i][1]);
+      const g = stops[i][2] + t * (stops[i+1][2] - stops[i][2]);
+      const b = stops[i][3] + t * (stops[i+1][3] - stops[i][3]);
+      return [r|0, g|0, b|0];
+    }
+  }
+  return [103, 0, 31];
+}
+
+// 100 x 80 grid -> upscaled to canvas
+const GW = 100, GH = 80;
+
+async function drawSolution() {
+  if (!state.vars.length) return;
+  const u = tf.tidy(() => {
+    // Build grid
+    const tArr = new Float32Array(GW * GH);
+    const xArr = new Float32Array(GW * GH);
+    for (let j = 0; j < GH; j++) {
+      const tval = j / (GH - 1);   // 0..1
+      for (let i = 0; i < GW; i++) {
+        const xval = -1 + 2 * i / (GW - 1);
+        tArr[j*GW + i] = tval;
+        xArr[j*GW + i] = xval;
+      }
+    }
+    const t = tf.tensor(tArr, [GW*GH, 1]);
+    const x = tf.tensor(xArr, [GW*GH, 1]);
+    return uOfTX(t, x).reshape([GH, GW]);
+  });
+
+  const arr = await u.data();
+  u.dispose();
+
+  // Render
+  const img = solCtx.createImageData(GW, GH);
+  for (let j = 0; j < GH; j++) {
+    for (let i = 0; i < GW; i++) {
+      const v = arr[j*GW + i];
+      const [r,g,b] = cmap(v);
+      const k = 4*(j*GW + i);
+      img.data[k]   = r;
+      img.data[k+1] = g;
+      img.data[k+2] = b;
+      img.data[k+3] = 255;
+    }
+  }
+  // Draw to offscreen then scale up to canvas
+  const off = document.createElement('canvas');
+  off.width = GW; off.height = GH;
+  off.getContext('2d').putImageData(img, 0, 0);
+  solCtx.imageSmoothingEnabled = false;
+  solCtx.clearRect(0, 0, solCanvas.width, solCanvas.height);
+  solCtx.drawImage(off, 0, 0, solCanvas.width, solCanvas.height);
+}
+
+function drawLoss() {
+  const W = lossCanvas.width;
+  const H = lossCanvas.height;
+  lossCtx.clearRect(0, 0, W, H);
+
+  // grid
+  lossCtx.strokeStyle = '#1f1f23';
+  lossCtx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = (i / 4) * H;
+    lossCtx.beginPath();
+    lossCtx.moveTo(0, y); lossCtx.lineTo(W, y); lossCtx.stroke();
+  }
+
+  if (state.history.length < 2) return;
+
+  const data = state.history;
+  const padL = 38, padR = 8, padT = 8, padB = 14;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  // log scale on y
+  const lossArrs = ['total','pde','bc'];
+  const colors = {total:'#ff8a3d', pde:'#7fb069', bc:'#6db6e0'};
+
+  // Determine y range across all series in log10
+  let ymin = Infinity, ymax = -Infinity;
+  for (const d of data) {
+    for (const k of lossArrs) {
+      const v = d[k];
+      if (v > 0 && isFinite(v)) {
+        const lv = Math.log10(v);
+        if (lv < ymin) ymin = lv;
+        if (lv > ymax) ymax = lv;
+      }
+    }
+  }
+  if (!isFinite(ymin) || !isFinite(ymax)) return;
+  if (ymax - ymin < 0.5) { ymax += 0.25; ymin -= 0.25; }
+  ymax += 0.1; ymin -= 0.1;
+
+  const x0 = data[0].iter;
+  const x1 = data[data.length-1].iter;
+  const xRange = Math.max(1, x1 - x0);
+
+  // axes labels
+  lossCtx.fillStyle = '#5a584f';
+  lossCtx.font = '10px JetBrains Mono, monospace';
+  for (let i = 0; i <= 4; i++) {
+    const ly = ymax - (i/4) * (ymax - ymin);
+    const yPix = padT + (i/4) * plotH;
+    lossCtx.fillText('1e' + ly.toFixed(1), 2, yPix + 3);
+  }
+
+  // draw series
+  for (const k of lossArrs) {
+    lossCtx.strokeStyle = colors[k];
+    lossCtx.lineWidth = k === 'total' ? 1.6 : 1.0;
+    lossCtx.beginPath();
+    let started = false;
+    for (const d of data) {
+      const v = d[k];
+      if (!(v > 0) || !isFinite(v)) continue;
+      const lv = Math.log10(v);
+      const px = padL + ((d.iter - x0) / xRange) * plotW;
+      const py = padT + (1 - (lv - ymin)/(ymax - ymin)) * plotH;
+      if (!started) { lossCtx.moveTo(px, py); started = true; }
+      else lossCtx.lineTo(px, py);
+    }
+    lossCtx.stroke();
+  }
+
+  // update legend
+  const last = data[data.length-1];
+  document.getElementById('loss-sub').innerHTML =
+    `<span style="color:${colors.total}">● total ${last.total.toExponential(2)}</span> · ` +
+    `<span style="color:${colors.pde}">● pde ${last.pde.toExponential(2)}</span> · ` +
+    `<span style="color:${colors.bc}">● bc ${last.bc.toExponential(2)}</span>`;
+}
+
+function updateStats() {
+  const h = state.history;
+  document.getElementById('stat-iter').textContent = state.iter;
+  if (h.length) {
+    const last = h[h.length-1];
+    document.getElementById('stat-loss').textContent = last.total.toExponential(2);
+    document.getElementById('stat-pde').textContent  = last.pde.toExponential(2);
+    document.getElementById('stat-bc').textContent   = last.bc.toExponential(2);
+  } else {
+    document.getElementById('stat-loss').textContent = '—';
+    document.getElementById('stat-pde').textContent  = '—';
+    document.getElementById('stat-bc').textContent   = '—';
+  }
+}
+
+/* ------------------------ UI wiring -------------------------------- */
+function $(id){ return document.getElementById(id); }
+
+function syncLabels() {
+  state.visc = VISC_OPTS[+$('visc').value].value;
+  $('visc-val').textContent = VISC_OPTS[+$('visc').value].label;
+
+  state.width = +$('width').value;
+  $('width-val').textContent = state.width;
+
+  state.depth = +$('depth').value;
+  $('depth-val').textContent = state.depth;
+
+  state.lr = LR_OPTS[+$('lr').value];
+  $('lr-val').textContent = state.lr.toExponential(0).replace('+','');
+
+  state.nF = +$('nf').value;
+  $('nf-val').textContent = state.nF;
+
+  state.lambda = LAM_OPTS[+$('lam').value];
+  $('lam-val').textContent = state.lambda.toString();
+}
+
+['visc','width','depth','lr','nf','lam'].forEach(id => {
+  $(id).addEventListener('input', () => {
+    syncLabels();
+    // LR change can be applied immediately
+    if (id === 'lr' && state.optimizer) state.optimizer = tf.train.adam(state.lr);
+  });
+});
+
+function setStatus(text, cls) {
+  const el = $('status');
+  el.classList.remove('training','error');
+  if (cls) el.classList.add(cls);
+  $('status-text').innerHTML = text;
+}
+
+$('btn-train').addEventListener('click', () => {
+  if (state.training) {
+    state.training = false;
+    $('btn-train').textContent = '▶ Train';
+    setStatus('Paused at iter <b style="color:var(--ink)">' + state.iter + '</b>');
+  } else {
+    if (!state.vars.length) buildModel(state.width, state.depth);
+    state.training = true;
+    $('btn-train').textContent = '⏸ Pause';
+    setStatus('Training on <b style="color:var(--ink)">' + tf.getBackend() + '</b> backend…', 'training');
+    runTrainLoop();
+  }
+});
+
+$('btn-reset').addEventListener('click', () => {
+  state.training = false;
+  $('btn-train').textContent = '▶ Train';
+  disposeVars();
+  state.iter = 0;
+  state.history = [];
+  solCtx.clearRect(0,0,solCanvas.width,solCanvas.height);
+  drawLoss();
+  updateStats();
+  setStatus('Reset. Press <b style="color:var(--ink)">Train</b> to start.');
+});
+
+$('btn-rebuild').addEventListener('click', () => {
+  state.training = false;
+  $('btn-train').textContent = '▶ Train';
+  buildModel(state.width, state.depth);
+  solCtx.clearRect(0,0,solCanvas.width,solCanvas.height);
+  drawLoss();
+  updateStats();
+  setStatus('Rebuilt: ' + state.depth + ' × ' + state.width + ' MLP. Press <b style="color:var(--ink)">Train</b>.');
+});
+
+/* ------------------------ Train loop ------------------------------- */
+async function runTrainLoop() {
+  let lastDraw = 0;
+  while (state.training) {
+    try {
+      // Several steps per animation frame for throughput
+      const stepsPerFrame = 1;
+      for (let i = 0; i < stepsPerFrame && state.training; i++) {
+        trainStep();
+      }
+    } catch (e) {
+      console.error(e);
+      setStatus('Error: ' + e.message, 'error');
+      state.training = false;
+      $('btn-train').textContent = '▶ Train';
+      return;
+    }
+
+    // Redraw periodically
+    const now = performance.now();
+    updateStats();
+    drawLoss();
+    if (now - lastDraw > 250) {
+      await drawSolution();
+      lastDraw = now;
+    }
+
+    // Yield to the browser
+    await tf.nextFrame();
+  }
+}
+
+/* ------------------------ Boot ------------------------------------- */
+async function boot() {
+  syncLabels();
+  await tf.ready();
+  try {
+    await tf.setBackend('webgl');
+  } catch (e) {
+    await tf.setBackend('cpu');
+  }
+  setStatus('Ready on <b style="color:var(--ink)">' + tf.getBackend() + '</b> backend. Press <b style="color:var(--ink)">Train</b>.');
+  buildModel(state.width, state.depth);
+  updateStats();
+  drawLoss();
+}
+boot();
+</script>
+
+</body>
+</html>

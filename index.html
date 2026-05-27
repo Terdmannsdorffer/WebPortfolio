@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tomás Erdmannsdörffer — ML / AI Engineer</title>
+<meta name="description" content="Machine Learning Engineer with a background in scientific computing and deep learning. PyTorch, JAX, CUDA, Physics-Informed Neural Networks. MSc Mechanical Engineering @ PUC Chile, currently at University of Graz.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0b; --bg-elev:#111114; --bg-card:#0e0e10;
+  --line:#1f1f23; --line-hi:#2a2a30;
+  --ink:#e8e6e1; --ink-dim:#9b988f; --ink-faint:#5a584f;
+  --accent:#390fd0; --accent-soft:rgba(255,138,61,.12);
+  --info:#6db6e0; --info-soft:rgba(109,182,224,.10);
+  --good:#7fb069;
+  --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --display:'Fraunces', Georgia, serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--mono); font-size:14px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(800px 400px at 80% -10%, rgba(255,138,61,.06), transparent 60%),
+    radial-gradient(600px 600px at -10% 30%, rgba(120,140,255,.04), transparent 60%);
+}
+::selection{background:var(--accent);color:#0a0a0b}
+a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line-hi);transition:border-color .2s, color .2s}
+a:hover{color:var(--accent);border-color:var(--accent)}
+a.bare{border:0}
+a.bare:hover{border:0}
+
+.shell{max-width:1100px;margin:0 auto;padding:0 32px}
+
+header.top{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(10px); background:rgba(10,10,11,.7);
+  border-bottom:1px solid var(--line);
+}
+.top-inner{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;max-width:1100px;margin:0 auto;font-size:12px}
+.top .brand{color:var(--ink);letter-spacing:.02em}
+.top .brand .dot{color:var(--accent)}
+.top nav{display:flex;gap:24px}
+.top nav a{color:var(--ink-dim);border:0}
+.top nav a:hover{color:var(--accent);border:0}
+.top .status{color:var(--ink-dim);display:flex;align-items:center;gap:8px}
+.status .pulse{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(127,176,105,.7);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,176,105,.55)}70%{box-shadow:0 0 0 8px rgba(127,176,105,0)}100%{box-shadow:0 0 0 0 rgba(127,176,105,0)}}
+
+/* HERO */
+section.hero{padding:88px 0 64px;border-bottom:1px solid var(--line)}
+.hero .meta{color:var(--ink-faint);font-size:12px;margin-bottom:24px;display:flex;gap:16px;flex-wrap:wrap}
+.hero .meta span::before{content:"// "}
+.hero h1{font-family:var(--display);font-weight:500;font-size:clamp(40px, 6vw, 76px);line-height:1.02;letter-spacing:-.02em;margin:0 0 28px;font-variation-settings:"opsz" 144}
+.hero h1 .sur{font-style:italic;color:var(--ink-dim);font-weight:400}
+.hero h1 .amp{color:var(--accent);font-style:italic}
+.hero .lede{max-width:680px;font-size:15px;color:var(--ink);line-height:1.7;margin-bottom:32px}
+.hero .lede .hl{color:var(--accent)}
+.hero .cta{display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:1px solid var(--line-hi);background:transparent;color:var(--ink);font-family:var(--mono);font-size:12px;letter-spacing:.04em;cursor:pointer;transition:all .2s}
+.btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.btn.primary{background:var(--accent);color:#0a0a0b;border-color:var(--accent);font-weight:500}
+.btn.primary:hover{background:#ff9d5a;border-color:#ff9d5a;color:#0a0a0b}
+.btn .arr{transition:transform .2s}
+.btn:hover .arr{transform:translateX(3px)}
+
+/* STAT STRIP */
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:48px}
+.stat{background:var(--bg-card);padding:20px 22px}
+.stat .v{font-family:var(--display);font-size:32px;color:var(--ink);font-weight:500;line-height:1;font-variation-settings:"opsz" 144;letter-spacing:-.01em}
+.stat .v .unit{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:400;margin-left:4px}
+.stat .k{font-size:10px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+@media (max-width:680px){.stat-strip{grid-template-columns:repeat(2,1fr)}}
+
+/* SECTION */
+section{padding:80px 0;border-bottom:1px solid var(--line)}
+.sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:40px;font-size:12px;color:var(--ink-faint);letter-spacing:.06em;text-transform:uppercase}
+.sec-head .num{color:var(--accent);font-weight:500}
+.sec-head h2{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--ink);margin:0;letter-spacing:.06em}
+.sec-head .rule{flex:1;height:1px;background:var(--line)}
+
+/* CURRENTLY */
+.currently{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.currently h3{font-family:var(--display);font-weight:500;font-size:34px;line-height:1.1;letter-spacing:-.01em;margin:0 0 18px}
+.currently h3 em{color:var(--accent);font-style:italic}
+.currently p{color:var(--ink-dim);font-size:14px;line-height:1.85;margin:0 0 14px}
+.currently p b{color:var(--ink);font-weight:500}
+.currently ul.now{margin:0;padding:0;list-style:none;font-size:13px;color:var(--ink-dim)}
+.currently ul.now li{padding:14px 0 14px 24px;border-top:1px solid var(--line);position:relative;line-height:1.7}
+.currently ul.now li:first-child{border-top:0}
+.currently ul.now li::before{content:"";position:absolute;left:0;top:21px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(255,138,61,.15)}
+.currently ul.now li b{color:var(--ink);font-weight:500}
+.currently ul.now li .when{display:block;font-size:10px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+@media (max-width:760px){.currently{grid-template-columns:1fr;gap:32px}}
+
+/* DEMOS */
+.demos{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media (max-width:960px){.demos{grid-template-columns:1fr 1fr}}
+@media (max-width:680px){.demos{grid-template-columns:1fr}}
+.demo{background:var(--bg-card);border:1px solid var(--line);display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:border-color .2s, transform .2s}
+.demo:hover{border-color:var(--accent-soft);transform:translateY(-2px)}
+.demo .preview{background:linear-gradient(135deg, #0a0a0b 0%, #18181d 100%);height:170px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.demo .preview svg{width:90%;height:90%;max-width:260px}
+.demo .body{padding:20px 22px}
+.demo .badge{display:inline-block;font-size:10px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;background:var(--accent-soft);border:1px solid var(--accent-soft);margin-bottom:10px}
+.demo h4{font-family:var(--mono);font-size:18px;font-weight:500;margin:0 0 8px;color:var(--ink)}
+.demo p{color:var(--ink-dim);font-size:13px;margin:0 0 14px;line-height:1.7}
+.demo p b{color:var(--ink);font-weight:500}
+.demo .stack{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.demo .chip{font-size:10px;padding:3px 8px;border:1px solid var(--line-hi);color:var(--ink-faint);letter-spacing:.04em}
+.demo .open{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:12px;letter-spacing:.04em}
+.demo:hover .open .arr{transform:translateX(3px)}
+.demo .open .arr{transition:transform .2s}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:40px}
+.timeline::before{content:"";position:absolute;left:8px;top:8px;bottom:8px;width:1px;background:var(--line)}
+.tl-item{position:relative;margin-bottom:36px}
+.tl-item:last-child{margin-bottom:0}
+.tl-item::before{content:"";position:absolute;left:-39px;top:6px;width:17px;height:17px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}
+.tl-item.research::before{border-color:var(--info)}
+.tl-item.education::before{border-color:var(--good)}
+.tl-item .when{font-size:10px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.tl-item h4{font-family:var(--mono);font-size:15px;font-weight:500;margin:0 0 4px;color:var(--ink);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tl-item h4 .pill{font-size:9px;padding:2px 7px;background:var(--accent-soft);color:var(--accent);letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--accent-soft)}
+.tl-item.research h4 .pill{background:var(--info-soft);color:var(--info);border-color:var(--info-soft)}
+.tl-item .where{color:var(--ink-dim);font-size:12px;margin-bottom:14px}
+.tl-item p{color:var(--ink-dim);font-size:13px;margin:0 0 12px;line-height:1.75;max-width:660px}
+.tl-item p b{color:var(--ink);font-weight:500}
+.tl-item .highlights{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.tl-item .hl{font-size:11px;padding:5px 10px;background:var(--bg-elev);border:1px solid var(--line);color:var(--ink)}
+.tl-item .hl .n{color:var(--accent);font-weight:500;margin-right:6px}
+.tl-item .tech{display:flex;flex-wrap:wrap;gap:5px}
+.tl-item .tech .t{font-size:10px;padding:3px 7px;border:1px solid var(--line-hi);color:var(--ink-faint);letter-spacing:.04em}
+
+/* PROJECTS */
+.proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.proj-grid{grid-template-columns:1fr}}
+.proj-card{background:var(--bg-card);border:1px solid var(--line);padding:22px}
+.proj-card h4{font-family:var(--mono);font-size:15px;font-weight:500;margin:0 0 5px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.proj-card h4 .pill{font-size:9px;padding:2px 6px;background:var(--accent-soft);color:var(--accent);letter-spacing:.06em;border:1px solid var(--accent-soft)}
+.proj-card .when{font-size:10px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.proj-card p{color:var(--ink-dim);font-size:12.5px;margin:0 0 12px;line-height:1.7}
+.proj-card p b{color:var(--ink);font-weight:500}
+.proj-card ul{margin:0 0 12px;padding:0;list-style:none;font-size:12px;color:var(--ink-dim)}
+.proj-card ul li{padding:2px 0 2px 16px;position:relative;line-height:1.6}
+.proj-card ul li::before{content:"→";position:absolute;left:0;color:var(--accent);font-size:11px}
+.proj-card ul li b{color:var(--ink);font-weight:500}
+.proj-card .tech{display:flex;flex-wrap:wrap;gap:5px}
+.proj-card .tech .t{font-size:10px;padding:3px 7px;border:1px solid var(--line-hi);color:var(--ink-faint);letter-spacing:.04em}
+
+/* SKILLS */
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px,1fr));gap:28px}
+.skill-col h5{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.skill-col h5 .ic{font-size:10px;color:var(--ink-faint)}
+.skill-col ul{margin:0;padding:0;list-style:none;font-size:12.5px;color:var(--ink-dim)}
+.skill-col li{padding:4px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.skill-col li .name{color:var(--ink-dim)}
+.skill-col li .name b{color:var(--ink);font-weight:500}
+.skill-col li .lvl{display:flex;gap:2px}
+.skill-col li .lvl span{width:5px;height:5px;background:var(--line-hi);border-radius:50%}
+.skill-col li .lvl span.on{background:var(--accent)}
+.lang-row{margin-top:32px;display:flex;gap:24px;flex-wrap:wrap;font-size:12px;color:var(--ink-dim)}
+.lang-row b{color:var(--ink);font-weight:500}
+
+/* CONTACT */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.contact-grid h2.big{font-family:var(--display);font-weight:500;font-size:clamp(36px,5vw,56px);line-height:1.05;letter-spacing:-.02em;margin:0 0 16px}
+.contact-grid h2.big em{color:var(--accent);font-style:italic}
+.contact-grid p.intro{color:var(--ink-dim);font-size:14px;max-width:420px;margin:0 0 28px}
+.contact-list{display:flex;flex-direction:column;font-size:13px}
+.contact-list .row{display:grid;grid-template-columns:80px 1fr;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.contact-list .row:last-child{border-bottom:0}
+.contact-list .row .k{color:var(--ink-faint);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding-top:2px}
+.contact-list .row .v a{font-size:13px}
+
+footer{padding:32px 0;font-size:11px;color:var(--ink-faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+footer .blink{color:var(--accent);animation:blink 1.2s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+
+@media (max-width:720px){
+  .shell{padding:0 20px}
+  .top-inner{padding:14px 20px}
+  .top nav{display:none}
+  section{padding:56px 0}
+  section.hero{padding:60px 0 48px}
+  .timeline{padding-left:28px}
+  .tl-item::before{left:-27px;width:13px;height:13px}
+  .contact-grid{grid-template-columns:1fr;gap:24px}
+}
+
+.reveal{opacity:0;transform:translateY(8px);animation:rev .8s ease forwards}
+.reveal:nth-child(1){animation-delay:.05s}
+.reveal:nth-child(2){animation-delay:.15s}
+.reveal:nth-child(3){animation-delay:.25s}
+.reveal:nth-child(4){animation-delay:.35s}
+@keyframes rev{to{opacity:1;transform:translateY(0)}}
+
+@keyframes flow{0%{stroke-dashoffset:0;opacity:.3}50%{opacity:1}100%{stroke-dashoffset:-40;opacity:.3}}
+.flow-line{animation:flow 3s linear infinite}
+
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+.pulse-node circle{animation:pulse-dot 2.4s ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <a href="#top" class="brand bare">tomás<span class="dot">.</span>erdmannsdörffer</a>
+    <nav>
+      <a href="#demos">demos</a>
+      <a href="#journey">journey</a>
+      <a href="#projects">projects</a>
+      <a href="#skills">skills</a>
+      <a href="#contact">contact</a>
+    </nav>
+    <div class="status"><span class="pulse"></span>open to roles</div>
+  </div>
+</header>
+
+<main class="shell">
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="meta reveal">
+    <span>graz, austria · santiago, chile</span>
+    <span>msc engineering @ puc chile</span>
+    <span>visiting researcher @ uni graz</span>
+  </div>
+
+  <h1 class="reveal">
+    Tomás <span class="sur">Erdmannsdörffer</span><br>
+    builds ML systems <span class="amp">where</span><br>
+    physics meets code.
+  </h1>
+
+  <p class="lede reveal">
+    Machine learning engineer with a foundation in <span class="hl">scientific computing</span>
+    and <span class="hl">deep learning</span>. I work the full stack — training and compressing
+    models, building LLM pipelines, shipping backends to production. Currently researching
+    cardiac fiber modeling with Physics-Informed Neural Networks at the University of Graz.
+  </p>
+
+  <div class="cta reveal">
+    <a class="btn primary bare" href="#demos">live demos <span class="arr">→</span></a>
+    <a class="btn bare" href="#journey">my journey</a>
+    <a class="btn bare" href="./cv.pdf" target="_blank" rel="noopener">cv (pdf)</a>
+  </div>
+
+  <div class="stat-strip reveal">
+    <div class="stat">
+      <div class="v">6<span class="unit">yrs</span></div>
+      <div class="k">building software</div>
+    </div>
+    <div class="stat">
+      <div class="v">3<span class="unit">live</span></div>
+      <div class="k">in-browser ML demos</div>
+    </div>
+    <div class="stat">
+      <div class="v">3<span class="unit">internships</span></div>
+      <div class="k">citi · falabella · graz</div>
+    </div>
+    <div class="stat">
+      <div class="v">6<span class="unit">courses</span></div>
+      <div class="k">taught as TA</div>
+    </div>
+  </div>
+</section>
+
+<!-- CURRENTLY -->
+<section id="now">
+  <div class="sec-head">
+    <span class="num">·</span>
+    <h2>Currently</h2>
+    <span class="rule"></span>
+    <span>may 2026</span>
+  </div>
+
+  <div class="currently">
+    <div>
+      <h3>Researching <em>cardiac fiber mechanics</em> with PINNs.</h3>
+      <p>
+        I'm three months into a visiting research stay at the <b>University of Graz</b>, working with
+        Dr. Federica Caforio on physics-informed neural networks for myocardial tissue modeling.
+        Most of my time goes into <b>WarpPINN-Fiber</b>, my MSc thesis project: extending PINNs to
+        anisotropic hyperelastic constitutive laws (Guccione, Holzapfel-Ogden) for cardiac biomechanics.
+      </p>
+      <p>
+        On the side, I'm building <b>browser-side ML demos</b> — the two on this page — and competing
+        in OpenAI's <b>Parameter Golf</b>, a sub-16MB language model competition.
+      </p>
+    </div>
+
+    <ul class="now">
+      <li>
+        <span class="when">research</span>
+        <b>WarpPINN-Fiber</b> — cardiac motion estimation with anisotropic hyperelastic PINNs in JAX.
+      </li>
+      <li>
+        <span class="when">writing</span>
+        <b>Compression thesis manuscript</b> — knowledge distillation + pruning + quantization on PINNs.
+      </li>
+      <li>
+        <span class="when">competition</span>
+        <b>OpenAI Parameter Golf</b> — sub-16MB language model on FineWeb bpb, RTX 5060 Blackwell.
+      </li>
+      <li>
+        <span class="when">building</span>
+        <b>Browser ML demos</b> — PINN playground &amp; RAG over scientific papers (both live on this page).
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- LIVE DEMOS -->
+<section id="demos">
+  <div class="sec-head">
+    <span class="num">01</span>
+    <h2>Live Demos</h2>
+    <span class="rule"></span>
+    <span>both run in your browser · no install</span>
+  </div>
+
+  <div class="demos">
+
+    <a href="./projects/pinn-playground/" class="demo bare">
+      <div class="preview">
+        <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ug" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stop-color="#053061"/>
+              <stop offset="25%"  stop-color="#4393c3"/>
+              <stop offset="50%"  stop-color="#f7f7f7"/>
+              <stop offset="75%"  stop-color="#d6604d"/>
+              <stop offset="100%" stop-color="#67001f"/>
+            </linearGradient>
+          </defs>
+          <rect x="30" y="30" width="260" height="130" fill="url(#ug)" opacity="0.85"/>
+          <path d="M30,90 Q160,30 290,150" stroke="#ff8a3d" stroke-width="2" fill="none"
+                stroke-dasharray="6 6" class="flow-line" opacity="0.9"/>
+          <line x1="30" y1="160" x2="290" y2="160" stroke="#5a584f" stroke-width="1"/>
+          <line x1="30" y1="30"  x2="30"  y2="160" stroke="#5a584f" stroke-width="1"/>
+          <text x="30"  y="180" fill="#9b988f" font-family="JetBrains Mono" font-size="9">x = -1</text>
+          <text x="270" y="180" fill="#9b988f" font-family="JetBrains Mono" font-size="9">x = +1</text>
+          <text x="30" y="20" fill="#5a584f" font-family="JetBrains Mono" font-size="9">∂u/∂t + u·∂u/∂x = ν·∂²u/∂x²</text>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="badge">project · 01</span>
+        <h4>PINN Playground</h4>
+        <p>Train a <b>physics-informed neural network</b> in the browser to solve the 1D viscous Burgers equation. No labeled data — just the PDE and autodiff.</p>
+        <div class="stack">
+          <span class="chip">TensorFlow.js</span><span class="chip">WebGL</span><span class="chip">Autodiff</span>
+        </div>
+        <span class="open">launch demo <span class="arr">→</span></span>
+      </div>
+    </a>
+
+    <a href="./projects/rag-scientific-ml/" class="demo bare">
+      <div class="preview">
+        <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="a-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#6db6e0" stroke-width="1.5"/></marker>
+          </defs>
+          <g class="pulse-node">
+            <circle cx="50" cy="100" r="6" fill="#6db6e0"/>
+          </g>
+          <text x="35" y="125" fill="#9b988f" font-family="JetBrains Mono" font-size="9">query</text>
+
+          <line x1="58" y1="100" x2="155" y2="50"  stroke="#ff8a3d" stroke-width="1.5" opacity=".9" stroke-dasharray="4 4" class="flow-line"/>
+          <line x1="58" y1="100" x2="155" y2="85"  stroke="#ff8a3d" stroke-width="2"   opacity="1"  stroke-dasharray="4 4" class="flow-line" style="animation-delay:.4s"/>
+          <line x1="58" y1="100" x2="155" y2="120" stroke="#ff8a3d" stroke-width="1"   opacity=".5" stroke-dasharray="4 4" class="flow-line" style="animation-delay:.8s"/>
+          <line x1="58" y1="100" x2="155" y2="155" stroke="#ff8a3d" stroke-width=".8"  opacity=".35" stroke-dasharray="4 4" class="flow-line" style="animation-delay:1.2s"/>
+
+          <rect x="155" y="40"  width="80" height="22" fill="#0a0a0b" stroke="#ff8a3d" stroke-width="1"/>
+          <text x="160" y="55" fill="#e8e6e1" font-family="JetBrains Mono" font-size="9">Raissi 2019</text>
+          <rect x="155" y="75"  width="80" height="22" fill="#0a0a0b" stroke="#ff8a3d" stroke-width="1.5"/>
+          <text x="160" y="90" fill="#ff8a3d" font-family="JetBrains Mono" font-size="9" font-weight="500">Li 2021 (FNO)</text>
+          <rect x="155" y="110" width="80" height="22" fill="#0a0a0b" stroke="#5a584f" stroke-width=".5"/>
+          <text x="160" y="125" fill="#9b988f" font-family="JetBrains Mono" font-size="9">Hinton 2015</text>
+          <rect x="155" y="145" width="80" height="22" fill="#0a0a0b" stroke="#5a584f" stroke-width=".5"/>
+          <text x="160" y="160" fill="#9b988f" font-family="JetBrains Mono" font-size="9">Dao 2022</text>
+
+          <line x1="235" y1="100" x2="280" y2="100" stroke="#6db6e0" stroke-width="1.5" marker-end="url(#a-arrow)"/>
+          <circle cx="290" cy="100" r="8" fill="none" stroke="#6db6e0" stroke-width="1.5"/>
+          <text x="278" y="125" fill="#9b988f" font-family="JetBrains Mono" font-size="9">LLM</text>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="badge">project · 02</span>
+        <h4>Ask My Research</h4>
+        <p><b>RAG system</b> over a curated corpus of 24 scientific ML papers — PINNs, neural operators, compression, LLM inference. Retrieval runs in your browser.</p>
+        <div class="stack">
+          <span class="chip">BM25</span><span class="chip">RAG</span><span class="chip">OpenAI-compatible</span>
+        </div>
+        <span class="open">launch demo <span class="arr">→</span></span>
+      </div>
+    </a>
+
+    <a href="./projects/fno-vs-solver/" class="demo bare">
+      <div class="preview">
+        <svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+          <!-- left: stepping curve -->
+          <text x="20" y="18" fill="#6db6e0" font-family="JetBrains Mono" font-size="9">▸ solver · slow</text>
+          <line x1="20" y1="100" x2="150" y2="100" stroke="#2a2a30" stroke-width="1"/>
+          <path d="M20,100 Q40,60 60,90 T100,95 T140,85 L150,100"
+                stroke="#6db6e0" stroke-width="1.5" fill="none" opacity="0.4"/>
+          <path d="M20,100 Q40,40 60,75 T100,80 T140,70 L150,100"
+                stroke="#6db6e0" stroke-width="1.8" fill="none">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/>
+          </path>
+          <text x="20" y="160" fill="#5a584f" font-family="JetBrains Mono" font-size="8">~1600 steps</text>
+
+          <!-- right: operator zap -->
+          <text x="170" y="18" fill="#ff8a3d" font-family="JetBrains Mono" font-size="9">◆ operator · ~30×</text>
+          <line x1="170" y1="100" x2="300" y2="100" stroke="#2a2a30" stroke-width="1"/>
+          <path d="M170,100 Q190,38 210,72 T250,76 T290,68 L300,100"
+                stroke="#ff8a3d" stroke-width="2" fill="none"/>
+          <!-- zap line -->
+          <path d="M170,30 L185,40 L180,55 L195,50" stroke="#ff8a3d" stroke-width="1.5" fill="none">
+            <animate attributeName="stroke-dashoffset" values="0;-20" dur="0.6s" repeatCount="indefinite"/>
+          </path>
+          <text x="170" y="160" fill="#5a584f" font-family="JetBrains Mono" font-size="8">one call · ~5ms</text>
+
+          <!-- divider -->
+          <line x1="160" y1="20" x2="160" y2="170" stroke="#1f1f23" stroke-width="1" stroke-dasharray="3 3"/>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="badge">project · 03</span>
+        <h4>FNO vs. Solver</h4>
+        <p><b>Watch a neural operator solve Burgers ~10-50× faster</b> than a finite-difference solver — same answer, fundamentally different algorithm.</p>
+        <div class="stack">
+          <span class="chip">Cole-Hopf</span><span class="chip">Neural Operator</span><span class="chip">Burgers</span>
+        </div>
+        <span class="open">launch demo <span class="arr">→</span></span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- JOURNEY -->
+<section id="journey">
+  <div class="sec-head">
+    <span class="num">02</span>
+    <h2>My Journey</h2>
+    <span class="rule"></span>
+    <span>2020 → today</span>
+  </div>
+
+  <div class="timeline">
+
+    <div class="tl-item research">
+      <div class="when">feb 2026 — present · graz, AT</div>
+      <h4>Visiting Researcher <span class="pill">research</span></h4>
+      <div class="where">Karl-Franzens-Universität Graz · with Dr. Federica Caforio</div>
+      <p>
+        Designing PINN architectures to solve high-dimensional PDEs in cardiac fiber mechanics
+        using JAX. Modeling myocardial tissue under <b>anisotropic hyperelastic constitutive laws</b>
+        (Guccione, Holzapfel-Ogden), evaluating reconstruction quality across multiple cardiac views.
+      </p>
+      <div class="highlights">
+        <span class="hl"><span class="n">JAX</span>differentiable PDE simulation</span>
+        <span class="hl"><span class="n">PINN</span>cardiac fiber mechanics</span>
+        <span class="hl"><span class="n">MSE+SSIM</span>multi-view reconstruction eval</span>
+      </div>
+      <div class="tech">
+        <span class="t">JAX</span><span class="t">PINN</span><span class="t">Finite Elasticity</span><span class="t">MRI</span>
+      </div>
+    </div>
+
+    <div class="tl-item education">
+      <div class="when">aug 2025 — present · santiago, CL</div>
+      <h4>MSc in Engineering Sciences <span class="pill" style="background:rgba(127,176,105,.1);color:var(--good);border-color:rgba(127,176,105,.2)">education</span></h4>
+      <div class="where">Pontificia Universidad Católica de Chile · Mechanical Engineering · advised by Prof. Francisco Sahli</div>
+      <p>
+        Researching PINNs for <b>cardiac fiber modeling</b> applied to PDEs — the foundation of
+        my work in Graz. The MSc deepens what started as a thesis on compressing PINNs.
+      </p>
+      <div class="tech">
+        <span class="t">JAX</span><span class="t">PyTorch</span><span class="t">PDEs</span><span class="t">Biomechanics</span>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="when">jan — feb 2025 · santiago, CL</div>
+      <h4>DevOps Intern <span class="pill">internship</span></h4>
+      <div class="where">Citi · Chile Tech Center</div>
+      <p>
+        Maintained and optimized <b>3 legacy applications</b>, improved the production
+        <b>CI/CD pipeline</b> to reduce operational complexity and deployment time, and
+        collaborated on code migration via Bitbucket.
+      </p>
+      <div class="highlights">
+        <span class="hl"><span class="n">3</span>legacy apps optimized</span>
+        <span class="hl"><span class="n">↓</span>deployment time reduced</span>
+      </div>
+      <div class="tech">
+        <span class="t">Jenkins</span><span class="t">Bitbucket</span><span class="t">CI/CD</span><span class="t">Docker</span>
+      </div>
+    </div>
+
+    <div class="tl-item research">
+      <div class="when">2024 — 2025 · santiago, CL</div>
+      <h4>Undergrad Thesis — PINN Compression <span class="pill">research</span></h4>
+      <div class="where">Universidad de los Andes · manuscript in preparation</div>
+      <p>
+        Applied <b>knowledge distillation, pruning, and quantization</b> to PINN surrogates
+        for non-Newtonian (Carbopol) fluid simulation. Built the baseline PINN end-to-end,
+        then quantified precision vs. efficiency trade-offs across techniques.
+      </p>
+      <div class="highlights">
+        <span class="hl"><span class="n">3</span>compression techniques studied</span>
+        <span class="hl"><span class="n">PyTorch</span>baseline + students</span>
+      </div>
+      <div class="tech">
+        <span class="t">PyTorch</span><span class="t">PINN</span><span class="t">QAT</span><span class="t">Distillation</span><span class="t">CFD</span>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="when">jun 2023 — dec 2024 · santiago, CL</div>
+      <h4>Teaching Assistant (×6 courses) <span class="pill">teaching</span></h4>
+      <div class="where">Universidad de los Andes · CS Department</div>
+      <p>
+        Supported <b>~30 students per semester</b> across Operating Systems, Low-Level Programming
+        (C/C++), Mobile Apps, Web Technologies, Automata &amp; Computability, and Programming
+        Fundamentals.
+      </p>
+      <div class="highlights">
+        <span class="hl"><span class="n">6</span>distinct courses</span>
+        <span class="hl"><span class="n">~30</span>students per semester</span>
+      </div>
+      <div class="tech">
+        <span class="t">C/C++</span><span class="t">Python</span><span class="t">Linux</span><span class="t">Web</span>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="when">dec 2023 — feb 2024 · santiago, CL</div>
+      <h4>AI Research Intern <span class="pill">internship</span></h4>
+      <div class="where">Falabella Retail</div>
+      <p>
+        Researched generative AI tools for retail. Built a functional <b>prototype for automated
+        product descriptions</b>, transforming a manual process into an automated flow. Delivered
+        a technical proposal that continued in development post-internship.
+      </p>
+      <div class="highlights">
+        <span class="hl"><span class="n">LLM</span>pipeline + prompt engineering</span>
+        <span class="hl"><span class="n">→</span>proposal kept in dev post-intern</span>
+      </div>
+      <div class="tech">
+        <span class="t">LLM</span><span class="t">Python</span><span class="t">Prompt Eng.</span>
+      </div>
+    </div>
+
+    <div class="tl-item education">
+      <div class="when">mar 2020 — oct 2025 · santiago, CL</div>
+      <h4>BSc Civil Engineering in Computer Science <span class="pill" style="background:rgba(127,176,105,.1);color:var(--good);border-color:rgba(127,176,105,.2)">education</span></h4>
+      <div class="where">Universidad de los Andes · Minor in Innovation</div>
+      <p>
+        Coursework: <b>Low-Level Programming, AI, LLM, Computer Vision, Algorithms &amp; Competitive
+        Programming</b>, Databases, Web Technologies, Data Structures.
+      </p>
+      <div class="tech">
+        <span class="t">Python</span><span class="t">C/C++</span><span class="t">PyTorch</span><span class="t">React</span><span class="t">SQL</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="sec-head">
+    <span class="num">03</span>
+    <h2>Research &amp; Software</h2>
+    <span class="rule"></span>
+    <span>beyond the demos</span>
+  </div>
+
+  <div class="proj-grid">
+
+    <div class="proj-card">
+      <h4>WarpPINN-Fiber <span class="pill">MSc thesis</span></h4>
+      <div class="when">2025 — present</div>
+      <p>
+        Extending the WarpPINN framework to <b>anisotropic hyperelastic constitutive models</b>
+        for cardiac biomechanics. JAX/jaxpi pipeline adapted to the STACOM 2014 dataset.
+      </p>
+      <ul>
+        <li>Diagnosed a <b>7-orders-of-magnitude loss imbalance</b> in the fiber stretch term.</li>
+        <li>Ran <b>Pareto sweeps</b> over physics-to-data weight ratios.</li>
+        <li>Curriculum blending between Neo-Hookean and anisotropic regimes.</li>
+      </ul>
+      <div class="tech">
+        <span class="t">JAX</span><span class="t">PINN</span><span class="t">jaxpi</span><span class="t">Finite Elasticity</span>
+      </div>
+    </div>
+
+    <div class="proj-card">
+      <h4>Parameter Golf <span class="pill">competition</span></h4>
+      <div class="when">2025 — present</div>
+      <p>
+        OpenAI public competition: build a language model under <b>16MB</b>, scored by bits-per-byte
+        on FineWeb. Designing custom tokenizers and quantized Transformer architectures.
+      </p>
+      <ul>
+        <li>Targeting RTX 5060 Blackwell (sm_120, PyTorch cu128 nightly).</li>
+        <li>Background in PINN compression directly applicable.</li>
+      </ul>
+      <div class="tech">
+        <span class="t">PyTorch</span><span class="t">CUDA</span><span class="t">Quantization</span><span class="t">Tokenizers</span>
+      </div>
+    </div>
+
+    <div class="proj-card">
+      <h4>Turbo Files <span class="pill">production</span></h4>
+      <div class="when">sep 2024</div>
+      <p>
+        Fault-tolerant data transfer system shipped to a <b>mining company in production</b>.
+        Fragments large files for resilience over intermittent connectivity.
+      </p>
+      <ul>
+        <li>Google Drive + AWS S3 integration with variable file sizes.</li>
+        <li>Built end-to-end in <b>Django</b>.</li>
+      </ul>
+      <div class="tech">
+        <span class="t">Django</span><span class="t">AWS S3</span><span class="t">Drive API</span>
+      </div>
+    </div>
+
+    <div class="proj-card">
+      <h4>Toma de Ramos <span class="pill">leadership</span></h4>
+      <div class="when">sep 2023</div>
+      <p>
+        Led a <b>team of 7</b> building a web-based academic scheduler.
+        Used by the entire Universidad de los Andes for one full year.
+      </p>
+      <ul>
+        <li>Credit validation + schedule conflict detection.</li>
+        <li>Django backend, React frontend.</li>
+      </ul>
+      <div class="tech">
+        <span class="t">Django</span><span class="t">React</span><span class="t">Team of 7</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="sec-head">
+    <span class="num">04</span>
+    <h2>Stack</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="skills-grid">
+
+    <div class="skill-col">
+      <h5>ML / AI <span class="ic">[core]</span></h5>
+      <ul>
+        <li><span class="name"><b>PyTorch</b></span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></span></li>
+        <li><span class="name"><b>JAX</b></span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        <li><span class="name">TensorFlow · Keras</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">HuggingFace</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        <li><span class="name">CUDA</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">PINNs · diff. sim</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></span></li>
+        <li><span class="name">RAG · LLM agents</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+      </ul>
+    </div>
+
+    <div class="skill-col">
+      <h5>Languages <span class="ic">[code]</span></h5>
+      <ul>
+        <li><span class="name"><b>Python</b></span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></span></li>
+        <li><span class="name">JavaScript</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">C / C++</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">C#</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">SQL</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        <li><span class="name">LaTeX</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+      </ul>
+    </div>
+
+    <div class="skill-col">
+      <h5>Backend &amp; Web <span class="ic">[apps]</span></h5>
+      <ul>
+        <li><span class="name"><b>Django</b></span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        <li><span class="name">Node.js</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">React</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">Ruby on Rails</span><span class="lvl"><span class="on"></span><span class="on"></span><span></span><span></span><span></span></span></li>
+        <li><span class="name">REST APIs</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+      </ul>
+    </div>
+
+    <div class="skill-col">
+      <h5>DevOps &amp; Cloud <span class="ic">[ops]</span></h5>
+      <ul>
+        <li><span class="name">Docker · Git</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        <li><span class="name"><b>AWS</b> (S3, Lambda)</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">Jenkins · Bitbucket</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        <li><span class="name">CI/CD</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        <li><span class="name">Linux · WSL2</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="lang-row">
+    <div><span style="color:var(--ink-faint);font-size:10px;letter-spacing:.08em;text-transform:uppercase">spoken </span><b>Spanish</b> native</div>
+    <div><b>English</b> C2 (IELTS)</div>
+    <div><b>German</b> A1</div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" style="border-bottom:0">
+  <div class="sec-head">
+    <span class="num">05</span>
+    <h2>Contact</h2>
+    <span class="rule"></span>
+  </div>
+
+  <div class="contact-grid">
+    <div>
+      <h2 class="big">Let's build something <em>that actually runs.</em></h2>
+      <p class="intro">
+        Open to ML/AI engineer roles — remote, hybrid, or on-site globally.
+        Available part-time now; full-time after MSc completion.
+      </p>
+    </div>
+
+    <div class="contact-list">
+      <div class="row">
+        <span class="k">email</span>
+        <span class="v"><a href="mailto:terdmannsdorffer@gmail.com">terdmannsdorffer@gmail.com</a></span>
+      </div>
+      <div class="row">
+        <span class="k">github</span>
+        <span class="v"><a href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener">github.com/Terdmannsdorffer</a></span>
+      </div>
+      <div class="row">
+        <span class="k">linkedin</span>
+        <span class="v"><a href="https://www.linkedin.com/in/tomas-erdmannsdorffer" target="_blank" rel="noopener">in/tomas-erdmannsdorffer</a></span>
+      </div>
+      <div class="row">
+        <span class="k">location</span>
+        <span class="v" style="color:var(--ink-dim)">Graz, Austria · Santiago, Chile</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="shell">
+  <div>© 2026 Tomás Erdmannsdörffer — built with care, not Inter<span class="blink">_</span></div>
+  <div><a href="#top">back to top ↑</a></div>
+</footer>
+
+</body>
+</html>

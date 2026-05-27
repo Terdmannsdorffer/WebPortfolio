@@ -1,0 +1,331 @@
+[
+  {
+    "id": "raissi-pinn-intro",
+    "paper": "Raissi, Perdikaris, Karniadakis (2019) — Physics-informed neural networks",
+    "arxiv": "1711.10561",
+    "section": "Introduction",
+    "tags": [
+      "pinn",
+      "pde",
+      "collocation",
+      "physics-informed",
+      "inverse-problem"
+    ],
+    "text": "Physics-informed neural networks (PINNs) are deep learning models trained to satisfy the laws of physics described by general nonlinear partial differential equations. Unlike data-driven methods, PINNs encode the underlying PDE directly into the loss function via residual minimization at collocation points, alongside initial and boundary condition terms. This formulation allows the network to learn solutions to forward and inverse problems with sparse or no labeled data, leveraging automatic differentiation to compute exact derivatives."
+  },
+  {
+    "id": "raissi-pinn-method",
+    "paper": "Raissi, Perdikaris, Karniadakis (2019) — Physics-informed neural networks",
+    "arxiv": "1711.10561",
+    "section": "Method",
+    "tags": [
+      "pinn",
+      "loss-function",
+      "autodiff",
+      "collocation"
+    ],
+    "text": "The PINN loss is composed of three terms: a PDE residual loss evaluated at randomly sampled collocation points in the domain, an initial condition loss at t=0, and a boundary condition loss along the spatial boundary. The residual is computed using automatic differentiation to evaluate partial derivatives of the network output with respect to its inputs. Training minimizes the sum of these terms, typically using Adam followed by L-BFGS for fine-tuning."
+  },
+  {
+    "id": "karniadakis-pinn-review",
+    "paper": "Karniadakis et al. (2021) — Physics-informed machine learning",
+    "arxiv": "2107.04026",
+    "section": "Discussion",
+    "tags": [
+      "pinn",
+      "review",
+      "inverse-problem",
+      "limitations"
+    ],
+    "text": "Despite their flexibility, PINNs face several challenges: training can be slow due to the second-order optimization landscape of PDE residuals, loss balancing between PDE and boundary terms is delicate, and convergence is not guaranteed for stiff or multiscale problems. Common remedies include adaptive collocation point resampling, loss reweighting via the NTK or gradient statistics, and curriculum-based training schedules."
+  },
+  {
+    "id": "sahli-cardiac-pinn",
+    "paper": "Sahli Costabal et al. (2020) — Physics-informed neural networks for cardiac activation mapping",
+    "arxiv": "2004.03961",
+    "section": "Application",
+    "tags": [
+      "pinn",
+      "cardiac",
+      "eikonal",
+      "biomechanics",
+      "medical"
+    ],
+    "text": "Physics-informed neural networks can recover the activation time field on the cardiac surface from sparse electrical recordings by enforcing the Eikonal equation as a soft constraint. The approach combines a small number of measurement points with the underlying wave propagation physics, producing smooth activation maps without explicit mesh-based solvers. This bridges sparse clinical data and full-field reconstruction."
+  },
+  {
+    "id": "li-fno-method",
+    "paper": "Li et al. (2021) — Fourier Neural Operator",
+    "arxiv": "2010.08895",
+    "section": "Method",
+    "tags": [
+      "fno",
+      "neural-operator",
+      "fourier",
+      "resolution-invariant",
+      "pde"
+    ],
+    "text": "The Fourier Neural Operator (FNO) parameterizes the integral kernel of a neural operator directly in Fourier space. Each FNO layer applies a fast Fourier transform, multiplies by a learnable complex tensor in low-frequency modes, and inverts back to the spatial domain. Combined with a pointwise linear bias, this captures global interactions efficiently. FNO achieves resolution-invariant predictions: a model trained at one mesh can evaluate at a finer mesh without retraining."
+  },
+  {
+    "id": "li-fno-results",
+    "paper": "Li et al. (2021) — Fourier Neural Operator",
+    "arxiv": "2010.08895",
+    "section": "Experiments",
+    "tags": [
+      "fno",
+      "navier-stokes",
+      "burgers",
+      "benchmark",
+      "speedup"
+    ],
+    "text": "On the Navier-Stokes equation in vorticity formulation, FNO achieves over a thousand times speedup compared to direct numerical simulation while maintaining error below one percent. Benchmarks on Burgers, Darcy flow, and Navier-Stokes show that FNO outperforms graph neural operators, DeepONet, and traditional convolutional U-Nets in both accuracy and computational efficiency."
+  },
+  {
+    "id": "deeponet",
+    "paper": "Lu et al. (2021) — DeepONet: learning nonlinear operators",
+    "arxiv": "1910.03193",
+    "section": "Architecture",
+    "tags": [
+      "deeponet",
+      "neural-operator",
+      "branch-trunk",
+      "approximation"
+    ],
+    "text": "DeepONet learns nonlinear operators between function spaces using a branch-trunk architecture. The branch network encodes the input function evaluated at a fixed set of sensor locations, while the trunk network encodes the query coordinate where the output is evaluated. Their inner product approximates the operator, supported by the universal approximation theorem for operators."
+  },
+  {
+    "id": "hinton-distillation",
+    "paper": "Hinton, Vinyals, Dean (2015) — Distilling the knowledge in a neural network",
+    "arxiv": "1503.02531",
+    "section": "Method",
+    "tags": [
+      "distillation",
+      "compression",
+      "teacher-student",
+      "softmax",
+      "dark-knowledge"
+    ],
+    "text": "Knowledge distillation transfers the generalization ability of a large teacher network or ensemble to a smaller student by training the student to match the teacher's softened output distribution. Softening is achieved with a temperature-scaled softmax: higher temperatures expose finer relative probabilities across classes, the so-called dark knowledge. The student learns from this richer signal beyond the hard one-hot labels."
+  },
+  {
+    "id": "jacob-qat",
+    "paper": "Jacob et al. (2018) — Quantization and training of neural networks for efficient integer arithmetic",
+    "arxiv": "1712.05877",
+    "section": "Method",
+    "tags": [
+      "quantization",
+      "compression",
+      "int8",
+      "qat",
+      "inference"
+    ],
+    "text": "Quantization-aware training (QAT) inserts simulated quantization operations into the forward pass during training, so the network adapts to the noise of low-precision arithmetic before deployment. Weights and activations are constrained to integer ranges representable in INT8 or lower. Gradients flow through the quantizer using the straight-through estimator. After training the model is exported with integer-only inference kernels, enabling deployment on mobile and embedded hardware."
+  },
+  {
+    "id": "han-deep-compression",
+    "paper": "Han, Mao, Dally (2016) — Deep compression",
+    "arxiv": "1510.00149",
+    "section": "Pipeline",
+    "tags": [
+      "pruning",
+      "compression",
+      "huffman",
+      "sparsity"
+    ],
+    "text": "Deep compression combines three techniques in sequence: weight pruning sets small-magnitude weights to zero, followed by weight quantization with codebook clustering, and finally Huffman coding of the resulting sparse representation. The pipeline achieves up to 49x reduction in model size on AlexNet and VGG-16 without accuracy loss, by exploiting redundancy at multiple levels."
+  },
+  {
+    "id": "frankle-lottery",
+    "paper": "Frankle, Carbin (2019) — Lottery ticket hypothesis",
+    "arxiv": "1803.03635",
+    "section": "Hypothesis",
+    "tags": [
+      "pruning",
+      "sparsity",
+      "compression",
+      "lottery-ticket"
+    ],
+    "text": "The lottery ticket hypothesis claims that dense, randomly-initialized networks contain sparse subnetworks that, when trained in isolation, reach test accuracy comparable to the original. Such winning tickets can be identified by iterative magnitude pruning: train the dense network, prune the smallest weights, reset survivors to their initial values, and retrain. This challenges conventional views on overparameterization."
+  },
+  {
+    "id": "chen-neural-ode",
+    "paper": "Chen et al. (2018) — Neural ordinary differential equations",
+    "arxiv": "1806.07366",
+    "section": "Method",
+    "tags": [
+      "neural-ode",
+      "ode",
+      "continuous-depth",
+      "adjoint",
+      "autodiff"
+    ],
+    "text": "Neural ODEs parameterize the derivative of a hidden state with a neural network and use a black-box ODE solver to compute the forward pass. This yields a continuous-depth model whose memory cost during training is constant in depth via the adjoint sensitivity method. Applications include continuous normalizing flows, generative time-series models, and irregularly-sampled data."
+  },
+  {
+    "id": "degrave-jax-sim",
+    "paper": "de Avila Belbute-Peres et al. (2018) — Differentiable physics",
+    "arxiv": "1806.01242",
+    "section": "Method",
+    "tags": [
+      "differentiable-simulation",
+      "physics",
+      "gradient",
+      "inverse-problem"
+    ],
+    "text": "Differentiable physics simulators expose gradients of simulation outputs with respect to inputs, parameters, and controls, enabling gradient-based optimization through physical systems. Applied to rigid body dynamics, this allows learning unknown physical parameters, solving inverse design problems, and training control policies end-to-end. The key is implementing all simulation primitives in an automatic differentiation framework like JAX or PyTorch."
+  },
+  {
+    "id": "jax-pde",
+    "paper": "Bradbury et al. (2018) — JAX: composable transformations",
+    "arxiv": "jax-docs",
+    "section": "Overview",
+    "tags": [
+      "jax",
+      "autodiff",
+      "jit",
+      "vmap",
+      "gpu"
+    ],
+    "text": "JAX provides composable function transformations on NumPy-like code: grad for automatic differentiation, jit for just-in-time compilation via XLA, vmap for automatic vectorization, and pmap for multi-device parallelism. These transformations compose freely: jit(grad(f)) yields a compiled gradient function. JAX has become a standard tool for scientific machine learning, differentiable PDE solvers, and large-scale numerical experiments."
+  },
+  {
+    "id": "dettmers-llmint8",
+    "paper": "Dettmers et al. (2022) — LLM.int8(): 8-bit matrix multiplication for transformers at scale",
+    "arxiv": "2208.07339",
+    "section": "Method",
+    "tags": [
+      "llm",
+      "quantization",
+      "int8",
+      "outliers",
+      "inference"
+    ],
+    "text": "LLM.int8() enables INT8 inference for large language models by handling outlier features in a separate FP16 path. Most weight and activation values follow a Gaussian distribution amenable to INT8 quantization, but a small number of outlier dimensions carry disproportionate magnitude and degrade accuracy if quantized naively. Decomposing the matrix multiplication into an outlier sub-matrix in FP16 and a bulk INT8 sub-matrix preserves accuracy while halving memory."
+  },
+  {
+    "id": "frantar-gptq",
+    "paper": "Frantar et al. (2023) — GPTQ: accurate post-training quantization",
+    "arxiv": "2210.17323",
+    "section": "Method",
+    "tags": [
+      "gptq",
+      "quantization",
+      "ptq",
+      "int4",
+      "llm"
+    ],
+    "text": "GPTQ is a one-shot post-training quantization method that produces INT4 weights for billion-parameter language models with minimal accuracy loss. Building on optimal brain quantization, GPTQ processes weight columns sequentially, updating remaining columns to compensate for quantization error using the inverse Hessian. The full quantization of OPT-175B takes about four GPU hours and reaches near-FP16 perplexity."
+  },
+  {
+    "id": "dao-flashattention",
+    "paper": "Dao et al. (2022) — FlashAttention",
+    "arxiv": "2205.14135",
+    "section": "Method",
+    "tags": [
+      "attention",
+      "cuda",
+      "kernel",
+      "memory",
+      "inference"
+    ],
+    "text": "FlashAttention is an IO-aware exact attention algorithm that reduces memory traffic between GPU global memory and on-chip SRAM. By tiling the attention computation and avoiding materialization of the full N-by-N attention matrix, it achieves up to 3x speedup on GPT-2 training and enables longer context windows. The algorithm is exact, not approximate, and is now standard in production transformer implementations."
+  },
+  {
+    "id": "holzapfel-2009",
+    "paper": "Holzapfel, Ogden (2009) — Constitutive modeling of myocardial tissue",
+    "arxiv": "royal-society",
+    "section": "Constitutive law",
+    "tags": [
+      "cardiac",
+      "biomechanics",
+      "anisotropic",
+      "hyperelastic",
+      "fiber"
+    ],
+    "text": "The Holzapfel-Ogden constitutive model describes passive myocardial tissue as an anisotropic, fiber-reinforced hyperelastic material. The strain energy decomposes into isotropic, fiber, sheet, and fiber-sheet shear contributions, each parameterized by invariants of the deformation tensor. Eight material parameters capture the dominant mechanical behavior across physiological strain ranges in left ventricular tissue."
+  },
+  {
+    "id": "guccione-model",
+    "paper": "Guccione et al. (1991) — Finite element passive ventricular mechanics",
+    "arxiv": "jbiomech",
+    "section": "Constitutive law",
+    "tags": [
+      "cardiac",
+      "biomechanics",
+      "guccione",
+      "hyperelastic",
+      "fiber"
+    ],
+    "text": "The Guccione constitutive law models passive ventricular mechanics with a transversely isotropic exponential strain energy function. Three principal stiffness parameters b_f, b_t, b_fs control the response along fiber, transverse, and shear directions respectively. Despite its simplicity compared to fully orthotropic models, Guccione remains widely used for whole-heart simulation due to robust parameter identification."
+  },
+  {
+    "id": "ggml-llama-cpp",
+    "paper": "Gerganov (2023) — llama.cpp",
+    "arxiv": "github",
+    "section": "Design",
+    "tags": [
+      "inference",
+      "cpu",
+      "quantization",
+      "ggml",
+      "llm"
+    ],
+    "text": "llama.cpp is a C/C++ implementation of LLaMA inference designed for consumer CPUs and GPUs. It uses the GGML tensor library with custom quantization formats (Q4_K_M, Q5_K_M, Q8_0) that store weights in mixed-precision blocks with per-group scales. The implementation emphasizes portability, minimal dependencies, and aggressive memory-mapping of model files for fast cold-start inference."
+  },
+  {
+    "id": "vllm-paged-attention",
+    "paper": "Kwon et al. (2023) — vLLM with PagedAttention",
+    "arxiv": "2309.06180",
+    "section": "Method",
+    "tags": [
+      "inference",
+      "kv-cache",
+      "paged-attention",
+      "llm",
+      "throughput"
+    ],
+    "text": "PagedAttention manages the key-value cache of transformer inference as virtual pages, analogous to operating system memory paging. By eliminating contiguous allocation requirements and enabling block-level sharing across requests, vLLM achieves up to 24x higher throughput than HuggingFace Transformers on LLaMA-7B serving. The technique is now adopted across most production inference servers."
+  },
+  {
+    "id": "warppinn",
+    "paper": "Buoso, Joyce, Kozerke (2023) — WarpPINN: cardiac motion estimation",
+    "arxiv": "2211.11380",
+    "section": "Method",
+    "tags": [
+      "pinn",
+      "cardiac",
+      "motion",
+      "mri",
+      "biomechanics"
+    ],
+    "text": "WarpPINN estimates the displacement field of the beating heart from cine magnetic resonance imaging by training a physics-informed neural network constrained by a hyperelastic strain energy and the image-similarity loss between warped reference frames and observed frames. The approach yields a continuous spatiotemporal displacement field suitable for downstream strain analysis without requiring explicit mesh-based registration."
+  },
+  {
+    "id": "adam-optimizer",
+    "paper": "Kingma, Ba (2015) — Adam: a method for stochastic optimization",
+    "arxiv": "1412.6980",
+    "section": "Method",
+    "tags": [
+      "adam",
+      "optimizer",
+      "sgd",
+      "training",
+      "momentum"
+    ],
+    "text": "Adam combines the benefits of momentum (first-moment estimates) and RMSProp (second-moment estimates) for adaptive per-parameter learning rates. Bias-corrected estimates of the moments are used to scale parameter updates. Default hyperparameters (lr=1e-3, beta1=0.9, beta2=0.999) work well across many problems, making Adam the de facto default optimizer for deep learning."
+  },
+  {
+    "id": "transformer-attention",
+    "paper": "Vaswani et al. (2017) — Attention is all you need",
+    "arxiv": "1706.03762",
+    "section": "Architecture",
+    "tags": [
+      "transformer",
+      "attention",
+      "sequence",
+      "nlp"
+    ],
+    "text": "The Transformer architecture replaces recurrence and convolution with self-attention as the primary mechanism for modeling dependencies in sequences. Multi-head scaled dot-product attention enables parallelizable computation and direct access between any pair of positions. The encoder-decoder structure with residual connections, layer normalization, and positional encodings forms the basis of subsequent language models."
+  }
+]
