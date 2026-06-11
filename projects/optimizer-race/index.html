@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Optimizer Race — Tomás Erdmannsdörffer</title>
+<meta name="description" content="SGD, Momentum, RMSProp and Adam race down interactive 3D loss landscapes. Click the surface to restart them anywhere.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎢</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f2e8; --card:#fffdf7;
+  --ink:#26243a; --dim:#6e6a80; --line:#e6ddcc;
+  --coral:#ff5d73; --teal:#0fb5a3; --yellow:#e8a800; --violet:#7c5cff; --blue:#52a7ff;
+  --coral-bg:#ffe7ea; --teal-bg:#dcf4ef; --yellow-bg:#fff3d4; --violet-bg:#ebe4ff; --blue-bg:#e2f0ff;
+  --body:'Space Grotesk', system-ui, sans-serif;
+  --display:'Fraunces', Georgia, serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(800px 460px at 90% -5%, rgba(82,167,255,.15), transparent 60%),
+    radial-gradient(700px 700px at -8% 50%, rgba(124,92,255,.10), transparent 60%);
+  background-attachment:fixed;
+}
+::selection{background:var(--yellow);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+.shell{max-width:1040px;margin:0 auto;padding:0 24px}
+
+header{padding:22px 0}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.crumb{
+  display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:2px solid var(--ink);border-radius:999px;padding:8px 18px;font-weight:700;font-size:13.5px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .15s, box-shadow .15s;
+}
+.crumb:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;background:var(--card);border:2px solid var(--ink);
+  border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;box-shadow:2px 2px 0 var(--ink);
+}
+.chip.live{background:var(--blue-bg)}
+
+h1{font-family:var(--display);font-weight:500;font-size:clamp(34px,5.4vw,58px);line-height:1.05;letter-spacing:-.02em;margin:26px 0 14px}
+h1 em{font-style:italic;color:var(--blue);background:linear-gradient(transparent 64%,var(--blue-bg) 64%)}
+.lede{color:var(--dim);max-width:680px;margin:0 0 24px;line-height:1.75}
+.lede b{color:var(--ink);font-weight:600}
+.lede code{font-family:var(--mono);font-size:12.5px;background:var(--card);border:1.5px solid var(--line);border-radius:6px;padding:1px 6px}
+
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:2px solid var(--ink);
+  border-radius:999px;background:var(--card);color:var(--ink);font-family:var(--body);
+  font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:3px 3px 0 var(--ink);
+  transition:transform .15s, box-shadow .15s;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+.btn.on{background:var(--ink);color:var(--paper)}
+.lr{
+  display:inline-flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--ink);
+  border-radius:999px;padding:8px 18px;font-size:13px;font-weight:700;box-shadow:3px 3px 0 var(--ink);
+}
+.lr input{accent-color:var(--violet);width:130px}
+.lr .val{font-family:var(--mono);font-size:12px;color:var(--dim);min-width:46px;text-align:right}
+
+.stage{
+  background:var(--card);border:2px solid var(--ink);border-radius:24px;
+  box-shadow:7px 7px 0 var(--ink);padding:12px;margin-bottom:18px;
+}
+#race{display:block;width:100%;height:560px;border-radius:14px;background:linear-gradient(180deg,#efe9db,#f7f2e8);touch-action:none}
+@media (max-width:720px){#race{height:420px}}
+.stage .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 8px 2px;font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px}
+.opt{
+  display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--ink);
+  border-radius:999px;padding:8px 18px;font-size:13px;font-weight:700;box-shadow:3px 3px 0 var(--ink);
+}
+.opt .dot{width:13px;height:13px;border-radius:50%;border:2px solid var(--ink);flex:0 0 auto}
+.opt .loss{font-family:var(--mono);font-size:11.5px;color:var(--dim);font-weight:500}
+
+.explain{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:40px}
+@media (max-width:720px){.explain{grid-template-columns:1fr}}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:22px 26px;box-shadow:4px 4px 0 var(--ink)}
+.card h3{font-family:var(--display);font-size:21px;font-weight:600;margin:0 0 10px;letter-spacing:-.01em}
+.card p{color:var(--dim);font-size:13.5px;margin:0 0 10px;line-height:1.75}
+.card p b{color:var(--ink);font-weight:600}
+.card code{font-family:var(--mono);font-size:12px;background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:1px 6px}
+
+footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+@media (prefers-reduced-motion: reduce){ *{transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<header>
+  <div class="bar">
+    <a class="crumb" href="../../">← tomás.erdmannsdörffer</a>
+    <span class="chip live">● live · 4 optimizers · 3 landscapes</span>
+  </div>
+</header>
+
+<h1>The <em>Optimizer</em> Race</h1>
+<p class="lede">
+  Four gradient-descent variants minimize the same loss surface from the same start —
+  <b>click anywhere on the surface to drop them somewhere new</b>. Drag to orbit, scroll to zoom.
+  Watch SGD stall in local minima while Adam's adaptive step sails past, or Momentum overshoot
+  the valley it was aiming for. Implemented from scratch: <code>θ ← θ − η·∇L(θ)</code> and friends.
+</p>
+
+<div class="controls">
+  <button class="btn fn on" data-fn="bumps">🏔 bumpy bowl</button>
+  <button class="btn fn" data-fn="ravine">🛶 ravine</button>
+  <button class="btn fn" data-fn="saddle">🐎 saddle</button>
+  <label class="lr">η <input type="range" id="lr" min="0.004" max="0.08" step="0.002" value="0.024"><span class="val" id="lrVal">0.024</span></label>
+  <button class="btn" id="restart">↺ restart</button>
+</div>
+
+<div class="stage">
+  <canvas id="race" aria-label="3D loss landscape with four optimizers racing downhill — click to restart them at a new point"></canvas>
+  <div class="foot">
+    <span id="formula">L(x,y) = 0.15(x²+y²) + 0.7·sin(1.5x)·cos(1.5y)</span>
+    <span>click surface = new start point</span>
+  </div>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div class="explain">
+  <div class="card">
+    <h3>What you're seeing</h3>
+    <p>
+      The surface is a 2-parameter loss function — a toy stand-in for the millions-dimensional
+      landscapes real networks train on. Each ball runs its update rule on the <b>analytic gradient</b>,
+      a few steps per frame:
+    </p>
+    <p>
+      <b>SGD</b> follows the raw gradient. <b>Momentum</b> (β=0.92) accumulates velocity — faster in
+      ravines, prone to overshooting. <b>RMSProp</b> divides by a running RMS of the gradient,
+      equalizing step sizes across dimensions. <b>Adam</b> combines both with bias correction.
+    </p>
+  </div>
+  <div class="card">
+    <h3>Why it matters to me</h3>
+    <p>
+      Training <b>physics-informed neural networks</b> is an optimization nightmare: PDE-residual and
+      data terms can sit <b>seven orders of magnitude apart</b> (I've measured it), producing exactly
+      these pathological ravines and saddles.
+    </p>
+    <p>
+      Picking and tuning the optimizer isn't a detail there — it's the difference between a heart
+      model that converges and one that doesn't. This toy is how I explain that problem in one picture.
+    </p>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 Tomás Erdmannsdörffer</span>
+  <a href="../../">← back to portfolio</a>
+</footer>
+
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const D = 3;                 // domain: x,y ∈ [-D, D]
+const STEPS_PER_FRAME = 2;
+const MAX_TRAIL = 4000;
+
+/* ---------- loss landscapes (analytic gradients) ---------- */
+const FUNCS = {
+  bumps: {
+    label: 'L(x,y) = 0.15(x²+y²) + 0.7·sin(1.5x)·cos(1.5y)',
+    f : (x, y) => .15 * (x*x + y*y) + .7 * Math.sin(1.5*x) * Math.cos(1.5*y),
+    gx: (x, y) => .3 * x + 1.05 * Math.cos(1.5*x) * Math.cos(1.5*y),
+    gy: (x, y) => .3 * y - 1.05 * Math.sin(1.5*x) * Math.sin(1.5*y),
+    start: [2.4, -2.3],
+  },
+  ravine: {
+    label: 'L(x,y) = 0.05[(1−x)² + 8(y − x²/2)²]   (Rosenbrock-style)',
+    f : (x, y) => .05 * ((1-x)*(1-x) + 8 * Math.pow(y - x*x/2, 2)),
+    gx: (x, y) => .05 * (-2 * (1-x) - 16 * (y - x*x/2) * x),
+    gy: (x, y) => .05 * 16 * (y - x*x/2),
+    start: [-2.2, 2.5],
+  },
+  saddle: {
+    label: 'L(x,y) = 0.2x² − 0.2y² + 0.012y⁴ + 0.005x⁴',
+    f : (x, y) => .2*x*x - .2*y*y + .012 * y*y*y*y + .005 * x*x*x*x,
+    gx: (x, y) => .4*x + .02 * x*x*x,
+    gy: (x, y) => -.4*y + .048 * y*y*y,
+    start: [.12, .07],          // near the saddle point: who escapes first?
+  },
+};
+let fnKey = 'bumps';
+let FN = FUNCS[fnKey];
+let hScale = 1, hMid = 0;        // vertical normalization, recomputed per landscape
+const H = (x, y) => (FN.f(x, y) - hMid) * hScale;
+
+/* ---------- optimizers ---------- */
+function makeOptimizers(){
+  return [
+    { label:'SGD', css:'#ff5d73', hex:0xff5d73,
+      reset(){}, st:{},
+      step(p, g, lr){ p[0] -= lr * g[0]; p[1] -= lr * g[1]; } },
+    { label:'Momentum', css:'#7c5cff', hex:0x7c5cff,
+      st:{ vx:0, vy:0 },
+      reset(){ this.st.vx = 0; this.st.vy = 0; },
+      step(p, g, lr){
+        const s = this.st;
+        s.vx = .92 * s.vx - lr * g[0];
+        s.vy = .92 * s.vy - lr * g[1];
+        p[0] += s.vx; p[1] += s.vy;
+      } },
+    { label:'RMSProp', css:'#0fb5a3', hex:0x0fb5a3,
+      st:{ sx:0, sy:0 },
+      reset(){ this.st.sx = 0; this.st.sy = 0; },
+      step(p, g, lr){
+        const s = this.st;
+        s.sx = .96 * s.sx + .04 * g[0]*g[0];
+        s.sy = .96 * s.sy + .04 * g[1]*g[1];
+        p[0] -= lr * .6 * g[0] / (Math.sqrt(s.sx) + 1e-8);
+        p[1] -= lr * .6 * g[1] / (Math.sqrt(s.sy) + 1e-8);
+      } },
+    { label:'Adam', css:'#e8a800', hex:0xe8a800,
+      st:{ mx:0, my:0, vx:0, vy:0, t:0 },
+      reset(){ const s = this.st; s.mx = s.my = s.vx = s.vy = s.t = 0; },
+      step(p, g, lr){
+        const s = this.st, b1 = .9, b2 = .999;
+        s.t++;
+        s.mx = b1 * s.mx + (1-b1) * g[0];   s.my = b1 * s.my + (1-b1) * g[1];
+        s.vx = b2 * s.vx + (1-b2) * g[0]*g[0]; s.vy = b2 * s.vy + (1-b2) * g[1]*g[1];
+        const c1 = 1 - Math.pow(b1, s.t), c2 = 1 - Math.pow(b2, s.t);
+        p[0] -= lr * .8 * (s.mx/c1) / (Math.sqrt(s.vx/c2) + 1e-8);
+        p[1] -= lr * .8 * (s.my/c1) / (Math.sqrt(s.vy/c2) + 1e-8);
+      } },
+  ];
+}
+const optimizers = makeOptimizers();
+
+/* ---------- three.js scene ---------- */
+const canvas = document.getElementById('race');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 1, .1, 100);
+camera.position.set(5.2, 4.6, 6.2);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xf0dcc4, 1.2));
+const d1 = new THREE.DirectionalLight(0xffffff, 1.9); d1.position.set(4, 7, 6); scene.add(d1);
+const d2 = new THREE.DirectionalLight(0xcfd8ff, .7);  d2.position.set(-5, -2, -4); scene.add(d2);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = .07;
+controls.maxPolarAngle = Math.PI * .49;
+controls.minDistance = 3; controls.maxDistance = 16;
+controls.autoRotate = true;
+controls.autoRotateSpeed = .8;
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+const SEG = 110;
+const geo = new THREE.PlaneGeometry(2*D, 2*D, SEG, SEG);
+geo.rotateX(-Math.PI / 2);
+geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
+const surface = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors:true, flatShading:true, roughness:.6 }));
+scene.add(surface);
+const wire = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ wireframe:true, color:0x26243a, transparent:true, opacity:.05 }));
+wire.position.y = .002;
+scene.add(wire);
+
+const LO = new THREE.Color(0x0fb5a3), MID = new THREE.Color(0xfdf8ec), HI = new THREE.Color(0xff5d73);
+function rebuildSurface(){
+  const p = geo.attributes.position, col = geo.attributes.color, n = p.count;
+  let mn = 1e9, mx = -1e9;
+  const hs = new Float32Array(n);
+  for(let i = 0; i < n; i++){
+    hs[i] = FN.f(p.getX(i), p.getZ(i));
+    mn = Math.min(mn, hs[i]); mx = Math.max(mx, hs[i]);
+  }
+  hMid = (mn + mx) / 2;
+  hScale = 2.6 / Math.max(1e-6, mx - mn);
+  const tmp = new THREE.Color();
+  for(let i = 0; i < n; i++){
+    p.setY(i, (hs[i] - hMid) * hScale);
+    const k = (hs[i] - mn) / Math.max(1e-6, mx - mn);
+    if(k < .5) tmp.lerpColors(LO, MID, k * 2);
+    else       tmp.lerpColors(MID, HI, (k - .5) * 2);
+    col.setXYZ(i, tmp.r, tmp.g, tmp.b);
+  }
+  p.needsUpdate = col.needsUpdate = true;
+  geo.computeVertexNormals();
+  document.getElementById('formula').textContent = FN.label;
+}
+
+/* start marker */
+const marker = new THREE.Mesh(
+  new THREE.TorusGeometry(.18, .035, 10, 28),
+  new THREE.MeshStandardMaterial({ color:0x26243a, roughness:.4 })
+);
+marker.rotation.x = Math.PI / 2;
+scene.add(marker);
+
+/* ---------- racers ---------- */
+const legend = document.getElementById('legend');
+const racers = optimizers.map(opt => {
+  const ball = new THREE.Mesh(
+    new THREE.SphereGeometry(.11, 18, 14),
+    new THREE.MeshStandardMaterial({ color:opt.hex, roughness:.3 })
+  );
+  scene.add(ball);
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MAX_TRAIL * 3), 3));
+  trailGeo.setDrawRange(0, 0);
+  const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color:opt.hex, transparent:true, opacity:.8 }));
+  trail.frustumCulled = false;
+  scene.add(trail);
+
+  const el = document.createElement('div');
+  el.className = 'opt';
+  el.innerHTML = '<span class="dot" style="background:' + opt.css + '"></span>' + opt.label +
+                 ' <span class="loss">L=—</span>';
+  legend.appendChild(el);
+
+  return { opt, ball, trail, trailGeo, p:[0,0], steps:0, count:0, lossEl:el.querySelector('.loss') };
+});
+
+let start = [...FN.start];
+function resetRace(){
+  racers.forEach((r, i) => {
+    r.p[0] = start[0] + (i - 1.5) * .015;     // hair's offset so balls don't fuse
+    r.p[1] = start[1] + (i - 1.5) * .015;
+    r.steps = 0; r.count = 0;
+    r.trailGeo.setDrawRange(0, 0);
+    r.opt.reset();
+  });
+  marker.position.set(start[0], H(start[0], start[1]) + .06, start[1]);
+}
+
+/* ---------- interaction ---------- */
+const lrInput = document.getElementById('lr'), lrVal = document.getElementById('lrVal');
+lrInput.addEventListener('input', () => { lrVal.textContent = (+lrInput.value).toFixed(3); });
+
+document.getElementById('restart').addEventListener('click', resetRace);
+document.querySelectorAll('.btn.fn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.btn.fn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    fnKey = btn.dataset.fn;
+    FN = FUNCS[fnKey];
+    rebuildSurface();
+    start = [...FN.start];
+    resetRace();
+  });
+});
+
+/* click (not drag) on the surface = new start point */
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+let downX = 0, downY = 0;
+canvas.addEventListener('pointerdown', e => { downX = e.clientX; downY = e.clientY; });
+canvas.addEventListener('pointerup', e => {
+  if(Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;   // was a drag
+  const r = canvas.getBoundingClientRect();
+  ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObject(surface)[0];
+  if(!hit) return;
+  start = [
+    Math.max(-D, Math.min(D, hit.point.x)),
+    Math.max(-D, Math.min(D, hit.point.z)),
+  ];
+  resetRace();
+});
+
+/* ---------- loop ---------- */
+function resize(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if(!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+resize();
+new ResizeObserver(resize).observe(canvas);
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const g = [0, 0];
+
+function frame(){
+  requestAnimationFrame(frame);
+  if(document.hidden) return;
+  const lr = +lrInput.value;
+
+  if(!reduced || racers[0].steps === 0){
+    for(const r of racers){
+      for(let s = 0; s < STEPS_PER_FRAME; s++){
+        g[0] = FN.gx(r.p[0], r.p[1]);
+        g[1] = FN.gy(r.p[0], r.p[1]);
+        if(Math.hypot(g[0], g[1]) < 1e-4) break;          // converged
+        r.opt.step(r.p, g, lr);
+        r.p[0] = Math.max(-D, Math.min(D, r.p[0]));
+        r.p[1] = Math.max(-D, Math.min(D, r.p[1]));
+        r.steps++;
+      }
+      const y = H(r.p[0], r.p[1]);
+      r.ball.position.set(r.p[0], y + .12, r.p[1]);
+      if(r.count < MAX_TRAIL){
+        r.trailGeo.attributes.position.setXYZ(r.count, r.p[0], y + .07, r.p[1]);
+        r.count++;
+        r.trailGeo.setDrawRange(0, r.count);
+        r.trailGeo.attributes.position.needsUpdate = true;
+      }
+      r.lossEl.textContent = 'L=' + FN.f(r.p[0], r.p[1]).toFixed(3) + ' · ' + r.steps + ' steps';
+    }
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+rebuildSurface();
+resetRace();
+frame();
+</script>
+
+</body>
+</html>

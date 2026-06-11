@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fluid Playground — Tomás Erdmannsdörffer</title>
+<meta name="description" content="A real-time incompressible Navier-Stokes solver (Jos Stam's stable fluids) running in pure JavaScript. Drag to stir candy-colored ink.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f2e8; --card:#fffdf7;
+  --ink:#26243a; --dim:#6e6a80; --line:#e6ddcc;
+  --coral:#ff5d73; --teal:#0fb5a3; --yellow:#ffc445; --violet:#7c5cff; --pink:#ff8fd2;
+  --coral-bg:#ffe7ea; --teal-bg:#dcf4ef; --yellow-bg:#fff3d4; --violet-bg:#ebe4ff; --pink-bg:#ffe4f3;
+  --body:'Space Grotesk', system-ui, sans-serif;
+  --display:'Fraunces', Georgia, serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(800px 460px at 90% -5%, rgba(255,143,210,.16), transparent 60%),
+    radial-gradient(700px 700px at -8% 50%, rgba(15,181,163,.10), transparent 60%);
+  background-attachment:fixed;
+}
+::selection{background:var(--yellow);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+.shell{max-width:980px;margin:0 auto;padding:0 24px}
+
+header{padding:22px 0}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.crumb{
+  display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:2px solid var(--ink);border-radius:999px;padding:8px 18px;font-weight:700;font-size:13.5px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .15s, box-shadow .15s;
+}
+.crumb:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;background:var(--card);border:2px solid var(--ink);
+  border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;box-shadow:2px 2px 0 var(--ink);
+}
+.chip.live{background:var(--teal-bg)}
+
+h1{font-family:var(--display);font-weight:500;font-size:clamp(34px,5.4vw,58px);line-height:1.05;letter-spacing:-.02em;margin:26px 0 14px}
+h1 em{font-style:italic;color:var(--pink);background:linear-gradient(transparent 64%,var(--pink-bg) 64%)}
+.lede{color:var(--dim);max-width:640px;margin:0 0 26px;line-height:1.75}
+.lede b{color:var(--ink);font-weight:600}
+.lede code{font-family:var(--mono);font-size:12.5px;background:var(--card);border:1.5px solid var(--line);border-radius:6px;padding:1px 6px}
+
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:2px solid var(--ink);
+  border-radius:999px;background:var(--card);color:var(--ink);font-family:var(--body);
+  font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:3px 3px 0 var(--ink);
+  transition:transform .15s, box-shadow .15s;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+.btn.on{background:var(--violet);color:#fff}
+.hint{font-family:var(--mono);font-size:12px;color:var(--dim);margin-left:auto}
+
+.stage{
+  background:var(--card);border:2px solid var(--ink);border-radius:24px;
+  box-shadow:7px 7px 0 var(--ink);padding:12px;margin-bottom:34px;
+}
+#fluid{
+  display:block;width:100%;height:auto;aspect-ratio:16/10;border-radius:14px;
+  background:var(--paper);cursor:crosshair;touch-action:none;
+}
+.stage .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 8px 2px;font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+
+.explain{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:40px}
+@media (max-width:720px){.explain{grid-template-columns:1fr}}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:22px 26px;box-shadow:4px 4px 0 var(--ink)}
+.card h3{font-family:var(--display);font-size:21px;font-weight:600;margin:0 0 10px;letter-spacing:-.01em}
+.card p{color:var(--dim);font-size:13.5px;margin:0 0 10px;line-height:1.75}
+.card p b{color:var(--ink);font-weight:600}
+.card code{font-family:var(--mono);font-size:12px;background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:1px 6px}
+.steps{margin:8px 0 0;padding:0;list-style:none;font-size:13px;color:var(--dim)}
+.steps li{padding:4px 0 4px 22px;position:relative}
+.steps li::before{content:"→";position:absolute;left:0;color:var(--pink);font-weight:700}
+.steps li b{color:var(--ink)}
+
+footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+@media (prefers-reduced-motion: reduce){ *{transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<header>
+  <div class="bar">
+    <a class="crumb" href="../../">← tomás.erdmannsdörffer</a>
+    <span class="chip live">● live simulation · 120×120 grid</span>
+  </div>
+</header>
+
+<h1>The <em>Fluid</em> Playground</h1>
+<p class="lede">
+  A <b>real-time incompressible Navier-Stokes solver</b> — Jos Stam's <i>Stable Fluids</i> (1999) —
+  running in pure JavaScript, no libraries. <b>Drag anywhere on the canvas</b> to stir ink into the
+  velocity field; the solver advects it, keeps the field divergence-free
+  (<code>∇·u = 0</code>), and adds vorticity confinement so the small swirls don't dissipate.
+</p>
+
+<div class="controls">
+  <button class="btn" id="btnPause">⏸ pause</button>
+  <button class="btn" id="btnClear">🧹 clear</button>
+  <button class="btn on" id="btnVort">🌀 vorticity: on</button>
+  <span class="hint">ink color cycles on its own · works with touch</span>
+</div>
+
+<div class="stage">
+  <canvas id="fluid" aria-label="Interactive fluid simulation — drag to stir colored ink"></canvas>
+  <div class="foot">
+    <span>semi-Lagrangian advection · Gauss-Seidel pressure projection (20 iters) · vorticity confinement</span>
+    <span id="fps">— fps</span>
+  </div>
+</div>
+
+<div class="explain">
+  <div class="card">
+    <h3>How it works</h3>
+    <p>Each frame solves the incompressible Navier-Stokes equations on a 120×120 staggered-ish grid:</p>
+    <ul class="steps">
+      <li><b>Add forces</b> — your pointer injects momentum and three dye channels (RGB).</li>
+      <li><b>Vorticity confinement</b> — measures the curl and pushes energy back into swirls lost to numerical diffusion.</li>
+      <li><b>Advect</b> — semi-Lagrangian backtrace, unconditionally stable (the "stable" in Stable Fluids).</li>
+      <li><b>Project</b> — solves a pressure Poisson equation with Gauss-Seidel to make the field divergence-free.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Why I built it</h3>
+    <p>
+      My undergrad thesis trained and <b>compressed PINN surrogates for non-Newtonian (Carbopol)
+      fluid simulation</b> — so classical CFD solvers and their costs are close to home.
+    </p>
+    <p>
+      This is the other end of the spectrum: a coarse but <b>fully interactive solver at 60&nbsp;fps</b>,
+      the kind of resolution/speed trade-off that makes learned surrogates (PINNs, neural operators)
+      so attractive for the expensive cases. See the <a href="../fno-vs-solver/" style="font-weight:700;color:var(--teal)">FNO vs. Solver demo</a> for that story.
+    </p>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 Tomás Erdmannsdörffer</span>
+  <a href="../../">← back to portfolio</a>
+</footer>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- simulation state (Stam, "Real-Time Fluid Dynamics for Games") ---------- */
+var N = 120;                       // interior cells per side
+var SZ = (N + 2) * (N + 2);
+function IX(i, j){ return i + (N + 2) * j; }
+
+var u  = new Float32Array(SZ), v  = new Float32Array(SZ);
+var u0 = new Float32Array(SZ), v0 = new Float32Array(SZ);
+var dR = new Float32Array(SZ), dG = new Float32Array(SZ), dB = new Float32Array(SZ);
+var d0 = new Float32Array(SZ);
+var curl = new Float32Array(SZ);
+
+var DT = 0.1;
+var DISSIPATION = 0.994;
+var VORT_EPS = 2.4;
+var vortOn = true, paused = false;
+
+function set_bnd(b, x){
+  for(var i = 1; i <= N; i++){
+    x[IX(0,     i)] = b === 1 ? -x[IX(1, i)] : x[IX(1, i)];
+    x[IX(N + 1, i)] = b === 1 ? -x[IX(N, i)] : x[IX(N, i)];
+    x[IX(i,     0)] = b === 2 ? -x[IX(i, 1)] : x[IX(i, 1)];
+    x[IX(i, N + 1)] = b === 2 ? -x[IX(i, N)] : x[IX(i, N)];
+  }
+  x[IX(0, 0)]         = .5 * (x[IX(1, 0)] + x[IX(0, 1)]);
+  x[IX(0, N + 1)]     = .5 * (x[IX(1, N + 1)] + x[IX(0, N)]);
+  x[IX(N + 1, 0)]     = .5 * (x[IX(N, 0)] + x[IX(N + 1, 1)]);
+  x[IX(N + 1, N + 1)] = .5 * (x[IX(N, N + 1)] + x[IX(N + 1, N)]);
+}
+
+function lin_solve(b, x, x0, a, c, iter){
+  var cr = 1 / c;
+  for(var k = 0; k < iter; k++){
+    for(var j = 1; j <= N; j++){
+      var row = (N + 2) * j;
+      for(var i = 1; i <= N; i++){
+        var id = i + row;
+        x[id] = (x0[id] + a * (x[id - 1] + x[id + 1] + x[id - (N + 2)] + x[id + (N + 2)])) * cr;
+      }
+    }
+    set_bnd(b, x);
+  }
+}
+
+function advect(b, d, dPrev, uu, vv){
+  var dt0 = DT * N;
+  for(var j = 1; j <= N; j++){
+    for(var i = 1; i <= N; i++){
+      var id = IX(i, j);
+      var x = i - dt0 * uu[id], y = j - dt0 * vv[id];
+      if(x < .5) x = .5; if(x > N + .5) x = N + .5;
+      if(y < .5) y = .5; if(y > N + .5) y = N + .5;
+      var i0 = x | 0, i1 = i0 + 1, j0 = y | 0, j1 = j0 + 1;
+      var s1 = x - i0, s0 = 1 - s1, t1 = y - j0, t0 = 1 - t1;
+      d[id] = s0 * (t0 * dPrev[IX(i0, j0)] + t1 * dPrev[IX(i0, j1)])
+            + s1 * (t0 * dPrev[IX(i1, j0)] + t1 * dPrev[IX(i1, j1)]);
+    }
+  }
+  set_bnd(b, d);
+}
+
+function project(uu, vv, p, div){
+  var i, j, id;
+  for(j = 1; j <= N; j++) for(i = 1; i <= N; i++){
+    id = IX(i, j);
+    div[id] = -.5 * (uu[id + 1] - uu[id - 1] + vv[id + (N + 2)] - vv[id - (N + 2)]) / N;
+    p[id] = 0;
+  }
+  set_bnd(0, div); set_bnd(0, p);
+  lin_solve(0, p, div, 1, 4, 20);
+  for(j = 1; j <= N; j++) for(i = 1; i <= N; i++){
+    id = IX(i, j);
+    uu[id] -= .5 * N * (p[id + 1] - p[id - 1]);
+    vv[id] -= .5 * N * (p[id + (N + 2)] - p[id - (N + 2)]);
+  }
+  set_bnd(1, uu); set_bnd(2, vv);
+}
+
+function vorticityConfinement(){
+  var i, j, id;
+  for(j = 1; j <= N; j++) for(i = 1; i <= N; i++){
+    id = IX(i, j);
+    curl[id] = .5 * (v[id + 1] - v[id - 1] - u[id + (N + 2)] + u[id - (N + 2)]);
+  }
+  for(j = 2; j < N; j++) for(i = 2; i < N; i++){
+    id = IX(i, j);
+    var dwdx = .5 * (Math.abs(curl[id + 1]) - Math.abs(curl[id - 1]));
+    var dwdy = .5 * (Math.abs(curl[id + (N + 2)]) - Math.abs(curl[id - (N + 2)]));
+    var len = Math.sqrt(dwdx * dwdx + dwdy * dwdy) + 1e-5;
+    dwdx /= len; dwdy /= len;
+    u[id] += DT * VORT_EPS * dwdy * curl[id];
+    v[id] -= DT * VORT_EPS * dwdx * curl[id];
+  }
+}
+
+function step(){
+  if(vortOn) vorticityConfinement();
+  // velocity: project → advect → project (zero viscosity, stability from the scheme itself)
+  project(u, v, u0, v0);
+  u0.set(u); v0.set(v);
+  advect(1, u, u0, u0, v0);
+  advect(2, v, v0, u0, v0);
+  project(u, v, u0, v0);
+  // dye: dissipate then advect each channel
+  advectDye(dR); advectDye(dG); advectDye(dB);
+}
+function advectDye(d){
+  for(var k = 0; k < SZ; k++) d0[k] = d[k] * DISSIPATION;
+  advect(0, d, d0, u, v);
+}
+
+/* ---------- injection ---------- */
+var hue = Math.random() * 360;
+function hsl2rgb(h, s, l){
+  h = ((h % 360) + 360) % 360;
+  var c = (1 - Math.abs(2 * l - 1)) * s;
+  var x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  var m = l - c / 2, r = 0, g = 0, b = 0;
+  if(h < 60){ r = c; g = x; } else if(h < 120){ r = x; g = c; }
+  else if(h < 180){ g = c; b = x; } else if(h < 240){ g = x; b = c; }
+  else if(h < 300){ r = x; b = c; } else { r = c; b = x; }
+  return [r + m, g + m, b + m];
+}
+
+function inject(gx, gy, dx, dy, amount){
+  var col = hsl2rgb(hue, .85, .58);
+  var rad = 2;
+  for(var oj = -rad; oj <= rad; oj++){
+    for(var oi = -rad; oi <= rad; oi++){
+      var i = Math.round(gx) + oi, j = Math.round(gy) + oj;
+      if(i < 1 || i > N || j < 1 || j > N) continue;
+      var fall = Math.max(0, 1 - (oi * oi + oj * oj) / (rad * rad + 1));
+      var id = IX(i, j);
+      u[id] += dx * 14 * fall;
+      v[id] += dy * 14 * fall;
+      dR[id] = Math.min(1.6, dR[id] + col[0] * amount * fall);
+      dG[id] = Math.min(1.6, dG[id] + col[1] * amount * fall);
+      dB[id] = Math.min(1.6, dB[id] + col[2] * amount * fall);
+    }
+  }
+}
+
+/* ---------- pointer ---------- */
+var canvas = document.getElementById('fluid');
+var dragging = false, px = 0, py = 0, lastInteract = -1e9;
+
+function toGrid(e){
+  var r = canvas.getBoundingClientRect();
+  return [ (e.clientX - r.left) / r.width * N, (e.clientY - r.top) / r.height * N ];
+}
+canvas.addEventListener('pointerdown', function(e){
+  dragging = true;
+  var g = toGrid(e); px = g[0]; py = g[1];
+  lastInteract = performance.now();
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', function(e){
+  if(!dragging) return;
+  var g = toGrid(e);
+  inject(g[0], g[1], g[0] - px, g[1] - py, .55);
+  px = g[0]; py = g[1];
+  lastInteract = performance.now();
+});
+addEventListener('pointerup', function(){ dragging = false; });
+
+/* idle attract mode: a wandering emitter keeps it alive until the user plays */
+var autoT = 0;
+function autoSwirl(dt){
+  autoT += dt;
+  var cx = N / 2 + N * .3 * Math.sin(autoT * .7);
+  var cy = N / 2 + N * .28 * Math.sin(autoT * 1.13 + 1.4);
+  var dx = N * .3 * .7 * Math.cos(autoT * .7) * dt;
+  var dy = N * .28 * 1.13 * Math.cos(autoT * 1.13 + 1.4) * dt;
+  inject(cx, cy, dx * 2.4, dy * 2.4, .3);
+}
+
+/* ---------- controls ---------- */
+document.getElementById('btnClear').addEventListener('click', function(){
+  u.fill(0); v.fill(0); dR.fill(0); dG.fill(0); dB.fill(0);
+});
+var btnPause = document.getElementById('btnPause');
+btnPause.addEventListener('click', function(){
+  paused = !paused;
+  btnPause.textContent = paused ? '▶ play' : '⏸ pause';
+  btnPause.classList.toggle('on', paused);
+});
+var btnVort = document.getElementById('btnVort');
+btnVort.addEventListener('click', function(){
+  vortOn = !vortOn;
+  btnVort.textContent = '🌀 vorticity: ' + (vortOn ? 'on' : 'off');
+  btnVort.classList.toggle('on', vortOn);
+});
+
+/* ---------- rendering ---------- */
+var off = document.createElement('canvas');
+off.width = N; off.height = N;
+var offCtx = off.getContext('2d');
+var img = offCtx.createImageData(N, N);
+var ctx = canvas.getContext('2d');
+
+function sizeCanvas(){
+  var r = canvas.getBoundingClientRect();
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  canvas.width  = Math.max(2, Math.round(r.width * dpr));
+  canvas.height = Math.max(2, Math.round(r.height * dpr));
+}
+sizeCanvas();
+addEventListener('resize', sizeCanvas, { passive:true });
+
+var PR = 247, PG = 242, PB = 232;   // paper color
+function render(){
+  var data = img.data, k = 0;
+  for(var j = 1; j <= N; j++){
+    for(var i = 1; i <= N; i++){
+      var id = IX(i, j);
+      var r = dR[id], g = dG[id], b = dB[id];
+      var tot = r + g + b;
+      var a = 1 - Math.exp(-tot * 2.2);
+      if(tot < 1e-6){
+        data[k] = PR; data[k+1] = PG; data[k+2] = PB;
+      } else {
+        var inv = 1 / tot;
+        data[k]   = PR * (1 - a) + (r * inv * 255) * a;
+        data[k+1] = PG * (1 - a) + (g * inv * 255) * a;
+        data[k+2] = PB * (1 - a) + (b * inv * 255) * a;
+      }
+      data[k+3] = 255;
+      k += 4;
+    }
+  }
+  offCtx.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
+}
+
+/* ---------- main loop ---------- */
+var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+var fpsEl = document.getElementById('fps'), frames = 0, fpsT = performance.now();
+var last = performance.now();
+
+function loop(now){
+  requestAnimationFrame(loop);
+  var dt = Math.min((now - last) / 1000, .05);
+  last = now;
+  if(document.hidden) return;
+  if(!paused){
+    hue += 28 * dt;
+    if(!reduced && now - lastInteract > 2500) autoSwirl(dt);
+    step();
+  }
+  render();
+  frames++;
+  if(now - fpsT > 1000){
+    fpsEl.textContent = frames + ' fps';
+    frames = 0; fpsT = now;
+  }
+}
+requestAnimationFrame(loop);
+
+/* seed a first splash so the canvas is never empty */
+inject(N * .5, N * .55, 1.2, -.8, .9);
+inject(N * .35, N * .45, -.8, .9, .9);
+
+})();
+</script>
+
+</body>
+</html>

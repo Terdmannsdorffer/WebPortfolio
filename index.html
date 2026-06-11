@@ -1,0 +1,1468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tomás Erdmannsdörffer — ML / AI Engineer</title>
+<meta name="description" content="Machine Learning Engineer with a background in scientific computing and deep learning. PyTorch, JAX, CUDA, Physics-Informed Neural Networks. MSc Mechanical Engineering @ PUC Chile, currently at University of Graz.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f2e8; --card:#fffdf7;
+  --ink:#26243a; --dim:#6e6a80; --faint:#9d99a8;
+  --line:#e6ddcc;
+  --coral:#ff5d73; --teal:#0fb5a3; --yellow:#ffc445; --violet:#7c5cff; --pink:#ff8fd2; --blue:#52a7ff;
+  --coral-bg:#ffe7ea; --teal-bg:#dcf4ef; --yellow-bg:#fff3d4; --violet-bg:#ebe4ff; --pink-bg:#ffe4f3; --blue-bg:#e2f0ff;
+  --body:'Space Grotesk', system-ui, sans-serif;
+  --display:'Fraunces', Georgia, serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --sh-sm:3px 3px 0 var(--ink);
+  --sh:5px 5px 0 var(--ink);
+  --sh-lg:8px 8px 0 var(--ink);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--body); font-size:15.5px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(900px 520px at 85% -5%, rgba(255,196,69,.18), transparent 60%),
+    radial-gradient(700px 700px at -8% 35%, rgba(124,92,255,.10), transparent 60%),
+    radial-gradient(800px 600px at 110% 75%, rgba(15,181,163,.10), transparent 60%);
+  background-attachment:fixed;
+}
+::selection{background:var(--yellow);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+canvas{display:block}
+.shell{max-width:1140px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+
+/* ===== NAV ===== */
+header.top{position:sticky;top:14px;z-index:100;padding:0 20px}
+.top-inner{
+  max-width:1100px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  background:var(--card);border:2px solid var(--ink);border-radius:999px;
+  box-shadow:var(--sh-sm);padding:10px 22px;font-size:14px;font-weight:600;
+}
+.top .brand{letter-spacing:.01em;font-weight:700}
+.top .brand .dot{color:var(--coral)}
+.top nav{display:flex;gap:4px}
+.top nav a{color:var(--dim);padding:5px 12px;border-radius:999px;transition:.15s}
+.top nav a:hover{color:var(--ink);background:var(--yellow-bg)}
+.top .status{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);
+  background:var(--teal-bg);border:2px solid var(--ink);border-radius:999px;padding:4px 12px}
+.status .pulse{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(15,181,163,.7);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(15,181,163,.55)}70%{box-shadow:0 0 0 8px rgba(15,181,163,0)}100%{box-shadow:0 0 0 0 rgba(15,181,163,0)}}
+
+/* ===== HERO ===== */
+section.hero{position:relative;padding:96px 0 90px;overflow:hidden;min-height:78vh;display:flex;align-items:center}
+#hero3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-inner{position:relative;z-index:1}
+.chip-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--card);border:2px solid var(--ink);border-radius:999px;
+  padding:6px 14px;font-size:12.5px;font-weight:600;box-shadow:2px 2px 0 var(--ink);
+}
+.chip.wave{background:var(--yellow)}
+.hero h1{
+  font-family:var(--display);font-weight:500;
+  font-size:clamp(38px,5.6vw,72px);line-height:1.04;letter-spacing:-.02em;
+  margin:0 0 26px;max-width:820px;font-variation-settings:"opsz" 144;
+}
+.hero h1 em{font-style:italic;font-weight:500}
+.hl-coral{color:var(--coral);background:linear-gradient(transparent 64%,var(--coral-bg) 64%)}
+.hl-violet{color:var(--violet);background:linear-gradient(transparent 64%,var(--violet-bg) 64%)}
+.hl-teal{color:var(--teal);background:linear-gradient(transparent 64%,var(--teal-bg) 64%)}
+.hero .lede{max-width:640px;font-size:16.5px;color:var(--dim);line-height:1.75;margin:0 0 34px}
+.hero .lede b{color:var(--ink);font-weight:600}
+.cta{display:flex;gap:14px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:13px 24px;border:2px solid var(--ink);border-radius:999px;
+  background:var(--card);color:var(--ink);
+  font-family:var(--body);font-size:14.5px;font-weight:700;cursor:pointer;
+  box-shadow:var(--sh-sm);transition:transform .15s, box-shadow .15s;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:var(--sh)}
+.btn:active{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
+.btn.primary{background:var(--coral);color:#fff}
+.btn.sun{background:var(--yellow)}
+.btn .arr{transition:transform .2s}
+.btn:hover .arr{transform:translateX(3px)}
+
+/* stats stickers */
+.stat-strip{display:flex;gap:20px;flex-wrap:wrap;margin-top:54px}
+.stat{
+  background:var(--card);border:2px solid var(--ink);border-radius:18px;
+  padding:16px 22px;box-shadow:var(--sh-sm);min-width:150px;
+  transition:transform .2s;
+}
+.stat:nth-child(1){transform:rotate(-2deg);background:var(--coral-bg)}
+.stat:nth-child(2){transform:rotate(1.4deg);background:var(--teal-bg)}
+.stat:nth-child(3){transform:rotate(-1.2deg);background:var(--violet-bg)}
+.stat:nth-child(4){transform:rotate(1.8deg);background:var(--yellow-bg)}
+.stat:hover{transform:rotate(0) translateY(-3px)}
+.stat .v{font-family:var(--display);font-size:34px;font-weight:600;line-height:1;letter-spacing:-.01em}
+.stat .v .unit{font-family:var(--mono);font-size:13px;font-weight:500;margin-left:4px;color:var(--dim)}
+.stat .k{font-size:11px;color:var(--dim);letter-spacing:.07em;text-transform:uppercase;margin-top:7px;font-weight:600}
+
+/* ===== MARQUEE ===== */
+.marquee{
+  background:var(--ink);color:var(--paper);
+  border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);
+  transform:rotate(-1deg) scale(1.02);
+  overflow:hidden;white-space:nowrap;padding:13px 0;
+  font-family:var(--mono);font-size:13.5px;font-weight:500;letter-spacing:.04em;
+  position:relative;z-index:2;
+}
+.marquee .track{display:inline-block;animation:marq 26s linear infinite}
+.marquee span{margin:0 18px}
+.marquee .s1{color:var(--yellow)} .marquee .s2{color:var(--pink)} .marquee .s3{color:var(--teal)} .marquee .s4{color:var(--blue)}
+@keyframes marq{to{transform:translateX(-50%)}}
+
+/* ===== SECTIONS ===== */
+section{padding:96px 0;position:relative}
+.sec-head{display:flex;align-items:center;gap:18px;margin-bottom:48px;flex-wrap:wrap}
+.sec-num{
+  width:46px;height:46px;flex:0 0 46px;border:2px solid var(--ink);border-radius:50%;
+  display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:15px;
+  box-shadow:2px 2px 0 var(--ink);transform:rotate(-6deg);
+}
+.sec-head h2{font-family:var(--display);font-weight:600;font-size:clamp(30px,4.2vw,46px);letter-spacing:-.02em;margin:0;line-height:1.05}
+.sec-head h2 em{font-style:italic;font-weight:500}
+.sec-note{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--dim);
+  border:2px dashed var(--faint);border-radius:999px;padding:6px 14px}
+@media (max-width:700px){.sec-note{display:none}}
+
+/* ===== CURRENTLY ===== */
+.currently{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:start}
+.currently h3{font-family:var(--display);font-weight:500;font-size:clamp(28px,3.4vw,38px);line-height:1.12;letter-spacing:-.01em;margin:0 0 18px}
+.currently h3 em{font-style:italic;color:var(--coral)}
+.currently p{color:var(--dim);font-size:15px;line-height:1.85;margin:0 0 14px}
+.currently p b{color:var(--ink);font-weight:600}
+.heart-card{
+  background:var(--card);border:2px solid var(--ink);border-radius:20px;
+  box-shadow:var(--sh-sm);padding:10px;margin:26px 0 0;max-width:330px;
+  transform:rotate(-1.5deg);
+}
+.heart-card canvas{width:100%;height:190px;cursor:pointer;border-radius:12px;background:var(--coral-bg)}
+.heart-card .cap{font-family:var(--mono);font-size:11.5px;color:var(--dim);text-align:center;padding:8px 4px 4px}
+ul.now{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:14px}
+ul.now li{
+  background:var(--card);border:2px solid var(--ink);border-radius:16px;
+  padding:16px 20px;box-shadow:var(--sh-sm);font-size:14px;color:var(--dim);line-height:1.65;
+  transition:transform .15s;
+}
+ul.now li:hover{transform:translateX(4px)}
+ul.now li b{color:var(--ink);font-weight:600}
+ul.now li .when{
+  display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  border-radius:999px;padding:2px 10px;margin-bottom:8px;font-weight:600;border:1.5px solid var(--ink);
+}
+.tag-coral{background:var(--coral-bg);color:var(--ink)}
+.tag-teal{background:var(--teal-bg);color:var(--ink)}
+.tag-violet{background:var(--violet-bg);color:var(--ink)}
+.tag-yellow{background:var(--yellow-bg);color:var(--ink)}
+@media (max-width:820px){.currently{grid-template-columns:1fr;gap:36px}}
+
+/* ===== DEMOS ===== */
+.demos{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+@media (max-width:980px){.demos{grid-template-columns:1fr 1fr}}
+@media (max-width:660px){.demos{grid-template-columns:1fr}}
+.demo{
+  background:var(--card);border:2px solid var(--ink);border-radius:22px;
+  overflow:hidden;display:flex;flex-direction:column;color:inherit;
+  box-shadow:var(--sh);transition:transform .2s, box-shadow .2s;
+}
+.demo:hover{transform:translate(-4px,-4px);box-shadow:var(--sh-lg)}
+.demo .preview{height:200px;border-bottom:2px solid var(--ink);position:relative;overflow:hidden}
+.demo .preview canvas{position:absolute;inset:0;width:100%;height:100%}
+.demo .preview .fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:54px}
+.webgl .preview .fallback{display:none}
+.demo .preview .tag{
+  position:absolute;z-index:2;font-family:var(--mono);font-size:10px;font-weight:600;
+  background:var(--card);border:1.5px solid var(--ink);border-radius:999px;padding:3px 10px;
+}
+.demo .preview .tag.bl{left:10px;bottom:10px}
+.demo .preview .tag.br{right:10px;bottom:10px}
+.bg-teal{background:var(--teal-bg)} .bg-violet{background:var(--violet-bg)} .bg-yellow{background:var(--yellow-bg)}
+.demo .body{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}
+.demo .badge{
+  align-self:flex-start;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 11px;border:1.5px solid var(--ink);border-radius:999px;margin-bottom:12px;
+}
+.demo h4{font-family:var(--display);font-size:23px;font-weight:600;margin:0 0 8px;letter-spacing:-.01em}
+.demo p{color:var(--dim);font-size:13.5px;margin:0 0 16px;line-height:1.7;flex:1}
+.demo p b{color:var(--ink);font-weight:600}
+.demo .stack{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.demo .chip-t{font-family:var(--mono);font-size:10.5px;padding:3px 10px;border:1.5px solid var(--line);border-radius:999px;color:var(--dim);background:var(--paper)}
+.demo .open{display:flex;align-items:center;gap:7px;font-weight:700;font-size:14px}
+.demo:hover .open .arr{transform:translateX(4px)}
+.demo .open .arr{transition:transform .2s}
+.demo.d1 .badge,.demo.d1 .open{color:var(--teal)} .demo.d1 .badge{background:var(--teal-bg)}
+.demo.d2 .badge,.demo.d2 .open{color:var(--violet)} .demo.d2 .badge{background:var(--violet-bg)}
+.demo.d3 .badge,.demo.d3 .open{color:#d99a00} .demo.d3 .badge{background:var(--yellow-bg)}
+.demo.d4 .badge,.demo.d4 .open{color:#e0529c} .demo.d4 .badge{background:var(--pink-bg)}
+.demo.d5 .badge,.demo.d5 .open{color:#2f7fd6} .demo.d5 .badge{background:var(--blue-bg)}
+
+/* ===== JOURNEY ===== */
+.timeline{position:relative;padding-left:46px;max-width:820px}
+.timeline::before{content:"";position:absolute;left:10px;top:10px;bottom:10px;border-left:3px dashed #d6cbb6}
+.tl-item{position:relative;margin-bottom:26px}
+.tl-item:last-child{margin-bottom:0}
+.tl-dot{
+  position:absolute;left:-46px;top:18px;width:20px;height:20px;border-radius:50%;
+  border:2.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink);background:#ddd3c2;
+  transition:background .35s, transform .35s;
+}
+.tl-item.lit .tl-dot{background:var(--coral);transform:scale(1.18)}
+.tl-item.research.lit .tl-dot{background:var(--violet)}
+.tl-item.education.lit .tl-dot{background:var(--teal)}
+.tl-item.teaching.lit .tl-dot{background:var(--yellow)}
+.tl-progress{
+  position:absolute;left:9px;top:10px;width:5px;height:0;z-index:0;border-radius:4px;
+  background:linear-gradient(180deg,var(--coral),var(--violet),var(--teal));
+}
+.tl-card{
+  background:var(--card);border:2px solid var(--ink);border-radius:18px;
+  padding:22px 26px;box-shadow:var(--sh-sm);transition:transform .15s, box-shadow .15s;
+}
+.tl-card:hover{transform:translate(-2px,-2px);box-shadow:var(--sh)}
+.tl-item .when{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;font-weight:500}
+.tl-item h4{font-family:var(--display);font-size:20px;font-weight:600;margin:0 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;letter-spacing:-.01em}
+.pill{
+  font-family:var(--mono);font-size:9.5px;font-weight:600;padding:2.5px 9px;border-radius:999px;
+  letter-spacing:.07em;text-transform:uppercase;border:1.5px solid var(--ink);
+}
+.pill.work{background:var(--coral-bg)} .pill.res{background:var(--violet-bg)}
+.pill.edu{background:var(--teal-bg)} .pill.teach{background:var(--yellow-bg)} .pill.prod{background:var(--blue-bg)}
+.tl-item .where{color:var(--dim);font-size:13px;margin-bottom:12px}
+.tl-item p{color:var(--dim);font-size:14px;margin:0 0 14px;line-height:1.75}
+.tl-item p b{color:var(--ink);font-weight:600}
+.highlights{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.hl-chip{font-size:12px;font-weight:600;padding:5px 12px;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;color:var(--ink)}
+.hl-chip .n{color:var(--coral);margin-right:6px;font-family:var(--mono)}
+.tech{display:flex;flex-wrap:wrap;gap:6px}
+.tech .t{font-family:var(--mono);font-size:10.5px;padding:3px 10px;border:1.5px solid var(--line);border-radius:999px;color:var(--dim)}
+
+/* ===== PROJECTS ===== */
+.proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+@media (max-width:760px){.proj-grid{grid-template-columns:1fr}}
+.proj-card{
+  background:var(--card);border:2px solid var(--ink);border-radius:20px;overflow:hidden;
+  box-shadow:var(--sh-sm);transition:transform .2s, box-shadow .2s;display:flex;flex-direction:column;
+}
+.proj-card:hover{transform:translate(-3px,-3px);box-shadow:var(--sh)}
+.proj-bar{height:12px;border-bottom:2px solid var(--ink)}
+.proj-card .inner{padding:22px 26px 26px}
+.proj-card h4{font-family:var(--display);font-size:21px;font-weight:600;margin:0 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;letter-spacing:-.01em}
+.proj-card .when{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+.proj-card p{color:var(--dim);font-size:13.5px;margin:0 0 14px;line-height:1.7}
+.proj-card p b{color:var(--ink);font-weight:600}
+.proj-card ul{margin:0 0 16px;padding:0;list-style:none;font-size:13px;color:var(--dim)}
+.proj-card ul li{padding:3px 0 3px 20px;position:relative;line-height:1.6}
+.proj-card ul li::before{content:"→";position:absolute;left:0;color:var(--coral);font-weight:700}
+.proj-card ul li b{color:var(--ink);font-weight:600}
+
+/* ===== SKILLS ===== */
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px}
+.skill-col{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:20px 22px;box-shadow:var(--sh-sm)}
+.skill-col h5{
+  font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  margin:0 0 16px;display:inline-block;padding:4px 12px;border:1.5px solid var(--ink);border-radius:999px;
+}
+.skill-col.c-coral h5{background:var(--coral-bg)} .skill-col.c-teal h5{background:var(--teal-bg)}
+.skill-col.c-violet h5{background:var(--violet-bg)} .skill-col.c-yellow h5{background:var(--yellow-bg)}
+.skill-col ul{margin:0;padding:0;list-style:none;font-size:13.5px;color:var(--dim)}
+.skill-col li{padding:5px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.skill-col li .name b{color:var(--ink);font-weight:600}
+.skill-col li .lvl{display:flex;gap:3px}
+.skill-col li .lvl span{width:7px;height:7px;background:var(--line);border-radius:50%}
+.skill-col.c-coral .lvl span.on{background:var(--coral)}
+.skill-col.c-teal .lvl span.on{background:var(--teal)}
+.skill-col.c-violet .lvl span.on{background:var(--violet)}
+.skill-col.c-yellow .lvl span.on{background:var(--yellow);border:1px solid #e0a800}
+.lang-row{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap}
+.lang-row .chip b{font-weight:700}
+
+/* ===== CONTACT ===== */
+.contact-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+.contact-grid h2.big{font-family:var(--display);font-weight:500;font-size:clamp(34px,4.6vw,58px);line-height:1.06;letter-spacing:-.02em;margin:0 0 18px}
+.contact-grid h2.big em{font-style:italic;color:var(--coral)}
+.contact-grid p.intro{color:var(--dim);font-size:15.5px;max-width:440px;margin:0 0 30px;line-height:1.75}
+.contact-list{display:flex;flex-direction:column;gap:12px;max-width:480px}
+.contact-list a.row,.contact-list .row{
+  display:flex;align-items:center;gap:16px;
+  background:var(--card);border:2px solid var(--ink);border-radius:999px;
+  padding:12px 22px;font-size:14.5px;font-weight:600;box-shadow:var(--sh-sm);
+  transition:transform .15s, box-shadow .15s;
+}
+.contact-list a.row:hover{transform:translate(-2px,-2px);box-shadow:var(--sh)}
+.contact-list .row .k{
+  font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  border:1.5px solid var(--ink);border-radius:999px;padding:3px 10px;flex:0 0 auto;
+}
+.contact-list .row:nth-child(1) .k{background:var(--coral-bg)}
+.contact-list .row:nth-child(2) .k{background:var(--violet-bg)}
+.contact-list .row:nth-child(3) .k{background:var(--blue-bg)}
+.contact-list .row:nth-child(4) .k{background:var(--teal-bg)}
+.smiley-wrap{justify-self:center;text-align:center}
+.smiley-wrap canvas{
+  width:300px;height:300px;max-width:100%;cursor:pointer;
+  background:var(--yellow-bg);border:2px solid var(--ink);border-radius:28px;box-shadow:var(--sh);
+}
+.smiley-wrap .cap{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-top:12px}
+@media (max-width:820px){.contact-grid{grid-template-columns:1fr;gap:40px}.smiley-wrap{justify-self:start}}
+
+footer{padding:36px 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:2px dashed #d6cbb6;margin-top:20px}
+footer .blink{color:var(--coral);animation:blink 1.2s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+footer a:hover{color:var(--ink)}
+
+/* reveal-on-scroll */
+.fx{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease;transition-delay:var(--d,0s)}
+.fx.in{opacity:1;transform:none}
+
+/* scroll-driven bits */
+#scrollProgress{
+  position:fixed;top:0;left:0;height:5px;width:0;z-index:300;
+  background:linear-gradient(90deg,var(--coral),var(--yellow),var(--teal),var(--violet));
+  border-radius:0 4px 4px 0;
+}
+.mq-shift{white-space:nowrap;will-change:transform}
+.doodle{
+  position:absolute;z-index:0;pointer-events:none;user-select:none;
+  opacity:.5;will-change:transform;line-height:1;
+}
+.doodle.ring{width:60px;height:60px;border:7px solid var(--teal);border-radius:50%}
+.doodle.sq{width:46px;height:46px;border:7px solid var(--pink);border-radius:12px}
+.scrollword{overflow:hidden;white-space:nowrap;padding:24px 0 0;pointer-events:none}
+.sw-track{
+  display:inline-block;font-family:var(--display);font-style:italic;font-weight:600;
+  font-size:clamp(64px,9vw,120px);letter-spacing:.02em;line-height:1.1;
+  color:transparent;-webkit-text-stroke:2px var(--ink);opacity:.4;will-change:transform;
+}
+
+@media (max-width:720px){
+  .shell{padding:0 20px}
+  header.top{top:10px;padding:0 12px}
+  .top-inner{padding:9px 18px}
+  .top nav{display:none}
+  section{padding:64px 0}
+  section.hero{padding:70px 0 64px;min-height:0}
+  .timeline{padding-left:36px}
+  .tl-dot{left:-36px;width:16px;height:16px}
+  .stat{min-width:130px;padding:13px 18px}
+}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .fx{opacity:1;transform:none;transition:none}
+  .marquee .track{animation:none}
+  .status .pulse{animation:none}
+  footer .blink{animation:none}
+  *{transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<div id="scrollProgress" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-inner">
+    <a href="#top" class="brand">tomás<span class="dot">.</span>erdmannsdörffer</a>
+    <nav>
+      <a href="#demos">demos</a>
+      <a href="#journey">journey</a>
+      <a href="#projects">projects</a>
+      <a href="#skills">skills</a>
+      <a href="#contact">contact</a>
+    </nav>
+    <div class="status"><span class="pulse"></span>open to roles</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <canvas id="hero3d" aria-hidden="true"></canvas>
+  <div class="shell hero-inner">
+    <div class="chip-row fx">
+      <span class="chip wave">👋 hi, I'm Tomás</span>
+      <span class="chip">📍 graz, AT · santiago, CL</span>
+      <span class="chip">🎓 msc eng. @ puc chile</span>
+      <span class="chip">🔬 visiting researcher @ uni graz</span>
+    </div>
+
+    <h1 class="fx" style="--d:.08s">
+      ML engineer making <em class="hl-coral">physics</em>,
+      <em class="hl-violet">neural networks</em> &amp;
+      <em class="hl-teal">browsers</em> play nicely together.
+    </h1>
+
+    <p class="lede fx" style="--d:.16s">
+      I work the full stack of machine learning — <b>training and compressing models</b>,
+      building <b>LLM pipelines</b>, shipping backends to production. Currently researching
+      cardiac fiber modeling with <b>Physics-Informed Neural Networks</b> at the University of Graz.
+      Everything 3D on this page runs live, right here in your browser.
+    </p>
+
+    <div class="cta fx" style="--d:.24s">
+      <a class="btn primary" href="#demos">live demos <span class="arr">→</span></a>
+      <a class="btn sun" href="#journey">my journey</a>
+      <a class="btn" href="./cv.pdf" target="_blank" rel="noopener">cv (pdf)</a>
+    </div>
+
+    <div class="stat-strip fx" style="--d:.32s">
+      <div class="stat"><div class="v">4<span class="unit">yrs</span></div><div class="k">building software</div></div>
+      <div class="stat"><div class="v">5<span class="unit">live</span></div><div class="k">in-browser ML demos</div></div>
+      <div class="stat"><div class="v">3<span class="unit">intern.</span></div><div class="k">citi · falabella · graz</div></div>
+      <div class="stat"><div class="v">6<span class="unit">courses</span></div><div class="k">taught as TA</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee" aria-hidden="true">
+  <div class="mq-shift" id="mqShift">
+  <div class="track">
+    <span>PyTorch</span><span class="s1">✦</span><span>JAX</span><span class="s2">✦</span><span>CUDA</span><span class="s3">✦</span><span>PINNs</span><span class="s4">✦</span><span>RAG</span><span class="s1">✦</span><span>Quantization</span><span class="s2">✦</span><span>Distillation</span><span class="s3">✦</span><span>TensorFlow.js</span><span class="s4">✦</span><span>Django</span><span class="s1">✦</span><span>React</span><span class="s2">✦</span><span>Docker</span><span class="s3">✦</span><span>WebGL</span><span class="s4">✦</span>
+    <span>PyTorch</span><span class="s1">✦</span><span>JAX</span><span class="s2">✦</span><span>CUDA</span><span class="s3">✦</span><span>PINNs</span><span class="s4">✦</span><span>RAG</span><span class="s1">✦</span><span>Quantization</span><span class="s2">✦</span><span>Distillation</span><span class="s3">✦</span><span>TensorFlow.js</span><span class="s4">✦</span><span>Django</span><span class="s1">✦</span><span>React</span><span class="s2">✦</span><span>Docker</span><span class="s3">✦</span><span>WebGL</span><span class="s4">✦</span>
+  </div>
+  </div>
+</div>
+
+<!-- CURRENTLY -->
+<section id="now">
+  <div class="shell">
+    <div class="sec-head fx">
+      <span class="sec-num" style="background:var(--coral-bg)">·</span>
+      <h2>Currently</h2>
+      <span class="sec-note">june 2026 · graz, austria</span>
+    </div>
+
+    <div class="currently">
+      <div class="fx">
+        <h3>Researching <em>cardiac fiber mechanics</em> with PINNs.</h3>
+        <p>
+          I'm a few months into a visiting research stay at the <b>University of Graz</b>, working with
+          Dr. Federica Caforio on physics-informed neural networks for myocardial tissue modeling.
+          Most of my time goes into <b>my MSc thesis</b>: extending PINNs to anisotropic
+          hyperelastic constitutive laws (Guccione, Holzapfel-Ogden) for cardiac biomechanics.
+        </p>
+        <p>
+          Beyond research, I like exploring what programming can do — <b>web experiments</b> like
+          the five live demos on this page, <b>neural-network architectures</b>, backends…
+          whatever looks fun to build next.
+        </p>
+        <div class="heart-card">
+          <canvas id="heart3d" aria-label="A beating 3D heart"></canvas>
+          <div class="cap">^ roughly what I study (click it!)</div>
+        </div>
+      </div>
+
+      <ul class="now">
+        <li class="fx"><span class="when tag-coral">research</span><br>
+          <b>MSc thesis</b> — cardiac motion estimation with anisotropic hyperelastic PINNs in JAX.</li>
+        <li class="fx" style="--d:.08s"><span class="when tag-violet">writing</span><br>
+          <b>Compression thesis manuscript</b> — knowledge distillation + pruning + quantization on PINNs.</li>
+        <li class="fx" style="--d:.16s"><span class="when tag-yellow">exploring</span><br>
+          <b>Tiny language models</b> — sub-16MB architectures, custom tokenizers &amp; quantization.</li>
+        <li class="fx" style="--d:.24s"><span class="when tag-teal">building</span><br>
+          <b>Browser experiments</b> — PINNs, RAG, neural operators, fluids &amp; optimizers (all live below).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE DEMOS -->
+<section id="demos">
+  <span class="doodle" data-speed=".22" style="top:90px;right:4%;color:var(--yellow);font-size:70px" aria-hidden="true">✦</span>
+  <span class="doodle" data-speed=".12" style="bottom:60px;left:2.5%;color:var(--violet);font-size:38px" aria-hidden="true">✦</span>
+  <div class="shell">
+    <div class="sec-head fx">
+      <span class="sec-num" style="background:var(--teal-bg)">01</span>
+      <h2>Live <em>demos</em></h2>
+      <span class="sec-note">all run in your browser · no install</span>
+    </div>
+
+    <div class="demos">
+
+      <a href="./projects/pinn-playground/" class="demo d1 fx">
+        <div class="preview bg-teal">
+          <div class="fallback">🌊</div>
+          <canvas data-scene="wave" aria-hidden="true"></canvas>
+          <span class="tag bl">∂u/∂t + u·∂u/∂x = ν·∂²u/∂x²</span>
+        </div>
+        <div class="body">
+          <span class="badge">project · 01</span>
+          <h4>PINN Playground</h4>
+          <p>Train a <b>physics-informed neural network</b> in the browser to solve the 1D viscous Burgers equation. No labeled data — just the PDE and autodiff.</p>
+          <div class="stack">
+            <span class="chip-t">TensorFlow.js</span><span class="chip-t">WebGL</span><span class="chip-t">Autodiff</span>
+          </div>
+          <span class="open">launch demo <span class="arr">→</span></span>
+        </div>
+      </a>
+
+      <a href="./projects/rag-scientific-ml/" class="demo d2 fx" style="--d:.1s">
+        <div class="preview bg-violet">
+          <div class="fallback">📚</div>
+          <canvas data-scene="rag" aria-hidden="true"></canvas>
+          <span class="tag bl">query → retrieve → answer</span>
+        </div>
+        <div class="body">
+          <span class="badge">project · 02</span>
+          <h4>Ask My Research</h4>
+          <p><b>RAG system</b> over a curated corpus of 24 scientific ML papers — PINNs, neural operators, compression, LLM inference. Retrieval runs in your browser.</p>
+          <div class="stack">
+            <span class="chip-t">BM25</span><span class="chip-t">RAG</span><span class="chip-t">OpenAI-compatible</span>
+          </div>
+          <span class="open">launch demo <span class="arr">→</span></span>
+        </div>
+      </a>
+
+      <a href="./projects/fno-vs-solver/" class="demo d3 fx" style="--d:.2s">
+        <div class="preview bg-yellow">
+          <div class="fallback">⚡</div>
+          <canvas data-scene="race" aria-hidden="true"></canvas>
+          <span class="tag bl">solver · ~1600 steps</span>
+          <span class="tag br">operator · 1 call ⚡</span>
+        </div>
+        <div class="body">
+          <span class="badge">project · 03</span>
+          <h4>FNO vs. Solver</h4>
+          <p><b>Watch a neural operator solve Burgers ~10-50× faster</b> than a finite-difference solver — same answer, fundamentally different algorithm.</p>
+          <div class="stack">
+            <span class="chip-t">Cole-Hopf</span><span class="chip-t">Neural Operator</span><span class="chip-t">Burgers</span>
+          </div>
+          <span class="open">launch demo <span class="arr">→</span></span>
+        </div>
+      </a>
+
+      <a href="./projects/fluid-playground/" class="demo d4 fx" style="--d:.1s">
+        <div class="preview bg-pink">
+          <div class="fallback">🌀</div>
+          <canvas data-scene="fluid" aria-hidden="true"></canvas>
+          <span class="tag bl">∇·u = 0 · stable fluids</span>
+        </div>
+        <div class="body">
+          <span class="badge">project · 04</span>
+          <h4>Fluid Playground</h4>
+          <p>A <b>real-time Navier-Stokes solver</b> (Stam's stable fluids) on a 120² grid in pure JavaScript. Drag to stir candy-colored ink through a divergence-free velocity field.</p>
+          <div class="stack">
+            <span class="chip-t">Navier-Stokes</span><span class="chip-t">Vorticity</span><span class="chip-t">Canvas</span>
+          </div>
+          <span class="open">launch demo <span class="arr">→</span></span>
+        </div>
+      </a>
+
+      <a href="./projects/optimizer-race/" class="demo d5 fx" style="--d:.2s">
+        <div class="preview bg-blue">
+          <div class="fallback">🎢</div>
+          <canvas data-scene="optim" aria-hidden="true"></canvas>
+          <span class="tag bl">θ ← θ − η·∇L</span>
+        </div>
+        <div class="body">
+          <span class="badge">project · 05</span>
+          <h4>Optimizer Race</h4>
+          <p><b>SGD, Momentum, RMSProp &amp; Adam race</b> down a 3D loss landscape. Click anywhere on the surface to drop them somewhere new — who escapes the local minima?</p>
+          <div class="stack">
+            <span class="chip-t">Adam</span><span class="chip-t">Loss Landscapes</span><span class="chip-t">Three.js</span>
+          </div>
+          <span class="open">launch demo <span class="arr">→</span></span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- JOURNEY -->
+<section id="journey">
+  <span class="doodle ring" data-speed=".16" style="top:160px;right:6%" aria-hidden="true"></span>
+  <span class="doodle" data-speed=".1" style="bottom:200px;right:12%;color:var(--coral);font-size:46px" aria-hidden="true">✦</span>
+  <div class="shell">
+    <div class="sec-head fx">
+      <span class="sec-num" style="background:var(--violet-bg)">02</span>
+      <h2>My <em>journey</em></h2>
+      <span class="sec-note">2020 → today</span>
+    </div>
+
+    <div class="timeline">
+      <span class="tl-progress" id="tlProgress" aria-hidden="true"></span>
+
+      <div class="tl-item research fx">
+        <span class="tl-dot"></span>
+        <div class="tl-card">
+          <div class="when">feb 2026 — present · graz, AT</div>
+          <h4>Visiting Researcher <span class="pill res">research</span></h4>
+          <div class="where">Karl-Franzens-Universität Graz · with Dr. Federica Caforio</div>
+          <p>
+            Designing PINN architectures to solve high-dimensional PDEs in cardiac fiber mechanics
+            using JAX. Modeling myocardial tissue under <b>anisotropic hyperelastic constitutive laws</b>
+            (Guccione, Holzapfel-Ogden), evaluating reconstruction quality across multiple cardiac views.
+          </p>
+          <div class="highlights">
+            <span class="hl-chip"><span class="n">JAX</span>differentiable PDE simulation</span>
+            <span class="hl-chip"><span class="n">PINN</span>cardiac fiber mechanics</span>
+            <span class="hl-chip"><span class="n">MSE+SSIM</span>multi-view reconstruction eval</span>
+          </div>
+          <div class="tech">
+            <span class="t">JAX</span><span class="t">PINN</span><span class="t">Finite Elasticity</span><span class="t">MRI</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item education fx">
+        <span class="tl-dot"></span>
+        <div class="tl-card">
+          <div class="when">aug 2025 — present · santiago, CL</div>
+          <h4>MSc in Engineering Sciences <span class="pill edu">education</span></h4>
+          <div class="where">Pontificia Universidad Católica de Chile · Mechanical Engineering · advised by Prof. Francisco Sahli</div>
+          <p>
+            Researching PINNs for <b>cardiac fiber modeling</b> applied to PDEs — the foundation of
+            my work in Graz. The MSc deepens what started as a thesis on compressing PINNs.
+          </p>
+          <div class="tech">
+            <span class="t">JAX</span><span class="t">PyTorch</span><span class="t">PDEs</span><span class="t">Biomechanics</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item fx">
+        <span class="tl-dot"></span>
+        <div class="tl-card">
+          <div class="when">jan — feb 2025 · santiago, CL</div>
+          <h4>DevOps Intern <span class="pill work">internship</span></h4>
+          <div class="where">Citi · Chile Tech Center</div>
+          <p>
+            Maintained and optimized <b>3 legacy applications</b>, improved the production
+            <b>CI/CD pipeline</b> to reduce operational complexity and deployment time, and
+            collaborated on code migration via Bitbucket.
+          </p>
+          <div class="highlights">
+            <span class="hl-chip"><span class="n">3</span>legacy apps optimized</span>
+            <span class="hl-chip"><span class="n">↓</span>deployment time reduced</span>
+          </div>
+          <div class="tech">
+            <span class="t">Jenkins</span><span class="t">Bitbucket</span><span class="t">CI/CD</span><span class="t">Docker</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item research fx">
+        <span class="tl-dot"></span>
+        <div class="tl-card">
+          <div class="when">2024 — 2025 · santiago, CL</div>
+          <h4>Undergrad Thesis — PINN Compression <span class="pill res">research</span></h4>
+          <div class="where">Universidad de los Andes · manuscript in preparation</div>
+          <p>
+            Applied <b>knowledge distillation, pruning, and quantization</b> to PINN surrogates
+            for non-Newtonian (Carbopol) fluid simulation. Built the baseline PINN end-to-end,
+            then quantified precision vs. efficiency trade-offs across techniques.
+          </p>
+          <div class="highlights">
+            <span class="hl-chip"><span class="n">3</span>compression techniques studied</span>
+            <span class="hl-chip"><span class="n">PyTorch</span>baseline + students</span>
+          </div>
+          <div class="tech">
+            <span class="t">PyTorch</span><span class="t">PINN</span><span class="t">QAT</span><span class="t">Distillation</span><span class="t">CFD</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item teaching fx">
+        <span class="tl-dot"></span>
+        <div class="tl-card">
+          <div class="when">jun 2023 — dec 2024 · santiago, CL</div>
+          <h4>Teaching Assistant (×6 courses) <span class="pill teach">teaching</span></h4>
+          <div class="where">Universidad de los Andes · CS Department</div>
+          <p>
+            Supported <b>~30 students per semester</b> across Operating Systems, Low-Level Programming
+            (C/C++), Mobile Apps, Web Technologies, Automata &amp; Computability, and Programming
+            Fundamentals.
+          </p>
+          <div class="highlights">
+            <span class="hl-chip"><span class="n">6</span>distinct courses</span>
+            <span class="hl-chip"><span class="n">~30</span>students per semester</span>
+          </div>
+          <div class="tech">
+            <span class="t">C/C++</span><span class="t">Python</span><span class="t">Linux</span><span class="t">Web</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item fx">
+        <span class="tl-dot"></span>
+        <div class="tl-card">
+          <div class="when">dec 2023 — feb 2024 · santiago, CL</div>
+          <h4>AI Research Intern <span class="pill work">internship</span></h4>
+          <div class="where">Falabella Retail</div>
+          <p>
+            Researched generative AI tools for retail. Built a functional <b>prototype for automated
+            product descriptions</b>, transforming a manual process into an automated flow. Delivered
+            a technical proposal that continued in development post-internship.
+          </p>
+          <div class="highlights">
+            <span class="hl-chip"><span class="n">LLM</span>pipeline + prompt engineering</span>
+            <span class="hl-chip"><span class="n">→</span>proposal kept in dev post-intern</span>
+          </div>
+          <div class="tech">
+            <span class="t">LLM</span><span class="t">Python</span><span class="t">Prompt Eng.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item education fx">
+        <span class="tl-dot"></span>
+        <div class="tl-card">
+          <div class="when">mar 2020 — oct 2025 · santiago, CL</div>
+          <h4>BSc Civil Engineering in Computer Science <span class="pill edu">education</span></h4>
+          <div class="where">Universidad de los Andes · Minor in Innovation</div>
+          <p>
+            Coursework: <b>Low-Level Programming, AI, LLM, Computer Vision, Algorithms &amp; Competitive
+            Programming</b>, Databases, Web Technologies, Data Structures.
+          </p>
+          <div class="tech">
+            <span class="t">Python</span><span class="t">C/C++</span><span class="t">PyTorch</span><span class="t">React</span><span class="t">SQL</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <span class="doodle sq" data-speed=".2" style="top:110px;left:3%" aria-hidden="true"></span>
+  <div class="shell">
+    <div class="sec-head fx">
+      <span class="sec-num" style="background:var(--yellow-bg)">03</span>
+      <h2>Research &amp; <em>software</em></h2>
+      <span class="sec-note">beyond the demos</span>
+    </div>
+
+    <div class="proj-grid">
+
+      <div class="proj-card fx">
+        <div class="proj-bar" style="background:var(--violet)"></div>
+        <div class="inner">
+          <h4>Cardiac PINN Modeling <span class="pill res">MSc thesis</span></h4>
+          <div class="when">2025 — present</div>
+          <p>
+            Extending physics-informed neural networks to <b>anisotropic hyperelastic constitutive
+            models</b> for cardiac biomechanics. JAX pipeline adapted to the STACOM 2014 cardiac MRI benchmark.
+          </p>
+          <ul>
+            <li>Diagnosed a <b>7-orders-of-magnitude loss imbalance</b> in the fiber stretch term.</li>
+            <li>Ran <b>Pareto sweeps</b> over physics-to-data weight ratios.</li>
+            <li>Curriculum blending between Neo-Hookean and anisotropic regimes.</li>
+          </ul>
+          <div class="tech">
+            <span class="t">JAX</span><span class="t">PINN</span><span class="t">jaxpi</span><span class="t">Finite Elasticity</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="proj-card fx" style="--d:.08s">
+        <div class="proj-bar" style="background:var(--coral)"></div>
+        <div class="inner">
+          <h4>Tiny Language Models <span class="pill work">exploration</span></h4>
+          <div class="when">2025 — present</div>
+          <p>
+            Designing language models under <b>16MB</b> — custom tokenizers and quantized
+            Transformer architectures, benchmarked by bits-per-byte on FineWeb.
+          </p>
+          <ul>
+            <li>Trained locally on RTX 5060 Blackwell (sm_120, PyTorch cu128 nightly).</li>
+            <li>Background in PINN compression directly applicable.</li>
+          </ul>
+          <div class="tech">
+            <span class="t">PyTorch</span><span class="t">CUDA</span><span class="t">Quantization</span><span class="t">Tokenizers</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="proj-card fx">
+        <div class="proj-bar" style="background:var(--teal)"></div>
+        <div class="inner">
+          <h4>Turbo Files <span class="pill prod">production</span></h4>
+          <div class="when">sep 2024</div>
+          <p>
+            Fault-tolerant data transfer system shipped to a <b>mining company in production</b>.
+            Fragments large files for resilience over intermittent connectivity.
+          </p>
+          <ul>
+            <li>Google Drive + AWS S3 integration with variable file sizes.</li>
+            <li>Built end-to-end in <b>Django</b>.</li>
+          </ul>
+          <div class="tech">
+            <span class="t">Django</span><span class="t">AWS S3</span><span class="t">Drive API</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="proj-card fx" style="--d:.08s">
+        <div class="proj-bar" style="background:var(--blue)"></div>
+        <div class="inner">
+          <h4>Remote Locker <span class="pill prod">IoT · team</span></h4>
+          <div class="when">2024</div>
+          <p>
+            A connected parcel locker we built as a team: when a package arrives the locker is
+            <b>opened remotely from the cloud</b> — and it only unlocks when the right code is
+            entered on the web app.
+          </p>
+          <ul>
+            <li><b>MicroPython firmware</b> on an ESP32 driving the lock hardware.</li>
+            <li><b>AWS</b> bridges the web app and the device for remote open + code validation.</li>
+          </ul>
+          <div class="tech">
+            <span class="t">MicroPython</span><span class="t">ESP32</span><span class="t">AWS</span><span class="t">Web</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="shell">
+    <div class="sec-head fx">
+      <span class="sec-num" style="background:var(--pink-bg)">04</span>
+      <h2>The <em>stack</em></h2>
+    </div>
+
+    <div class="skills-grid">
+
+      <div class="skill-col c-coral fx">
+        <h5>ML / AI · core</h5>
+        <ul>
+          <li><span class="name"><b>PyTorch</b></span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></span></li>
+          <li><span class="name"><b>JAX</b></span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+          <li><span class="name">TensorFlow · Keras</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">HuggingFace</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+          <li><span class="name">CUDA</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">PINNs · diff. sim</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></span></li>
+          <li><span class="name">RAG · LLM agents</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+        </ul>
+      </div>
+
+      <div class="skill-col c-violet fx" style="--d:.06s">
+        <h5>Languages · code</h5>
+        <ul>
+          <li><span class="name"><b>Python</b></span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></span></li>
+          <li><span class="name">JavaScript</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">C / C++</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">C#</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">SQL</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+          <li><span class="name">LaTeX</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        </ul>
+      </div>
+
+      <div class="skill-col c-teal fx" style="--d:.12s">
+        <h5>Backend &amp; Web · apps</h5>
+        <ul>
+          <li><span class="name"><b>Django</b></span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+          <li><span class="name">Node.js</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">React</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">Ruby on Rails</span><span class="lvl"><span class="on"></span><span class="on"></span><span></span><span></span><span></span></span></li>
+          <li><span class="name">REST APIs</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        </ul>
+      </div>
+
+      <div class="skill-col c-yellow fx" style="--d:.18s">
+        <h5>DevOps &amp; Cloud · ops</h5>
+        <ul>
+          <li><span class="name">Docker · Git</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+          <li><span class="name"><b>AWS</b> (S3, Lambda)</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">Jenkins · Bitbucket</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span></li>
+          <li><span class="name">CI/CD</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+          <li><span class="name">Linux · WSL2</span><span class="lvl"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="lang-row fx">
+      <span class="chip">🗣️ <b>Spanish</b>&nbsp;native</span>
+      <span class="chip">🇬🇧 <b>English</b>&nbsp;C2 (IELTS)</span>
+      <span class="chip">🇦🇹 <b>German</b>&nbsp;A1 (and counting)</span>
+    </div>
+  </div>
+</section>
+
+<div class="scrollword" id="scrollword" aria-hidden="true">
+  <span class="sw-track" id="swTrack">say hi · come say hi · say hi · come say hi · say hi · come say hi · say hi · come say hi · say hi · come say hi&nbsp;·&nbsp;</span>
+</div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="shell">
+    <div class="sec-head fx">
+      <span class="sec-num" style="background:var(--blue-bg)">05</span>
+      <h2>Say <em>hi</em></h2>
+    </div>
+
+    <div class="contact-grid">
+      <div class="fx">
+        <h2 class="big">Let's build something <em>that actually runs.</em></h2>
+        <p class="intro">
+          Open to ML/AI engineer roles — remote, hybrid, or on-site globally.
+          Available part-time now; full-time after MSc completion.
+        </p>
+        <div class="contact-list">
+          <a class="row" href="mailto:terdmannsdorffer@gmail.com"><span class="k">email</span>terdmannsdorffer@gmail.com</a>
+          <a class="row" href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener"><span class="k">github</span>github.com/Terdmannsdorffer</a>
+          <a class="row" href="https://www.linkedin.com/in/tomas-erdmannsdorffer" target="_blank" rel="noopener"><span class="k">linkedin</span>in/tomas-erdmannsdorffer</a>
+          <div class="row"><span class="k">based</span>Graz, Austria · Santiago, Chile</div>
+        </div>
+      </div>
+
+      <div class="smiley-wrap fx" style="--d:.1s">
+        <canvas id="smiley3d" aria-label="A friendly 3D smiley — click to spin it"></canvas>
+        <div class="cap">click me, I spin · no PDE governs my joy</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="shell">
+  <div>© 2026 Tomás Erdmannsdörffer — 100% handmade, 0% template<span class="blink">_</span></div>
+  <div><a href="#top">back to top ↑</a></div>
+</footer>
+
+<script>
+/* scroll-reveal — plain script so it works even if WebGL/module loading fails */
+(function(){
+  var els = document.querySelectorAll('.fx');
+  if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in')}); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  },{threshold:0.12});
+  els.forEach(function(e){ io.observe(e); });
+})();
+
+/* scroll-driven motion: progress bar, hero parallax, timeline draw, marquee shift, doodles, sliding word */
+(function(){
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.tl-item');
+  var bar = document.getElementById('scrollProgress');
+  var fill = document.getElementById('tlProgress');
+  var timeline = document.querySelector('.timeline');
+  var mq = document.getElementById('mqShift');
+  var trackEl = document.querySelector('.marquee .track');
+  var sw = document.getElementById('swTrack');
+  var swWrap = document.getElementById('scrollword');
+  var hero = document.querySelector('.hero-inner');
+  var heroSec = document.querySelector('section.hero');
+  var doodles = Array.prototype.slice.call(document.querySelectorAll('.doodle'));
+
+  if(reduced){
+    items.forEach(function(it){ it.classList.add('lit'); });
+    if(fill) fill.style.height = '100%';
+    if(bar) bar.style.display = 'none';
+    return;
+  }
+
+  var halfW = 0, ticking = false;
+  function measure(){ halfW = trackEl ? trackEl.scrollWidth / 2 : 0; }
+
+  function update(){
+    ticking = false;
+    var y = window.scrollY || 0;
+    var max = document.documentElement.scrollHeight - innerHeight;
+    if(bar) bar.style.width = (max > 0 ? y / max * 100 : 0) + '%';
+
+    if(hero && heroSec){
+      var hh = heroSec.offsetHeight || 1;
+      if(y < hh){
+        hero.style.transform = 'translateY(' + (y * .22) + 'px)';
+        hero.style.opacity = Math.max(0, 1 - y / (hh * .95));
+      }
+    }
+
+    if(timeline && fill){
+      var r = timeline.getBoundingClientRect();
+      var p = (innerHeight * .62 - r.top) / r.height;
+      fill.style.height = (Math.max(0, Math.min(1, p)) * 100) + '%';
+    }
+    items.forEach(function(it){
+      it.classList.toggle('lit', it.getBoundingClientRect().top < innerHeight * .62);
+    });
+
+    if(mq && halfW) mq.style.transform = 'translateX(' + (-(y * .25) % halfW) + 'px)';
+
+    if(sw && swWrap){
+      var rw = swWrap.getBoundingClientRect();
+      var shift = (innerHeight - rw.top) * .45;
+      if(shift > 0) sw.style.transform = 'translateX(' + (-shift) + 'px)';
+    }
+
+    doodles.forEach(function(d){
+      var pr = d.parentElement.getBoundingClientRect();
+      var c = pr.top + pr.height / 2 - innerHeight / 2;
+      var sp = parseFloat(d.dataset.speed) || .1;
+      d.style.transform = 'translateY(' + (c * sp) + 'px) rotate(' + (c * .03) + 'deg)';
+    });
+  }
+  function onScroll(){
+    if(!ticking){ ticking = true; requestAnimationFrame(update); }
+  }
+  addEventListener('scroll', onScroll, { passive:true });
+  addEventListener('resize', function(){ measure(); onScroll(); }, { passive:true });
+  measure(); update();
+})();
+</script>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js';
+
+document.documentElement.classList.add('webgl');
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DPR = Math.min(window.devicePixelRatio || 1, 1.75);
+
+const PALETTE = {
+  coral:0xff5d73, teal:0x0fb5a3, yellow:0xffc445,
+  violet:0x7c5cff, pink:0xff8fd2, blue:0x52a7ff, ink:0x26243a
+};
+
+function candyMat(color, opts={}){
+  return new THREE.MeshStandardMaterial({ color, roughness:.42, metalness:0, ...opts });
+}
+function softLights(scene){
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xf0dcc4, 1.2));
+  const d1 = new THREE.DirectionalLight(0xffffff, 1.9); d1.position.set(4,7,6); scene.add(d1);
+  const d2 = new THREE.DirectionalLight(0xcfd8ff, .7);  d2.position.set(-5,-2,-4); scene.add(d2);
+}
+
+/* ---- multi-scene manager: each canvas renders only while on screen ---- */
+const views = [];
+const io = new IntersectionObserver(entries => {
+  for(const e of entries){
+    const v = views.find(v => v.el === e.target);
+    if(v) v.active = e.isIntersecting;
+  }
+},{rootMargin:'140px'});
+
+function createView(el, build, opts={}){
+  if(!el) return null;
+  const renderer = new THREE.WebGLRenderer({ canvas:el, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(DPR, opts.maxDpr || DPR));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(opts.fov || 40, 1, .1, 100);
+  const v = { el, renderer, scene, camera, active:false, renderedOnce:false, update:null };
+  v.update = build(scene, camera, el) || (()=>{});
+  function resize(){
+    const w = el.clientWidth, h = el.clientHeight;
+    if(!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  new ResizeObserver(resize).observe(el);
+  io.observe(el);
+  views.push(v);
+  return v;
+}
+
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), .05);
+  const t = clock.elapsedTime;
+  for(const v of views){
+    if(!v.active) continue;
+    if(reduced && v.renderedOnce) continue;   // static single frame for reduced motion
+    v.update(t, dt);
+    v.renderer.render(v.scene, v.camera);
+    v.renderedOnce = true;
+  }
+}
+tick();
+
+/* ================= HERO: floating candy shapes ================= */
+createView(document.getElementById('hero3d'), (scene, camera) => {
+  camera.position.set(0, 0, 13);
+  softLights(scene);
+  scene.fog = new THREE.Fog(0xf7f2e8, 15, 30);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const defs = [
+    { g:new THREE.TorusKnotGeometry(1, .34, 110, 16),  c:PALETTE.violet, p:[ 6.6,  1.7, -1.0] },
+    { g:new THREE.IcosahedronGeometry(1.15, 0),        c:PALETTE.coral,  p:[ 8.8, -1.9, -3.0], flat:true },
+    { g:new THREE.TorusGeometry(.95, .4, 16, 40),      c:PALETTE.teal,   p:[ 4.3, -2.8,  0.4] },
+    { g:new THREE.CapsuleGeometry(.55, 1.1, 6, 16),    c:PALETTE.yellow, p:[10.2,  1.6, -5.0] },
+    { g:new THREE.SphereGeometry(.78, 26, 18),         c:PALETTE.pink,   p:[ 2.9,  3.0, -2.6] },
+    { g:new THREE.ConeGeometry(.85, 1.5, 24),          c:PALETTE.blue,   p:[-8.4,  2.5, -3.0] },
+    { g:new THREE.BoxGeometry(1.15, 1.15, 1.15),       c:PALETTE.yellow, p:[-9.8, -1.7, -4.5], flat:true },
+    { g:new THREE.OctahedronGeometry(1.05, 0),         c:PALETTE.teal,   p:[-6.9, -3.1, -1.6], flat:true },
+    { g:new THREE.DodecahedronGeometry(.95, 0),        c:PALETTE.coral,  p:[-4.1,  3.5, -5.0], flat:true },
+    { g:new THREE.TorusKnotGeometry(.5, .19, 80, 12),  c:PALETTE.pink,   p:[ 1.3, -3.5, -4.0] },
+  ];
+  const narrow = innerWidth < 700;
+  for(const d of defs){
+    if(narrow && Math.abs(d.p[0]) > 7) continue;     // fewer shapes on small screens
+    const m = new THREE.Mesh(d.g, candyMat(d.c, { flatShading: !!d.flat }));
+    m.position.set(...d.p);
+    m.userData = {
+      y: d.p[1],
+      rx: .15 + Math.random() * .3,
+      ry: .2  + Math.random() * .35,
+      bs: .5  + Math.random() * .7,
+      ph: Math.random() * Math.PI * 2,
+    };
+    group.add(m);
+  }
+
+  let mx = 0, my = 0;
+  addEventListener('pointermove', e => {
+    mx = e.clientX / innerWidth  - .5;
+    my = e.clientY / innerHeight - .5;
+  }, { passive:true });
+
+  return t => {
+    for(const m of group.children){
+      m.rotation.x = t * m.userData.rx + m.userData.ph;
+      m.rotation.y = t * m.userData.ry;
+      m.position.y = m.userData.y + Math.sin(t * m.userData.bs + m.userData.ph) * .5;
+    }
+    group.rotation.y = (window.scrollY || 0) * .0008;
+    camera.position.x += ( mx * 1.7 - camera.position.x) * .04;
+    camera.position.y += (-my * 1.2 - camera.position.y) * .04;
+    camera.lookAt(0, 0, 0);
+  };
+}, { fov:40, maxDpr:1.5 });
+
+/* ================= CURRENTLY: beating heart ================= */
+createView(document.getElementById('heart3d'), (scene, camera, el) => {
+  camera.position.set(0, 0, 4.6);
+  softLights(scene);
+
+  const s = new THREE.Shape();
+  s.moveTo(.5, .5);
+  s.bezierCurveTo(.5, .5, .4, 0, 0, 0);
+  s.bezierCurveTo(-.6, 0, -.6, .7, -.6, .7);
+  s.bezierCurveTo(-.6, 1.1, -.3, 1.54, .5, 1.9);
+  s.bezierCurveTo(1.2, 1.54, 1.6, 1.1, 1.6, .7);
+  s.bezierCurveTo(1.6, .7, 1.6, 0, 1, 0);
+  s.bezierCurveTo(.7, 0, .5, .5, .5, .5);
+  const geo = new THREE.ExtrudeGeometry(s, {
+    depth:.45, bevelEnabled:true, bevelThickness:.12, bevelSize:.12, bevelSegments:3, curveSegments:24
+  });
+  geo.center();
+  geo.rotateZ(Math.PI);                       // point the heart downward
+  const heart = new THREE.Mesh(geo, candyMat(PALETTE.coral, { roughness:.3 }));
+  heart.scale.setScalar(1.15);
+  scene.add(heart);
+
+  let phase = 0, boost = 0;
+  el.addEventListener('click', () => { boost = 1; });
+
+  return (t, dt) => {
+    boost = Math.max(0, boost - dt * .45);    // excitement decays over ~2s
+    phase += dt * 3.1 * (1 + boost * 1.6);
+    const lub = Math.pow(Math.max(0, Math.sin(phase)), 10);
+    const dub = .6 * Math.pow(Math.max(0, Math.sin(phase - .55)), 10);
+    heart.scale.setScalar(1.15 * (1 + .09 * (lub + dub)));
+    heart.rotation.y = Math.sin(t * .6) * .4;
+    heart.rotation.x = Math.sin(t * .4) * .08;
+  };
+}, { fov:42 });
+
+/* ================= DEMO PREVIEW: PDE wave surface ================= */
+function buildWave(scene, camera){
+  camera.position.set(0, 3.1, 5.6);
+  camera.lookAt(0, -.4, 0);
+  softLights(scene);
+
+  const geo = new THREE.PlaneGeometry(8, 5, 56, 34);
+  geo.rotateX(-Math.PI / 2);
+  const count = geo.attributes.position.count;
+  geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+    vertexColors:true, flatShading:true, roughness:.5
+  }));
+  scene.add(mesh);
+
+  const pos = geo.attributes.position, col = geo.attributes.color;
+  const a = new THREE.Color(PALETTE.teal), b = new THREE.Color(PALETTE.coral);
+
+  return t => {
+    for(let i = 0; i < count; i++){
+      const x = pos.getX(i), z = pos.getZ(i);
+      const y = .42 * Math.sin(x * 1.4 - t * 1.8) * Math.cos(z * 1.1 + t * .9)
+              + .16 * Math.sin(x * 3.1 + t * 1.3);
+      pos.setY(i, y);
+      const k = THREE.MathUtils.clamp((y + .58) / 1.16, 0, 1);
+      col.setXYZ(i, a.r + (b.r - a.r) * k, a.g + (b.g - a.g) * k, a.b + (b.b - a.b) * k);
+    }
+    pos.needsUpdate = col.needsUpdate = true;
+    geo.computeVertexNormals();
+  };
+}
+
+/* ================= DEMO PREVIEW: RAG orbit ================= */
+function buildRag(scene, camera){
+  camera.position.set(0, 1.2, 7);
+  camera.lookAt(0, 0, 0);
+  softLights(scene);
+
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(.9, 0),
+    candyMat(PALETTE.violet, { flatShading:true }));
+  scene.add(core);
+
+  const cardGeo = new THREE.BoxGeometry(.85, .58, .07);
+  const cards = [];
+  const rings = [
+    { tilt:.45,  r:2.5, n:4, speed:.55,  mat:candyMat(0xfffdf7, { roughness:.6 }) },
+    { tilt:-.65, r:3.1, n:4, speed:-.38, mat:candyMat(PALETTE.pink, { roughness:.55 }) },
+  ].map(cfg => {
+    const ring = new THREE.Group();
+    ring.rotation.x = cfg.tilt;
+    for(let i = 0; i < cfg.n; i++){
+      const card = new THREE.Mesh(cardGeo, cfg.mat);
+      const a = i / cfg.n * Math.PI * 2;
+      card.position.set(Math.cos(a) * cfg.r, 0, Math.sin(a) * cfg.r);
+      card.rotation.y = -a + Math.PI / 2;
+      ring.add(card);
+      cards.push(card);
+    }
+    ring.userData.speed = cfg.speed;
+    scene.add(ring);
+    return ring;
+  });
+
+  const lpos = new Float32Array(cards.length * 6);
+  const lineGeo = new THREE.BufferGeometry();
+  lineGeo.setAttribute('position', new THREE.BufferAttribute(lpos, 3));
+  scene.add(new THREE.LineSegments(lineGeo,
+    new THREE.LineBasicMaterial({ color:PALETTE.ink, transparent:true, opacity:.28 })));
+
+  const tmp = new THREE.Vector3();
+  return t => {
+    core.rotation.y = t * .6;
+    core.rotation.x = Math.sin(t * .5) * .3;
+    rings.forEach(r => { r.rotation.y = t * r.userData.speed; });
+    cards.forEach((c, i) => {
+      c.getWorldPosition(tmp);
+      lpos[i*6+0] = 0; lpos[i*6+1] = 0; lpos[i*6+2] = 0;
+      lpos[i*6+3] = tmp.x; lpos[i*6+4] = tmp.y; lpos[i*6+5] = tmp.z;
+    });
+    lineGeo.attributes.position.needsUpdate = true;
+  };
+}
+
+/* ================= DEMO PREVIEW: solver vs operator race ================= */
+function buildRace(scene, camera){
+  camera.position.set(0, .5, 7);
+  camera.lookAt(0, .1, 0);
+  softLights(scene);
+
+  // left: finite-difference solver, plodding cube by cube
+  const cubes = [];
+  for(let i = 0; i < 5; i++){
+    const c = new THREE.Mesh(new THREE.BoxGeometry(.55, .55, .55),
+      candyMat(PALETTE.teal, { flatShading:true }));
+    c.position.set(-3.3 + i * .62, -.2, 0);
+    scene.add(c);
+    cubes.push(c);
+  }
+
+  // right: neural operator comet, zipping along an arc
+  const comet = new THREE.Mesh(new THREE.SphereGeometry(.3, 20, 14), candyMat(PALETTE.coral));
+  scene.add(comet);
+  const trail = [];
+  for(let i = 0; i < 5; i++){
+    const tr = new THREE.Mesh(new THREE.SphereGeometry(.3 * (1 - i * .16), 12, 8),
+      new THREE.MeshStandardMaterial({ color:PALETTE.coral, transparent:true, opacity:.5 - i * .09, roughness:.5 }));
+    scene.add(tr);
+    trail.push(tr);
+  }
+  const cometAt = (t, out) => {
+    const u = Math.abs(((t * 1.5) % 2) - 1);          // ping-pong 0..1..0
+    out.set(1.0 + u * 2.4, -.4 + Math.sin(u * Math.PI) * 1.1, 0);
+  };
+  const tmp = new THREE.Vector3();
+
+  return t => {
+    const active = Math.floor(t * 1.4) % 5;
+    cubes.forEach((c, i) => {
+      const target = i === active ? 1.45 : 1;
+      c.scale.setScalar(c.scale.x + (target - c.scale.x) * .18);
+      c.rotation.y += i === active ? .05 : .004;
+    });
+    cometAt(t, tmp); comet.position.copy(tmp);
+    trail.forEach((tr, i) => { cometAt(t - (i + 1) * .045, tmp); tr.position.copy(tmp); });
+  };
+}
+
+/* ================= DEMO PREVIEW: swirling fluid particles ================= */
+function buildFluidPreview(scene, camera){
+  camera.position.set(0, 0, 7.5);
+  const Np = 650;
+  const pos = new Float32Array(Np * 3);
+  const col = new Float32Array(Np * 3);
+  const palette = [PALETTE.coral, PALETTE.violet, PALETTE.teal, PALETTE.yellow, PALETTE.pink, PALETTE.blue]
+    .map(c => new THREE.Color(c));
+  for(let i = 0; i < Np; i++){
+    pos[i*3]   = (Math.random() - .5) * 9.4;
+    pos[i*3+1] = (Math.random() - .5) * 5.4;
+    pos[i*3+2] = 0;
+    const c = palette[i % palette.length];
+    col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ size:.13, vertexColors:true })));
+
+  return (t, dt) => {
+    // two counter-rotating vortices orbiting the center
+    const cx = Math.cos(t * .5) * 1.8, cy = Math.sin(t * .5) * 1.1;
+    for(let i = 0; i < Np; i++){
+      const x = pos[i*3], y = pos[i*3+1];
+      let dx = x - cx, dy = y - cy, q = dx*dx + dy*dy + .6;
+      let vx = -dy / q * 2.4, vy = dx / q * 2.4;
+      dx = x + cx; dy = y + cy; q = dx*dx + dy*dy + .6;
+      vx += dy / q * 2.4; vy += -dx / q * 2.4;
+      pos[i*3]   += vx * dt;
+      pos[i*3+1] += vy * dt;
+      if(Math.abs(pos[i*3])   > 5.0) pos[i*3]   *= -.96;
+      if(Math.abs(pos[i*3+1]) > 3.0) pos[i*3+1] *= -.96;
+    }
+    g.attributes.position.needsUpdate = true;
+  };
+}
+
+/* ================= DEMO PREVIEW: balls rolling down a loss surface ================= */
+function buildOptimPreview(scene, camera){
+  camera.position.set(0, 3.6, 6.4);
+  camera.lookAt(0, -.4, 0);
+  softLights(scene);
+
+  const f = (x, z) => .12 * (x*x + z*z) + .55 * Math.sin(1.5*x) * Math.cos(1.5*z) - .45;
+  const geo = new THREE.PlaneGeometry(7.5, 7.5, 44, 44);
+  geo.rotateX(-Math.PI / 2);
+  const p = geo.attributes.position, n = p.count;
+  geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  const lo = new THREE.Color(PALETTE.teal), hi = new THREE.Color(PALETTE.coral);
+  let mn = 1e9, mx = -1e9;
+  const hs = new Float32Array(n);
+  for(let i = 0; i < n; i++){
+    hs[i] = f(p.getX(i), p.getZ(i));
+    mn = Math.min(mn, hs[i]); mx = Math.max(mx, hs[i]);
+  }
+  for(let i = 0; i < n; i++){
+    p.setY(i, hs[i]);
+    const k = (hs[i] - mn) / (mx - mn);
+    geo.attributes.color.setXYZ(i, lo.r + (hi.r-lo.r)*k, lo.g + (hi.g-lo.g)*k, lo.b + (hi.b-lo.b)*k);
+  }
+  geo.computeVertexNormals();
+
+  const grp = new THREE.Group();
+  scene.add(grp);
+  grp.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors:true, flatShading:true, roughness:.55 })));
+
+  const balls = [PALETTE.yellow, PALETTE.violet, PALETTE.ink].map(c => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(.18, 16, 12), candyMat(c, { roughness:.3 }));
+    grp.add(m);
+    return m;
+  });
+
+  return t => {
+    grp.rotation.y = t * .18;
+    balls.forEach((b, i) => {
+      const u = (t * .16 + i / 3) % 1;             // spiral descent, looping
+      const r = 3.1 * (1 - u) + .12, a = u * 7 + i * 2.1;
+      const x = Math.cos(a) * r, z = Math.sin(a) * r;
+      b.position.set(x, f(x, z) + .22, z);
+    });
+  };
+}
+
+document.querySelectorAll('canvas[data-scene]').forEach(el => {
+  const builders = { wave:buildWave, rag:buildRag, race:buildRace, fluid:buildFluidPreview, optim:buildOptimPreview };
+  const b = builders[el.dataset.scene];
+  if(b) createView(el, b, { fov:40 });
+});
+
+/* ================= CONTACT: clickable smiley ================= */
+createView(document.getElementById('smiley3d'), (scene, camera, el) => {
+  camera.position.set(0, 0, 5);
+  softLights(scene);
+
+  const head = new THREE.Group();
+  scene.add(head);
+
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(1.32, 40, 28),
+    candyMat(PALETTE.yellow, { roughness:.35 })));
+
+  const eyeGeo = new THREE.SphereGeometry(.14, 14, 10);
+  const eyeMat = candyMat(PALETTE.ink, { roughness:.3 });
+  const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-.45, .34, 1.16);
+  const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set( .45, .34, 1.16);
+  head.add(eyeL, eyeR);
+
+  const arc = Math.PI * .7;
+  const mouth = new THREE.Mesh(new THREE.TorusGeometry(.52, .085, 12, 28, arc), eyeMat);
+  mouth.rotation.z = -Math.PI / 2 - arc / 2;          // arc centered at the bottom = smile
+  mouth.position.set(0, -.08, 1.13);
+  head.add(mouth);
+
+  const cheekGeo = new THREE.SphereGeometry(.13, 12, 8);
+  const cheekMat = candyMat(PALETTE.coral, { roughness:.6 });
+  const chL = new THREE.Mesh(cheekGeo, cheekMat); chL.position.set(-.82, -.05, 1.0); chL.scale.set(1,.7,.4);
+  const chR = new THREE.Mesh(cheekGeo, cheekMat); chR.position.set( .82, -.05, 1.0); chR.scale.set(1,.7,.4);
+  head.add(chL, chR);
+
+  const sparkMat = candyMat(PALETTE.violet, { flatShading:true });
+  const sparks = [0, 1, 2].map(i => {
+    const sp = new THREE.Mesh(new THREE.TetrahedronGeometry(.16), sparkMat);
+    sp.userData.a = i / 3 * Math.PI * 2;
+    scene.add(sp);
+    return sp;
+  });
+
+  let spin = 0, spinV = 0;
+  el.addEventListener('click', () => { spinV += 11; });
+
+  return (t, dt) => {
+    spinV *= Math.pow(.18, dt);               // friction
+    spin += spinV * dt;
+    head.rotation.y = Math.sin(t * .8) * .28 + spin;
+    head.rotation.z = Math.sin(t * .5) * .06;
+    head.position.y = Math.sin(t * 1.1) * .08;
+
+    const blinking = (t % 3.4) < .14;
+    const target = blinking ? .12 : 1;
+    eyeL.scale.y += (target - eyeL.scale.y) * .45;
+    eyeR.scale.y = eyeL.scale.y;
+
+    sparks.forEach((sp, i) => {
+      const a = sp.userData.a + t * (.5 + i * .12);
+      sp.position.set(Math.cos(a) * 2.1, Math.sin(a * 1.3 + i) * 1.1, Math.sin(a) * .8);
+      sp.rotation.set(t * .8 + i, t * .6, 0);
+    });
+  };
+}, { fov:42 });
+</script>
+
+</body>
+</html>

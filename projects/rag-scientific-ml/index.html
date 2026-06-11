@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ask My Research — RAG over Scientific ML papers · Tomás Erdmannsdörffer</title>
+<meta name="description" content="A transparent RAG system over a curated corpus of scientific ML papers. BM25 retrieval in the browser, extractive answers with zero setup, or bring your own LLM key.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f2e8; --card:#fffdf7;
+  --ink:#26243a; --dim:#6e6a80; --line:#e6ddcc;
+  --coral:#ff5d73; --teal:#0fb5a3; --yellow:#ffc445; --violet:#7c5cff; --pink:#ff8fd2; --blue:#52a7ff;
+  --coral-bg:#ffe7ea; --teal-bg:#dcf4ef; --yellow-bg:#fff3d4; --violet-bg:#ebe4ff; --blue-bg:#e2f0ff;
+  --body:'Space Grotesk', system-ui, sans-serif;
+  --display:'Fraunces', Georgia, serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(800px 460px at 90% -5%, rgba(124,92,255,.13), transparent 60%),
+    radial-gradient(700px 700px at -8% 50%, rgba(255,143,210,.10), transparent 60%);
+  background-attachment:fixed;
+}
+::selection{background:var(--yellow);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+.shell{max-width:1140px;margin:0 auto;padding:0 24px}
+
+header{padding:22px 0}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.crumb{
+  display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:2px solid var(--ink);border-radius:999px;padding:8px 18px;font-weight:700;font-size:13.5px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .15s, box-shadow .15s;
+}
+.crumb:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;background:var(--card);border:2px solid var(--ink);
+  border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;box-shadow:2px 2px 0 var(--ink);
+}
+.chip.live{background:var(--violet-bg)}
+
+h1{font-family:var(--display);font-weight:500;font-size:clamp(34px,5.4vw,58px);line-height:1.05;letter-spacing:-.02em;margin:26px 0 14px}
+h1 em{font-style:italic;color:var(--violet);background:linear-gradient(transparent 64%,var(--violet-bg) 64%)}
+.lede{color:var(--dim);max-width:700px;margin:0 0 22px;line-height:1.75}
+.lede b{color:var(--ink);font-weight:600}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.tag{font-family:var(--mono);font-size:11px;padding:4px 12px;border:1.5px solid var(--line);border-radius:999px;color:var(--dim);background:var(--card)}
+
+/* settings bar */
+.settings-bar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--card);border:2px solid var(--ink);border-radius:999px;
+  padding:9px 20px;font-size:13px;font-weight:600;box-shadow:3px 3px 0 var(--ink);margin-bottom:26px;
+}
+.settings-bar .led{width:9px;height:9px;border-radius:50%;background:var(--yellow);flex:0 0 auto}
+.settings-bar.ok .led{background:var(--teal);box-shadow:0 0 0 0 rgba(15,181,163,.7);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(15,181,163,.55)}70%{box-shadow:0 0 0 7px rgba(15,181,163,0)}100%{box-shadow:0 0 0 0 rgba(15,181,163,0)}}
+.settings-bar .lbl{color:var(--dim);font-weight:500}
+.settings-bar button.cfg{
+  margin-left:auto;background:var(--violet);color:#fff;border:2px solid var(--ink);border-radius:999px;
+  padding:6px 16px;font-family:var(--body);font-size:12.5px;font-weight:700;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);transition:transform .12s, box-shadow .12s;
+}
+.settings-bar button.cfg:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+
+/* workspace */
+.workspace{display:grid;grid-template-columns:1fr 360px;gap:22px;margin-bottom:40px}
+@media (max-width:920px){.workspace{grid-template-columns:1fr}}
+
+.chat{display:flex;flex-direction:column;gap:14px}
+.msgs{
+  background:var(--card);border:2px solid var(--ink);border-radius:20px;
+  box-shadow:4px 4px 0 var(--ink);padding:20px;min-height:380px;max-height:62vh;overflow-y:auto;
+}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;text-align:center}
+.empty .icon{font-size:38px;margin-bottom:10px}
+.empty h4{font-family:var(--display);font-weight:600;font-size:24px;margin:0 0 6px}
+.empty p{color:var(--dim);font-size:13px;margin:0 0 18px;max-width:380px}
+.suggestions{display:flex;flex-direction:column;gap:8px;width:100%;max-width:420px}
+.sug-btn{
+  background:var(--paper);border:2px solid var(--ink);border-radius:12px;color:var(--ink);
+  font-family:var(--body);font-size:12.5px;font-weight:600;padding:10px 14px;cursor:pointer;
+  text-align:left;box-shadow:2px 2px 0 var(--ink);transition:transform .12s, box-shadow .12s;
+}
+.sug-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink);background:var(--violet-bg)}
+
+.msg{margin-bottom:18px;padding-bottom:18px;border-bottom:1.5px dashed var(--line)}
+.msg:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.msg .role{
+  display:inline-block;font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;padding:2.5px 10px;border:1.5px solid var(--ink);border-radius:999px;margin-bottom:9px;
+}
+.msg.user .role{background:var(--blue-bg)}
+.msg.assistant .role{background:var(--violet-bg)}
+.msg .content{font-size:14px;line-height:1.75;white-space:pre-wrap;color:var(--ink)}
+.msg .modenote{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:8px}
+.msg .citations{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.cite{
+  font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 10px;background:var(--paper);
+  border:1.5px solid var(--line);border-radius:999px;color:var(--dim);
+}
+.msg.thinking .content::after{content:'▊';animation:blink 1s steps(2,start) infinite;color:var(--violet)}
+@keyframes blink{to{opacity:.2}}
+
+.input-bar{
+  display:flex;gap:8px;background:var(--card);border:2px solid var(--ink);border-radius:18px;
+  box-shadow:4px 4px 0 var(--ink);padding:8px;
+}
+.input-bar textarea{
+  flex:1;background:transparent;color:var(--ink);border:0;font-family:var(--body);font-size:14px;
+  padding:10px;resize:none;outline:none;min-height:44px;max-height:120px;
+}
+.input-bar button{
+  background:var(--violet);color:#fff;border:2px solid var(--ink);border-radius:12px;
+  font-family:var(--body);font-size:13px;font-weight:700;padding:0 22px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);transition:transform .12s, box-shadow .12s;
+}
+.input-bar button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.input-bar button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+/* behind the scenes */
+.bts{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--card);border:2px solid var(--ink);border-radius:18px;box-shadow:3px 3px 0 var(--ink);overflow:hidden}
+.panel-h{
+  padding:10px 16px;border-bottom:2px solid var(--ink);background:var(--violet-bg);
+  font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  display:flex;justify-content:space-between;
+}
+.panel-body{padding:14px 16px;font-size:12px;color:var(--dim);line-height:1.7}
+.panel-body .stat{display:flex;justify-content:space-between;padding:3px 0}
+.panel-body .stat .v{color:var(--ink);font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums}
+.chunk-card{
+  background:var(--paper);border:1.5px solid var(--line);border-radius:12px;
+  padding:10px 12px;margin-bottom:8px;font-size:11.5px;cursor:pointer;transition:border-color .15s;
+}
+.chunk-card:hover{border-color:var(--violet)}
+.chunk-card .h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.chunk-card .ttl{font-weight:700;font-size:11.5px;line-height:1.4}
+.chunk-card .score{font-family:var(--mono);color:var(--violet);font-weight:600;font-size:10px;flex:0 0 auto}
+.chunk-card .scorebar{height:5px;border-radius:99px;background:var(--line);margin:5px 0 6px;overflow:hidden}
+.chunk-card .scorebar i{display:block;height:100%;background:linear-gradient(90deg,var(--violet),var(--pink));border-radius:99px}
+.chunk-card .sec{font-family:var(--mono);color:var(--dim);font-size:9.5px;letter-spacing:.04em}
+.chunk-card .snip{color:var(--dim);font-size:10.5px;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.55}
+.chunk-card.expanded .snip{-webkit-line-clamp:unset;overflow:visible}
+.empty-state{color:var(--dim);font-size:11.5px;text-align:center;padding:22px 12px;font-style:italic}
+.prompt-block{
+  background:var(--paper);border:1.5px solid var(--line);border-radius:10px;
+  padding:10px;font-family:var(--mono);font-size:10px;color:var(--dim);
+  white-space:pre-wrap;word-break:break-word;max-height:240px;overflow-y:auto;
+}
+
+/* config modal */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(38,36,58,.55);display:none;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modal .box{
+  background:var(--card);border:2px solid var(--ink);border-radius:22px;box-shadow:8px 8px 0 var(--ink);
+  padding:28px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;
+}
+.modal h3{margin:0 0 8px;font-family:var(--display);font-size:24px;font-weight:600}
+.modal p.sub{color:var(--dim);font-size:12.5px;margin:0 0 18px;line-height:1.6}
+.modal label{display:block;margin-bottom:13px;font-size:12px;color:var(--dim);font-weight:600}
+.modal label span{display:block;margin-bottom:5px}
+.modal input,.modal select{
+  width:100%;background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:10px;
+  padding:9px 11px;font-family:var(--mono);font-size:12.5px;
+}
+.modal .footnote{font-size:11px;color:var(--dim);margin-top:12px;line-height:1.7}
+.modal .footnote code{font-family:var(--mono);background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:0 5px;font-size:10.5px}
+.modal .actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.modal button{
+  background:var(--card);border:2px solid var(--ink);border-radius:999px;color:var(--ink);
+  font-family:var(--body);font-size:13px;font-weight:700;padding:9px 20px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);transition:transform .12s, box-shadow .12s;
+}
+.modal button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.modal button.primary{background:var(--violet);color:#fff}
+
+/* explainer */
+.explain{background:var(--card);border:2px solid var(--ink);border-radius:22px;padding:30px 34px;box-shadow:5px 5px 0 var(--ink);margin-bottom:40px}
+.explain h2{font-family:var(--display);font-weight:600;font-size:clamp(24px,3.4vw,32px);margin:0 0 14px;letter-spacing:-.01em}
+.explain h2 em{font-style:italic;color:var(--violet)}
+.explain p{color:var(--dim);margin:0 0 13px;max-width:780px;font-size:14px;line-height:1.75}
+.explain p b{color:var(--ink);font-weight:600}
+.explain h4{
+  font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  display:inline-block;padding:3px 12px;border:1.5px solid var(--ink);border-radius:999px;
+  background:var(--violet-bg);margin:18px 0 10px;
+}
+.explain ul{color:var(--dim);font-size:13.5px;padding-left:18px;line-height:1.85;margin:0 0 13px}
+.explain ul li b{color:var(--ink);font-weight:600}
+.explain code{font-family:var(--mono);font-size:11.5px;background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:0 5px}
+
+footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--ink);color:var(--paper);
+  border-radius:14px;padding:12px 18px;font-size:13px;font-weight:600;z-index:200;max-width:340px;
+  transform:translateY(140%);transition:transform .3s;
+}
+.toast.show{transform:translateY(0)}
+.toast.err{background:var(--coral)}
+@media (prefers-reduced-motion: reduce){ *{transition-duration:.01ms !important;animation-duration:.01ms !important} }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<header>
+  <div class="bar">
+    <a class="crumb" href="../../">← tomás.erdmannsdörffer</a>
+    <span class="chip live">● retrieval runs in your browser · zero backend</span>
+  </div>
+</header>
+
+<h1>Ask my <em>research corpus</em>.</h1>
+<p class="lede">
+  A transparent <b>RAG system</b> over a curated corpus of papers on physics-informed neural
+  networks, neural operators, model compression, and LLM inference — the literature I actually
+  use day-to-day. BM25 retrieval runs client-side, and answers work <b>instantly with no setup</b>
+  (extractive mode) — or plug in any OpenAI-compatible LLM for generative answers. The
+  behind-the-scenes panel shows retrieved chunks, scores, and the exact prompt: if retrieval
+  fails, you can see why.
+</p>
+<div class="tagrow">
+  <span class="tag">RAG</span><span class="tag">BM25</span><span class="tag">24 chunks · 16 papers</span>
+  <span class="tag">extractive + generative</span><span class="tag">zero backend</span>
+</div>
+
+<div class="settings-bar" id="settings-bar">
+  <span class="led"></span>
+  <span class="lbl">answers:</span><span id="cfg-summary">⚡ extractive mode — works now, no key needed</span>
+  <span style="color:var(--line)">·</span>
+  <span class="lbl">index:</span><span id="idx-summary">loading…</span>
+  <button class="cfg" id="open-cfg">⚙ use an LLM</button>
+</div>
+
+<div class="workspace">
+
+  <!-- CHAT -->
+  <div class="chat">
+    <div class="msgs" id="msgs">
+      <div class="empty" id="empty-state">
+        <div class="icon">🔎</div>
+        <h4>Ask anything about the corpus.</h4>
+        <p>Retrieval is instant and local. Try one of these — no API key required:</p>
+        <div class="suggestions">
+          <button class="sug-btn" data-q="How do physics-informed neural networks work?">How do physics-informed neural networks work?</button>
+          <button class="sug-btn" data-q="What is the Fourier Neural Operator and why is it resolution-invariant?">What is the Fourier Neural Operator and why is it resolution-invariant?</button>
+          <button class="sug-btn" data-q="Compare knowledge distillation and quantization for compressing a model.">Compare distillation and quantization for compression.</button>
+          <button class="sug-btn" data-q="How is FlashAttention different from standard attention?">How is FlashAttention different from standard attention?</button>
+          <button class="sug-btn" data-q="What are the constitutive models used for cardiac tissue?">What constitutive models are used for cardiac tissue?</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <textarea id="q-input" placeholder="Ask a question about scientific ML…" rows="1"></textarea>
+      <button id="send-btn">ask</button>
+    </div>
+  </div>
+
+  <!-- BEHIND THE SCENES -->
+  <div class="bts">
+    <div class="panel">
+      <div class="panel-h"><span>retrieval</span><span>[01]</span></div>
+      <div class="panel-body">
+        <div class="stat"><span>Algorithm</span><span class="v">BM25 + tag boost</span></div>
+        <div class="stat"><span>Corpus size</span><span class="v" id="stat-chunks">—</span></div>
+        <div class="stat"><span>Top-k retrieved</span><span class="v">4</span></div>
+        <div class="stat"><span>Last query</span><span class="v" id="stat-latency">—</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><span>retrieved chunks</span><span>[02]</span></div>
+      <div class="panel-body" id="chunks-list">
+        <div class="empty-state">Ask a question to see retrieved chunks, scores and score bars.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><span>prompt / context</span><span>[03]</span></div>
+      <div class="panel-body">
+        <div class="prompt-block" id="prompt-preview">—</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EXPLAINER -->
+<section class="explain">
+  <h2>What's actually <em>happening</em> here?</h2>
+  <p>
+    Most "chat with your PDFs" demos hide retrieval behind a black box. This one shows everything:
+    the chunks pulled, their scores, and the exact prompt. That transparency is the point — when
+    retrieval fails, you can see why.
+  </p>
+
+  <h4>architecture</h4>
+  <ul>
+    <li><b>Static corpus:</b> 24 hand-curated chunks from 16 scientific ML papers, shipped as one small JSON file. No vector DB, no backend.</li>
+    <li><b>Retrieval:</b> BM25 with light stemming, computed in the browser. Title, section, and tag tokens are up-weighted; a small tag-overlap rerank runs after scoring. Top-4 retained.</li>
+    <li><b>Extractive mode (default):</b> with no LLM configured, the answer is stitched from the highest-scoring sentences inside the retrieved chunks — each sentence scored by IDF-weighted query overlap. Zero setup, fully local, honestly labeled.</li>
+    <li><b>Generative mode:</b> any OpenAI-compatible endpoint — OpenAI, Groq, OpenRouter, local Ollama. Your key stays in <code>localStorage</code> and is sent only to the endpoint you configure.</li>
+  </ul>
+
+  <h4>honest trade-offs</h4>
+  <ul>
+    <li><b>BM25 vs dense embeddings.</b> Production RAG uses dense embeddings + a reranker; they handle synonyms and paraphrase better. BM25 wins for a 24-chunk corpus and ships with zero infrastructure — at scale I'd swap it.</li>
+    <li><b>Extractive answers can read choppy.</b> They're real sentences from real papers, in rank order, with citations — not fluent prose. That's the trade for zero-setup honesty.</li>
+    <li><b>No conversational memory.</b> Each question is independent; multi-turn needs history-aware query rewriting (one extra LLM call).</li>
+  </ul>
+
+  <h4>why a small corpus?</h4>
+  <p>
+    A focused corpus is the whole point. The system is good at scientific ML <b>because</b> the chunks
+    are tagged, sectioned, and curated. Throw 10,000 random PDFs at the same architecture and recall
+    collapses. Choosing a scope is a real engineering decision — and a more interesting portfolio
+    piece than another generic Q&amp;A bot.
+  </p>
+</section>
+
+<footer>
+  <span>© 2026 Tomás Erdmannsdörffer · <a href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener" style="font-weight:700">github</a></span>
+  <a href="../../">← back to portfolio</a>
+</footer>
+
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="modal" id="cfg-modal">
+  <div class="box">
+    <h3>Use an LLM for answers</h3>
+    <p class="sub">
+      Optional — extractive mode already works with no setup. Bring your own key for fluent
+      generative answers; it stays in <b>localStorage</b> and is only sent to the endpoint below.
+    </p>
+    <label>
+      <span>Preset</span>
+      <select id="cfg-preset">
+        <option value="custom">Custom</option>
+        <option value="groq">Groq (fast & free tier)</option>
+        <option value="openai">OpenAI</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="together">Together AI</option>
+        <option value="ollama">Local Ollama</option>
+      </select>
+    </label>
+    <label>
+      <span>Endpoint URL</span>
+      <input type="text" id="cfg-url" placeholder="https://api.groq.com/openai/v1/chat/completions">
+    </label>
+    <label>
+      <span>Model name</span>
+      <input type="text" id="cfg-model" placeholder="llama-3.1-8b-instant">
+    </label>
+    <label>
+      <span>API key</span>
+      <input type="password" id="cfg-key" placeholder="sk-…">
+    </label>
+    <div class="footnote">
+      <b>Quick start with Groq (free):</b> sign up at <code>console.groq.com</code>, create a key, pick the
+      Groq preset, paste it here.<br>
+      <b>Local Ollama:</b> run <code>ollama serve</code> and use <code>http://localhost:11434/v1/chat/completions</code>.
+    </div>
+    <div class="actions">
+      <button id="cfg-clear">Clear key</button>
+      <button id="cfg-cancel">Cancel</button>
+      <button class="primary" id="cfg-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ============== CONFIG / STATE ============== */
+const STORAGE_KEY = 'rag_scimi_cfg_v1';
+const PRESETS = {
+  groq:       { url:'https://api.groq.com/openai/v1/chat/completions', model:'llama-3.1-8b-instant' },
+  openai:     { url:'https://api.openai.com/v1/chat/completions',      model:'gpt-4o-mini' },
+  openrouter: { url:'https://openrouter.ai/api/v1/chat/completions',   model:'meta-llama/llama-3.1-8b-instruct:free' },
+  together:   { url:'https://api.together.xyz/v1/chat/completions',    model:'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo' },
+  ollama:     { url:'http://localhost:11434/v1/chat/completions',      model:'llama3.2' },
+};
+
+let cfg = loadCfg();
+let corpus = [];
+let index = null;
+
+function loadCfg(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch{ return {}; }
+}
+function saveCfg(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); }
+function hasLLM(){ return !!(cfg.key && cfg.url && cfg.model); }
+
+/* ============== TOKENIZATION ============== */
+function stem(t){
+  if(t.length <= 4) return t;
+  for(const s of ['ization','isation','ing','ions','ion','ies','ied','ed','es','ly','er','s']){
+    if(t.endsWith(s) && t.length - s.length >= 3) return t.slice(0, -s.length);
+  }
+  return t;
+}
+function tokenize(s){
+  return s.toLowerCase().replace(/[^a-z0-9\s\-]/g,' ').split(/\s+/)
+    .filter(t => t.length > 1).map(stem);
+}
+
+/* ============== INDEX ============== */
+async function loadCorpus(){
+  const res = await fetch('./corpus.json');
+  corpus = await res.json();
+  buildIndex();
+  document.getElementById('stat-chunks').textContent = corpus.length + ' chunks';
+  document.getElementById('idx-summary').textContent = corpus.length + ' chunks · BM25';
+}
+function buildIndex(){
+  const docs = corpus.map(c => {
+    const t = tokenize(c.paper), sec = tokenize(c.section);
+    const tags = c.tags.flatMap(tag => tokenize(tag.replace(/-/g,' ')));
+    const text = tokenize(c.text);
+    return [...t,...t,...t, ...sec,...sec, ...tags,...tags, ...text];
+  });
+  const N = docs.length;
+  const avgdl = docs.reduce((a, d) => a + d.length, 0) / N;
+  const df = {};
+  docs.forEach(d => new Set(d).forEach(t => df[t] = (df[t]||0) + 1));
+  const idf = {};
+  Object.keys(df).forEach(t => idf[t] = Math.log((N - df[t] + .5) / (df[t] + .5) + 1));
+  const tfs = docs.map(d => {
+    const tf = {};
+    d.forEach(t => tf[t] = (tf[t]||0) + 1);
+    return { tf, len: d.length };
+  });
+  index = { tfs, idf, avgdl, N };
+}
+function search(query, k = 4){
+  const t0 = performance.now();
+  const qToks = tokenize(query);
+  const { tfs, idf, avgdl } = index;
+  const k1 = 1.5, b = .75;
+  const scored = tfs.map((d, i) => {
+    let bm = 0;
+    qToks.forEach(qt => {
+      const f = d.tf[qt] || 0;
+      if(f > 0) bm += (idf[qt]||0) * (f * (k1+1)) / (f + k1 * (1 - b + b * d.len / avgdl));
+    });
+    const qSet = new Set(qToks);
+    let tagOv = 0;
+    corpus[i].tags.forEach(tag => {
+      tokenize(tag.replace(/-/g,' ')).forEach(tt => { if(qSet.has(tt)) tagOv++; });
+    });
+    return { i, score: bm + tagOv * .5, bm25: bm, tagOv };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return { results: scored.slice(0, k).filter(s => s.score > .1), latencyMs: performance.now() - t0 };
+}
+
+/* ============== EXTRACTIVE ANSWERS (no LLM needed) ============== */
+function extractiveAnswer(query, results){
+  const qToks = new Set(tokenize(query));
+  const cands = [];
+  results.forEach((r, ri) => {
+    const sentences = corpus[r.i].text.split(/(?<=[.!?])\s+/);
+    sentences.forEach(s => {
+      s = s.trim();
+      if(s.length < 40) return;
+      const toks = tokenize(s);
+      let score = 0;
+      const seen = new Set();
+      toks.forEach(t => {
+        if(qToks.has(t) && !seen.has(t)){ score += (index.idf[t] || 1); seen.add(t); }
+      });
+      score = score / Math.sqrt(toks.length + 6) + (results.length - ri) * .04;
+      cands.push({ s, score, ri });
+    });
+  });
+  cands.sort((a, b) => b.score - a.score);
+  const picked = [];
+  for(const c of cands){
+    if(picked.length >= 4) break;
+    if(picked.some(p => p.s === c.s)) continue;
+    picked.push(c);
+  }
+  picked.sort((a, b) => a.ri - b.ri);
+  if(!picked.length) return null;
+  return picked.map(p => p.s + ' [' + (p.ri + 1) + ']').join('\n\n');
+}
+
+/* ============== UI HELPERS ============== */
+function $(id){ return document.getElementById(id); }
+
+function updateSettingsBar(){
+  const bar = $('settings-bar');
+  if(hasLLM()){
+    bar.classList.add('ok');
+    $('cfg-summary').textContent = '🤖 ' + cfg.model;
+    $('open-cfg').textContent = '⚙ configure';
+  } else {
+    bar.classList.remove('ok');
+    $('cfg-summary').textContent = '⚡ extractive mode — works now, no key needed';
+    $('open-cfg').textContent = '⚙ use an LLM';
+  }
+}
+function toast(msg, isErr){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* config modal */
+$('open-cfg').onclick = () => {
+  $('cfg-modal').classList.add('open');
+  $('cfg-url').value = cfg.url || '';
+  $('cfg-model').value = cfg.model || '';
+  $('cfg-key').value = cfg.key || '';
+};
+$('cfg-cancel').onclick = () => $('cfg-modal').classList.remove('open');
+$('cfg-clear').onclick = () => {
+  cfg = {};
+  saveCfg(); updateSettingsBar();
+  $('cfg-modal').classList.remove('open');
+  toast('Key cleared — back to extractive mode.');
+};
+$('cfg-preset').onchange = e => {
+  const p = PRESETS[e.target.value];
+  if(p){ $('cfg-url').value = p.url; $('cfg-model').value = p.model; }
+};
+$('cfg-save').onclick = () => {
+  cfg = { url:$('cfg-url').value.trim(), model:$('cfg-model').value.trim(), key:$('cfg-key').value.trim() };
+  saveCfg(); updateSettingsBar();
+  $('cfg-modal').classList.remove('open');
+  toast('Configuration saved.');
+};
+
+document.querySelectorAll('.sug-btn').forEach(btn => {
+  btn.onclick = () => { $('q-input').value = btn.dataset.q; ask(); };
+});
+
+const ta = $('q-input');
+ta.addEventListener('input', () => {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+});
+ta.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); ask(); }
+});
+$('send-btn').onclick = ask;
+
+/* ============== RENDERING ============== */
+function renderChunks(results){
+  const el = $('chunks-list');
+  if(!results.length){
+    el.innerHTML = '<div class="empty-state">No relevant chunks found above the score threshold.</div>';
+    return;
+  }
+  const top = results[0].score || 1;
+  el.innerHTML = results.map(r => {
+    const c = corpus[r.i];
+    const pct = Math.max(6, r.score / top * 100);
+    return `
+      <div class="chunk-card" data-i="${r.i}">
+        <div class="h">
+          <span class="ttl">${c.paper.split(' — ')[0]}</span>
+          <span class="score">${r.score.toFixed(2)}</span>
+        </div>
+        <div class="scorebar"><i style="width:${pct}%"></i></div>
+        <div class="sec">${c.section} · bm25 ${r.bm25.toFixed(2)} · tags +${r.tagOv}</div>
+        <div class="snip">${c.text}</div>
+      </div>`;
+  }).join('');
+  el.querySelectorAll('.chunk-card').forEach(card => {
+    card.onclick = () => card.classList.toggle('expanded');
+  });
+}
+
+function buildPrompt(query, results){
+  const ctx = results.map((r, idx) => {
+    const c = corpus[r.i];
+    return `[${idx+1}] ${c.paper} (${c.section})\n${c.text}`;
+  }).join('\n\n');
+  return {
+    system: `You are a precise scientific assistant. Answer the user's question using ONLY the context passages below. Cite passages by their bracketed number, like [1] or [2]. If the context doesn't contain the answer, say "the corpus doesn't cover this" — do not make things up.`,
+    user: `CONTEXT:\n${ctx}\n\nQUESTION: ${query}\n\nAnswer concisely, citing the relevant passages.`,
+  };
+}
+
+async function callLLM(prompt){
+  const res = await fetch(cfg.url, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + cfg.key },
+    body: JSON.stringify({
+      model: cfg.model,
+      messages: [
+        { role:'system', content: prompt.system },
+        { role:'user',   content: prompt.user },
+      ],
+      temperature: .2,
+      max_tokens: 600,
+    }),
+  });
+  if(!res.ok){
+    const txt = await res.text().catch(() => '');
+    throw new Error('LLM API error ' + res.status + ': ' + txt.slice(0, 200));
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '(empty response)';
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function citationsHtml(results){
+  return '<div class="citations">' + results.map((r, i) => {
+    const c = corpus[r.i];
+    return `<span class="cite" title="${escapeHtml(c.section)}">[${i+1}] ${escapeHtml(c.paper.split(' — ')[0])}</span>`;
+  }).join('') + '</div>';
+}
+
+function appendMsg(role, content){
+  const msgs = $('msgs');
+  const empty = $('empty-state');
+  if(empty) empty.remove();
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = `
+    <span class="role">${role === 'user' ? 'you' : 'assistant'}</span>
+    <div class="content">${escapeHtml(content)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+/* ============== ASK FLOW ============== */
+async function ask(){
+  const q = $('q-input').value.trim();
+  if(!q || !index) return;
+
+  appendMsg('user', q);
+  $('q-input').value = '';
+  ta.style.height = 'auto';
+  $('send-btn').disabled = true;
+
+  const { results, latencyMs } = search(q, 4);
+  $('stat-latency').textContent = latencyMs.toFixed(1) + ' ms';
+  renderChunks(results);
+
+  if(!results.length){
+    $('prompt-preview').textContent = '(no retrieval — query has no high-confidence matches)';
+    appendMsg('assistant', "The corpus doesn't cover this — no relevant chunks were retrieved with high enough confidence. Try asking about PINNs, neural operators, model compression, LLM inference, or cardiac biomechanics.");
+    $('send-btn').disabled = false;
+    return;
+  }
+
+  const prompt = buildPrompt(q, results);
+  $('prompt-preview').textContent = '── system ──\n' + prompt.system + '\n\n── user ──\n' + prompt.user;
+
+  if(!hasLLM()){
+    /* extractive mode: instant, local, honest */
+    const ans = extractiveAnswer(q, results) ||
+      'The retrieved passages matched, but no single sentence answers this directly — expand the chunks in the side panel to read them in full.';
+    const div = appendMsg('assistant', ans);
+    div.insertAdjacentHTML('beforeend',
+      citationsHtml(results) +
+      '<div class="modenote">⚡ extractive mode — sentences quoted verbatim from the retrieved passages. Configure an LLM (⚙) for generative answers.</div>');
+    $('msgs').scrollTop = $('msgs').scrollHeight;
+    $('send-btn').disabled = false;
+    return;
+  }
+
+  /* generative mode */
+  const thinking = appendMsg('assistant', 'Calling ' + cfg.model + '…');
+  thinking.classList.add('thinking');
+  try{
+    const answer = await callLLM(prompt);
+    thinking.classList.remove('thinking');
+    thinking.querySelector('.content').textContent = answer;
+    thinking.insertAdjacentHTML('beforeend', citationsHtml(results));
+  } catch(err){
+    thinking.classList.remove('thinking');
+    thinking.querySelector('.content').textContent = '⚠ ' + err.message;
+    toast(err.message, true);
+  } finally{
+    $('msgs').scrollTop = $('msgs').scrollHeight;
+    $('send-btn').disabled = false;
+  }
+}
+
+/* ============== BOOT ============== */
+async function boot(){
+  updateSettingsBar();
+  try{
+    await loadCorpus();
+  } catch(e){
+    console.error(e);
+    $('idx-summary').textContent = 'failed to load';
+    toast('Failed to load corpus.json — if you opened this via file://, run a local server.', true);
+  }
+}
+boot();
+</script>
+</body>
+</html>

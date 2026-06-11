@@ -1,0 +1,19 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (in case you ever add tooling)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Local notes
+notes.md
+draft/

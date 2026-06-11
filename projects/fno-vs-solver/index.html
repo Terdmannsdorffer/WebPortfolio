@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FNO vs. Solver — Neural Operator Speed Demo · Tomás Erdmannsdörffer</title>
+<meta name="description" content="Watch an operator surrogate solve viscous Burgers orders of magnitude faster than a finite-difference solver. Both start at the same time — live race in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f2e8; --card:#fffdf7;
+  --ink:#26243a; --dim:#6e6a80; --line:#e6ddcc;
+  --coral:#ff5d73; --teal:#0fb5a3; --yellow:#ffc445; --violet:#7c5cff; --gold:#d99a00;
+  --coral-bg:#ffe7ea; --teal-bg:#dcf4ef; --yellow-bg:#fff3d4; --violet-bg:#ebe4ff;
+  --body:'Space Grotesk', system-ui, sans-serif;
+  --display:'Fraunces', Georgia, serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(800px 460px at 90% -5%, rgba(255,196,69,.18), transparent 60%),
+    radial-gradient(700px 700px at -8% 50%, rgba(15,181,163,.10), transparent 60%);
+  background-attachment:fixed;
+}
+::selection{background:var(--yellow);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+.shell{max-width:1100px;margin:0 auto;padding:0 24px}
+
+header{padding:22px 0}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.crumb{
+  display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:2px solid var(--ink);border-radius:999px;padding:8px 18px;font-weight:700;font-size:13.5px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .15s, box-shadow .15s;
+}
+.crumb:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;background:var(--card);border:2px solid var(--ink);
+  border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;box-shadow:2px 2px 0 var(--ink);
+}
+.chip.live{background:var(--yellow-bg)}
+
+h1{font-family:var(--display);font-weight:500;font-size:clamp(34px,5.4vw,58px);line-height:1.05;letter-spacing:-.02em;margin:26px 0 14px}
+h1 em{font-style:italic;color:var(--gold);background:linear-gradient(transparent 64%,var(--yellow-bg) 64%)}
+.lede{color:var(--dim);max-width:700px;margin:0 0 22px;line-height:1.75}
+.lede b{color:var(--ink);font-weight:600}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.tag{font-family:var(--mono);font-size:11px;padding:4px 12px;border:1.5px solid var(--line);border-radius:999px;color:var(--dim);background:var(--card)}
+
+/* controls */
+.controls{
+  display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;
+  background:var(--card);border:2px solid var(--ink);border-radius:20px;
+  box-shadow:4px 4px 0 var(--ink);padding:18px 22px;margin-bottom:24px;
+}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}
+.ctrl label{font-size:11.5px;color:var(--dim);font-weight:700;display:flex;justify-content:space-between}
+.ctrl label .v{color:var(--gold);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ctrl input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;background:var(--line);
+  border-radius:99px;outline:none;cursor:pointer;
+}
+.ctrl input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:17px;height:17px;background:var(--yellow);
+  border:2px solid var(--ink);border-radius:50%;cursor:pointer;
+}
+.ctrl input[type=range]::-moz-range-thumb{width:15px;height:15px;background:var(--yellow);border:2px solid var(--ink);border-radius:50%;cursor:pointer}
+.ctrl select{
+  background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:10px;
+  padding:8px 10px;font-family:var(--mono);font-size:12px;cursor:pointer;
+}
+.btns{display:flex;gap:10px;margin-left:auto}
+button.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border:2px solid var(--ink);
+  border-radius:999px;background:var(--card);color:var(--ink);font-family:var(--body);
+  font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:3px 3px 0 var(--ink);
+  transition:transform .15s, box-shadow .15s;
+}
+button.btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+button.btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+button.btn.primary{background:var(--yellow)}
+button.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+/* race */
+.race{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+@media (max-width:860px){.race{grid-template-columns:1fr}}
+.racer{background:var(--card);border:2px solid var(--ink);border-radius:20px;box-shadow:4px 4px 0 var(--ink);overflow:hidden}
+.racer .head{padding:13px 18px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.racer.fd .head{background:var(--teal-bg)}
+.racer.op .head{background:var(--coral-bg)}
+.racer .ttl{font-weight:700;font-size:14px}
+.racer .sub{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:2px}
+.badge{
+  font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 10px;border:1.5px solid var(--ink);
+  border-radius:999px;background:var(--card);letter-spacing:.05em;flex:0 0 auto;
+}
+.badge.live{background:var(--yellow)}
+.badge.done{background:var(--teal);color:#fff}
+.racer canvas{display:block;width:100%;height:240px;background:var(--paper)}
+.progress{height:7px;background:var(--line);border-top:1.5px solid var(--line)}
+.progress i{display:block;height:100%;width:0;background:var(--teal);transition:width .1s linear}
+.racer.op .progress i{background:var(--coral)}
+.racer .stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--ink)}
+.racer .stat{padding:10px 12px;text-align:center;border-left:1.5px solid var(--line)}
+.racer .stat:first-child{border-left:0}
+.racer .stat .k{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.racer .stat .v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.racer.fd .stat .v.hl{color:var(--teal)}
+.racer.op .stat .v.hl{color:var(--coral)}
+
+/* verdict */
+.verdict{
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  background:var(--card);border:2px solid var(--ink);border-radius:20px;
+  box-shadow:4px 4px 0 var(--ink);padding:16px 24px;margin-bottom:40px;
+}
+.verdict .lbl{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.verdict .speedup{font-family:var(--display);font-size:40px;font-weight:600;color:var(--coral);letter-spacing:-.02em;line-height:1}
+.verdict .err{color:var(--dim);font-size:13px}
+.verdict .err b{color:var(--teal);font-weight:700}
+.verdict .note{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim);max-width:380px;text-align:right}
+@media (max-width:700px){.verdict .note{margin-left:0;text-align:left}}
+
+/* explainer */
+.explain{background:var(--card);border:2px solid var(--ink);border-radius:22px;padding:30px 34px;box-shadow:5px 5px 0 var(--ink);margin-bottom:40px}
+.explain h2{font-family:var(--display);font-weight:600;font-size:clamp(24px,3.4vw,32px);margin:0 0 14px;letter-spacing:-.01em}
+.explain h2 em{font-style:italic;color:var(--gold)}
+.explain p{color:var(--dim);margin:0 0 13px;max-width:780px;font-size:14px;line-height:1.75}
+.explain p b{color:var(--ink);font-weight:600}
+.explain .eq{
+  background:var(--paper);padding:13px 18px;margin:14px 0;border:1.5px solid var(--line);
+  border-left:4px solid var(--yellow);border-radius:10px;font-family:var(--mono);font-size:12.5px;overflow-x:auto;
+}
+.explain h4{
+  font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  display:inline-block;padding:3px 12px;border:1.5px solid var(--ink);border-radius:999px;
+  background:var(--yellow-bg);margin:18px 0 10px;
+}
+.explain ul{color:var(--dim);font-size:13.5px;padding-left:18px;line-height:1.85;margin:0 0 13px}
+.explain ul li b{color:var(--ink);font-weight:600}
+.honest{
+  margin-top:18px;padding:16px 20px;background:var(--coral-bg);border:2px solid var(--ink);
+  border-radius:14px;font-size:13px;color:var(--dim);line-height:1.75;
+}
+.honest b{color:var(--coral);font-weight:700}
+
+footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+@media (prefers-reduced-motion: reduce){ *{transition-duration:.01ms !important;animation-duration:.01ms !important} }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<header>
+  <div class="bar">
+    <a class="crumb" href="../../">← tomás.erdmannsdörffer</a>
+    <span class="chip live">● live race · pure JS, no libraries</span>
+  </div>
+</header>
+
+<h1>Neural operator <em>vs.</em> numerical solver.</h1>
+<p class="lede">
+  Two algorithms, same PDE, <b>same starting gun</b>. The <b>finite-difference solver</b> (left, teal)
+  crawls timestep by timestep, the way numerical codes have for decades. The <b>operator surrogate</b>
+  (right, coral) jumps straight from initial condition to any time t in one shot. Same answer to within
+  a couple percent — watch which one finishes. This is the story neural operators (FNO, DeepONet) tell,
+  and why they're one of the hottest directions in scientific ML.
+</p>
+<div class="tagrow">
+  <span class="tag">Burgers equation</span><span class="tag">Cole-Hopf operator</span>
+  <span class="tag">Finite difference</span><span class="tag">CFL-bounded</span>
+  <span class="tag">mode truncation</span><span class="tag">zero backend</span>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="ctrl">
+    <label>Viscosity ν <span class="v" id="nu-val">0.020</span></label>
+    <input type="range" id="nu" min="0" max="4" step="1" value="3">
+  </div>
+  <div class="ctrl">
+    <label>Initial condition</label>
+    <select id="ic">
+      <option value="2sin">sin(2πx) + ½ sin(4πx)</option>
+      <option value="sin">sin(2πx)</option>
+      <option value="cos3">cos(2πx) + ⅓ sin(6πx)</option>
+      <option value="step">smoothed step</option>
+      <option value="bump">gaussian bump</option>
+    </select>
+  </div>
+  <div class="ctrl">
+    <label>Grid size Nx <span class="v" id="nx-val">256</span></label>
+    <input type="range" id="nx" min="0" max="3" step="1" value="2">
+  </div>
+  <div class="ctrl">
+    <label>Modes kept K <span class="v" id="K-val">24</span></label>
+    <input type="range" id="K" min="4" max="48" step="2" value="24">
+  </div>
+  <div class="btns">
+    <button class="btn" id="btn-brutal">🔥 make it brutal</button>
+    <button class="btn primary" id="btn-race">🏁 race</button>
+  </div>
+</div>
+
+<!-- RACE -->
+<div class="race">
+
+  <div class="racer fd">
+    <div class="head">
+      <div>
+        <div class="ttl">▸ Finite-difference solver</div>
+        <div class="sub">explicit Euler · central differences · CFL-bounded Δt</div>
+      </div>
+      <span class="badge" id="fd-status">idle</span>
+    </div>
+    <canvas id="fd-canvas"></canvas>
+    <div class="progress"><i id="fd-prog"></i></div>
+    <div class="stats">
+      <div class="stat"><div class="k">step</div><div class="v hl" id="fd-step">—</div></div>
+      <div class="stat"><div class="k">sim t</div><div class="v" id="fd-time">—</div></div>
+      <div class="stat"><div class="k">compute ms</div><div class="v" id="fd-wall">—</div></div>
+    </div>
+  </div>
+
+  <div class="racer op">
+    <div class="head">
+      <div>
+        <div class="ttl">◆ Operator surrogate</div>
+        <div class="sub">Cole-Hopf → heat eq. in Fourier modes · evaluate any t directly</div>
+      </div>
+      <span class="badge" id="op-status">idle</span>
+    </div>
+    <canvas id="op-canvas"></canvas>
+    <div class="progress"><i id="op-prog"></i></div>
+    <div class="stats">
+      <div class="stat"><div class="k">setup ms</div><div class="v" id="op-setup">—</div></div>
+      <div class="stat"><div class="k">eval ms</div><div class="v hl" id="op-eval">—</div></div>
+      <div class="stat"><div class="k">total ms</div><div class="v" id="op-wall">—</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- VERDICT -->
+<div class="verdict">
+  <div>
+    <div class="lbl">speedup</div>
+    <div class="speedup" id="v-speedup">—</div>
+  </div>
+  <div>
+    <div class="lbl">accuracy</div>
+    <div class="err" id="v-err">press race to find out</div>
+  </div>
+  <div class="note" id="v-note">After the race, the solver's final answer is overlaid (dashed) on the operator's — they should sit on top of each other.</div>
+</div>
+
+<!-- EXPLAINER -->
+<section class="explain">
+  <h2>What you're actually <em>watching</em></h2>
+  <p>Both sides solve the 1D viscous Burgers equation — the canonical nonlinear PDE benchmark mixing advection and diffusion:</p>
+  <div class="eq">∂u/∂t + u · ∂u/∂x = ν · ∂²u/∂x² &nbsp;&nbsp; x ∈ [0, 1], periodic</div>
+
+  <h4>the solver (left)</h4>
+  <p>
+    Classical explicit finite differences. The CFL stability condition forces tiny timesteps — for
+    ν = 0.02 at Nx = 256 that's <b>thousands of sequential steps</b> to reach t = 0.5, and you can't
+    compute step n before step n−1 exists. The animation deliberately shows the time-marching.
+  </p>
+
+  <h4>the operator (right)</h4>
+  <p>
+    Burgers admits the <b>Cole-Hopf transformation</b>: substitute u = −2ν·φₓ/φ and φ obeys the
+    <i>linear</i> heat equation, which is diagonal in Fourier space — every mode just decays
+    exponentially. So the "operator" maps the initial condition to its spectral coefficients once,
+    and evaluating the solution at <b>any</b> time t is a single O(Nx·K) pass. No time marching at all.
+  </p>
+  <div class="eq">φ̂(t, k) = φ̂(0, k) · e^(−ν(2πk)²t) &nbsp; → &nbsp; u(t, x) = −2ν · φₓ/φ</div>
+
+  <h4>why this is the neural-operator story</h4>
+  <p>
+    A neural operator like <b>FNO</b> (Li et al., 2021) does conceptually the same thing — it learns a
+    map from initial conditions to solutions, parameterized in frequency space, for problems where
+    no analytic transform exists (Navier-Stokes, Darcy flow, weather). Trained once on solver
+    outputs, then deployed at constant inference cost. Published FNO speedups reach 1000×+; what you
+    measure here is the same structural advantage in its purest form.
+  </p>
+
+  <div class="honest">
+    <b>Honest framing.</b> The right-hand racer is <i>not</i> a trained neural network — it's the exact
+    Cole-Hopf operator. Deliberate choice: training a real FNO and shipping weights would add days of GPU
+    time without changing the visual story, and the analytic operator makes the accuracy comparison clean.
+    A real FNO replaces the analytic step with a learned one. Same architecture concept, same punchline.
+  </div>
+
+  <h4>try this</h4>
+  <ul>
+    <li>Hit <b>🔥 make it brutal</b> — high viscosity + fine grid crushes the solver (~10,000+ steps); the operator barely notices.</li>
+    <li>Drop <b>modes K to 6</b> — watch the surrogate lose the sharp shock but keep its speed. Accuracy/cost knob, live.</li>
+    <li>Try the <b>smoothed step</b> IC — Burgers steepens it into a traveling shock front.</li>
+    <li>At the lowest ν the truncated operator struggles near shocks — push K to 40+ to recover accuracy.</li>
+  </ul>
+</section>
+
+<footer>
+  <span>© 2026 Tomás Erdmannsdörffer · <a href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener" style="font-weight:700">github</a></span>
+  <a href="../../">← back to portfolio</a>
+</footer>
+
+</div>
+
+<script>
+'use strict';
+
+/* ============== CONFIG ============== */
+const NU_OPTS = [0.003, 0.005, 0.01, 0.02, 0.05];
+const NX_OPTS = [128, 192, 256, 384];
+const T_FINAL = 0.5;
+const DPR = Math.min(window.devicePixelRatio || 1, 1.75);
+
+const state = { nu:0.02, Nx:256, K:24, icType:'2sin', running:false };
+function $(id){ return document.getElementById(id); }
+
+/* ============== INITIAL CONDITIONS ============== */
+function makeIC(type, Nx){
+  const u = new Float32Array(Nx);
+  for(let i = 0; i < Nx; i++){
+    const x = i / Nx;
+    switch(type){
+      case 'sin':  u[i] = Math.sin(2*Math.PI*x); break;
+      case '2sin': u[i] = Math.sin(2*Math.PI*x) + .5*Math.sin(4*Math.PI*x + .7); break;
+      case 'cos3': u[i] = Math.cos(2*Math.PI*x) + (1/3)*Math.sin(6*Math.PI*x); break;
+      case 'step': u[i] = Math.tanh((.5 - x) / .05); break;
+      case 'bump': u[i] = Math.exp(-(((x - .5) / .08) ** 2)) - .4; break;
+    }
+  }
+  let mean = 0;
+  for(let i = 0; i < Nx; i++) mean += u[i];
+  mean /= Nx;
+  for(let i = 0; i < Nx; i++) u[i] -= mean;   // mean-zero for clean periodic Cole-Hopf
+  return u;
+}
+
+/* ============== FD SOLVER ============== */
+function fdStep(u, dt, nu){
+  const Nx = u.length, dx = 1 / Nx;
+  const out = new Float32Array(Nx);
+  for(let i = 0; i < Nx; i++){
+    const im = (i - 1 + Nx) % Nx, ip = (i + 1) % Nx;
+    const ux  = (u[ip] - u[im]) / (2 * dx);
+    const uxx = (u[ip] - 2*u[i] + u[im]) / (dx * dx);
+    out[i] = u[i] + dt * (-u[i] * ux + nu * uxx);
+  }
+  return out;
+}
+function getDt(Nx, nu, uMax){
+  const dx = 1 / Nx;
+  const dtVisc = .5 * dx * dx / (2 * nu);
+  const dtAdv  = .5 * dx / Math.max(.1, uMax);
+  return Math.min(dtVisc, dtAdv);
+}
+
+/* ============== OPERATOR (Cole-Hopf, mode-truncated) ============== */
+class BurgersOperator {
+  constructor(u0, nu, K){
+    const Nx = u0.length, dx = 1 / Nx;
+    this.Nx = Nx; this.nu = nu;
+    const phi = new Float64Array(Nx);
+    let U = 0;
+    for(let i = 0; i < Nx; i++){
+      U += u0[i] * dx;
+      phi[i] = Math.exp(-U / (2 * nu));
+    }
+    this.K = Math.min(K, Math.floor(Nx / 2));
+    const M = 2 * this.K + 1;
+    this.M = M;
+    this.kfs = new Float64Array(M);
+    this.ck_re = new Float64Array(M);
+    this.ck_im = new Float64Array(M);
+    for(let kI = 0; kI < M; kI++){
+      const k = kI - this.K;
+      this.kfs[kI] = k;
+      const kPos = (k + Nx) % Nx;
+      let re = 0, im = 0;
+      for(let j = 0; j < Nx; j++){
+        const ang = -2 * Math.PI * kPos * j / Nx;
+        re += phi[j] * Math.cos(ang);
+        im += phi[j] * Math.sin(ang);
+      }
+      this.ck_re[kI] = re / Nx;
+      this.ck_im[kI] = im / Nx;
+    }
+    this.cosT = new Float64Array(Nx * M);
+    this.sinT = new Float64Array(Nx * M);
+    for(let j = 0; j < Nx; j++)
+      for(let kI = 0; kI < M; kI++){
+        const kPos = (this.kfs[kI] + Nx) % Nx;
+        const ang = 2 * Math.PI * kPos * j / Nx;
+        this.cosT[j*M + kI] = Math.cos(ang);
+        this.sinT[j*M + kI] = Math.sin(ang);
+      }
+  }
+  predict(t){
+    const { Nx, M, nu } = this;
+    const dec = new Float64Array(M);
+    for(let kI = 0; kI < M; kI++)
+      dec[kI] = Math.exp(-(nu * (2*Math.PI*this.kfs[kI])**2 * t));
+    const uT = new Float32Array(Nx);
+    for(let j = 0; j < Nx; j++){
+      let phi = 0, phix = 0;
+      const base = j * M;
+      for(let kI = 0; kI < M; kI++){
+        const cre = this.ck_re[kI] * dec[kI];
+        const cim = this.ck_im[kI] * dec[kI];
+        const cos = this.cosT[base + kI], sin = this.sinT[base + kI];
+        phi  += cre * cos - cim * sin;
+        const d = 2 * Math.PI * this.kfs[kI];
+        phix += -cim * d * cos - cre * d * sin;
+      }
+      uT[j] = -2 * nu * phix / phi;
+    }
+    return uT;
+  }
+}
+
+/* ============== RENDERING (light theme, DPR-aware) ============== */
+const fdC = $('fd-canvas'), opC = $('op-canvas');
+function sizeCanvases(){
+  for(const c of [fdC, opC]){
+    const r = c.getBoundingClientRect();
+    c.width  = Math.max(2, Math.round(r.width * DPR));
+    c.height = Math.max(2, Math.round(r.height * DPR));
+  }
+}
+addEventListener('resize', () => { sizeCanvases(); drawIdle(); }, { passive:true });
+
+function drawCurve(ctx, u, color, ghost, overlay){
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  // grid
+  ctx.strokeStyle = '#eee5d4'; ctx.lineWidth = 1 * DPR;
+  for(let i = 0; i <= 4; i++){
+    const y = i / 4 * H;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.strokeStyle = '#e6ddcc';
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+  ctx.fillStyle = '#9d99a8';
+  ctx.font = `${10 * DPR}px JetBrains Mono, monospace`;
+  ctx.fillText('+1.5', 5 * DPR, 13 * DPR);
+  ctx.fillText('−1.5', 5 * DPR, H - 6 * DPR);
+
+  const plot = (arr, col, lw, alpha, dash) => {
+    if(!arr) return;
+    ctx.strokeStyle = col; ctx.lineWidth = lw * DPR; ctx.globalAlpha = alpha;
+    ctx.setLineDash(dash || []);
+    ctx.beginPath();
+    const N = arr.length;
+    for(let i = 0; i < N; i++){
+      const v = Math.max(-1.5, Math.min(1.5, arr[i]));
+      const x = i / (N - 1) * W;
+      const y = H/2 - v / 1.5 * (H/2 - 10 * DPR);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+  };
+  plot(ghost, color, 1.2, .22);
+  plot(u, color, 2.2, 1);
+  plot(overlay, '#26243a', 1.6, .85, [5 * DPR, 4 * DPR]);
+}
+
+function drawIdle(){
+  const ic = makeIC(state.icType, state.Nx);
+  drawCurve(fdC.getContext('2d'), ic, '#0fb5a3');
+  drawCurve(opC.getContext('2d'), ic, '#ff5d73');
+}
+
+/* ============== THE RACE (both start simultaneously) ============== */
+async function runFD(ic){
+  const { nu, Nx } = state;
+  const ctx = fdC.getContext('2d');
+  let uMax = 0;
+  for(let i = 0; i < Nx; i++) uMax = Math.max(uMax, Math.abs(ic[i]));
+  const dt = getDt(Nx, nu, uMax);
+  const totalSteps = Math.ceil(T_FINAL / dt);
+  const realDt = T_FINAL / totalSteps;
+  const frames = Math.min(70, totalSteps);
+  const perFrame = Math.ceil(totalSteps / frames);
+
+  $('fd-status').textContent = 'running';
+  $('fd-status').className = 'badge live';
+
+  let u = new Float32Array(ic), cur = 0, wall = 0;
+  while(cur < totalSteps){
+    const t0 = performance.now();
+    const n = Math.min(perFrame, totalSteps - cur);
+    for(let s = 0; s < n; s++){ u = fdStep(u, realDt, nu); cur++; }
+    wall += performance.now() - t0;
+    drawCurve(ctx, u, '#0fb5a3', ic);
+    $('fd-step').textContent = cur;
+    $('fd-time').textContent = (cur * realDt).toFixed(3);
+    $('fd-wall').textContent = wall.toFixed(1);
+    $('fd-prog').style.width = (cur / totalSteps * 100) + '%';
+    await new Promise(r => requestAnimationFrame(r));
+  }
+  $('fd-status').textContent = 'done';
+  $('fd-status').className = 'badge done';
+  return { u, wall, totalSteps };
+}
+
+async function runOp(ic){
+  const { nu, K } = state;
+  const ctx = opC.getContext('2d');
+  $('op-status').textContent = 'building';
+  $('op-status').className = 'badge live';
+  await new Promise(r => requestAnimationFrame(r));
+
+  const t0 = performance.now();
+  const op = new BurgersOperator(ic, nu, K);
+  const setupMs = performance.now() - t0;
+
+  let uOp;
+  const t1 = performance.now();
+  for(let r = 0; r < 20; r++) uOp = op.predict(T_FINAL);
+  const evalMs = (performance.now() - t1) / 20;
+  const total = setupMs + evalMs;
+
+  // quick visual sweep t: 0 → T so you see it "solve" — done in a blink
+  const sweep = 24;
+  for(let i = 1; i <= sweep; i++){
+    const t = i / sweep * T_FINAL;
+    drawCurve(ctx, op.predict(t), '#ff5d73', ic);
+    $('op-prog').style.width = (i / sweep * 100) + '%';
+    await new Promise(r => requestAnimationFrame(r));
+  }
+  $('op-setup').textContent = setupMs.toFixed(2);
+  $('op-eval').textContent  = evalMs.toFixed(2);
+  $('op-wall').textContent  = total.toFixed(2);
+  $('op-status').textContent = 'done — waiting';
+  $('op-status').className = 'badge done';
+  return { uOp, setupMs, evalMs, total };
+}
+
+async function race(){
+  const ic = makeIC(state.icType, state.Nx);
+  ['fd-step','fd-time','fd-wall','op-setup','op-eval','op-wall'].forEach(id => $(id).textContent = '—');
+  $('fd-prog').style.width = '0%';
+  $('op-prog').style.width = '0%';
+  $('v-speedup').textContent = '—';
+  $('v-err').textContent = 'racing…';
+
+  // 🏁 both start on the same gun
+  const [fd, op] = await Promise.all([runFD(ic), runOp(ic)]);
+  $('op-status').textContent = 'done';
+
+  // verification overlay: solver final (dashed ink) on operator canvas
+  drawCurve(opC.getContext('2d'), op.uOp, '#ff5d73', ic, fd.u);
+  drawCurve(fdC.getContext('2d'), fd.u, '#0fb5a3', ic);
+
+  let err = 0, norm = 0;
+  for(let i = 0; i < fd.u.length; i++){
+    err += (op.uOp[i] - fd.u[i]) ** 2;
+    norm += fd.u[i] ** 2;
+  }
+  const relErr = norm > 0 ? Math.sqrt(err / norm) * 100 : 0;
+  const speedup = fd.wall / op.total;
+
+  $('v-speedup').textContent = speedup.toFixed(0) + '×';
+  $('v-err').innerHTML = `relative L2 error <b>${relErr.toFixed(2)}%</b> — dashed line = solver's answer, overlaid on the operator's`;
+  $('v-note').textContent = `solver: ${fd.wall.toFixed(0)} ms over ${fd.totalSteps} sequential steps · operator: ${op.total.toFixed(2)} ms (setup ${op.setupMs.toFixed(1)} + one eval ${op.evalMs.toFixed(2)})`;
+
+  state.running = false;
+  $('btn-race').disabled = false;
+  $('btn-race').textContent = '🏁 race again';
+}
+
+/* ============== UI ============== */
+function syncLabels(){
+  state.nu = NU_OPTS[+$('nu').value];
+  $('nu-val').textContent = state.nu.toFixed(3);
+  state.Nx = NX_OPTS[+$('nx').value];
+  $('nx-val').textContent = state.Nx;
+  state.K = +$('K').value;
+  $('K-val').textContent = state.K;
+  state.icType = $('ic').value;
+}
+['nu','nx','K','ic'].forEach(id => $(id).addEventListener('input', () => {
+  syncLabels();
+  if(!state.running) drawIdle();
+}));
+
+$('btn-race').onclick = () => {
+  if(state.running) return;
+  state.running = true;
+  $('btn-race').disabled = true;
+  $('btn-race').textContent = '⟳ racing…';
+  race().catch(err => {
+    console.error(err);
+    state.running = false;
+    $('btn-race').disabled = false;
+    $('btn-race').textContent = '🏁 race';
+    $('v-err').textContent = 'error: ' + err.message;
+  });
+};
+
+$('btn-brutal').onclick = () => {
+  if(state.running) return;
+  $('nu').value = 4;            // ν = 0.05 → vicious CFL bound
+  $('nx').value = 3;            // Nx = 384
+  $('K').value = 32;
+  syncLabels();
+  $('btn-race').click();
+};
+
+/* boot */
+syncLabels();
+sizeCanvases();
+drawIdle();
+</script>
+</body>
+</html>

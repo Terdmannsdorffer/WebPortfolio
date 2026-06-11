@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PINN Playground — Burgers Equation in the Browser · Tomás Erdmannsdörffer</title>
+<meta name="description" content="Train a physics-informed neural network in your browser. Solves the 1D viscous Burgers equation in real time using TensorFlow.js.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<style>
+:root{
+  --paper:#f7f2e8; --card:#fffdf7;
+  --ink:#26243a; --dim:#6e6a80; --line:#e6ddcc;
+  --coral:#ff5d73; --teal:#0fb5a3; --yellow:#ffc445; --violet:#7c5cff; --pink:#ff8fd2;
+  --coral-bg:#ffe7ea; --teal-bg:#dcf4ef; --yellow-bg:#fff3d4; --violet-bg:#ebe4ff;
+  --body:'Space Grotesk', system-ui, sans-serif;
+  --display:'Fraunces', Georgia, serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(800px 460px at 90% -5%, rgba(15,181,163,.14), transparent 60%),
+    radial-gradient(700px 700px at -8% 50%, rgba(255,196,69,.12), transparent 60%);
+  background-attachment:fixed;
+}
+::selection{background:var(--yellow);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+.shell{max-width:1100px;margin:0 auto;padding:0 24px}
+
+header{padding:22px 0}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.crumb{
+  display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:2px solid var(--ink);border-radius:999px;padding:8px 18px;font-weight:700;font-size:13.5px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .15s, box-shadow .15s;
+}
+.crumb:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;background:var(--card);border:2px solid var(--ink);
+  border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;box-shadow:2px 2px 0 var(--ink);
+}
+.chip.live{background:var(--teal-bg)}
+
+h1{font-family:var(--display);font-weight:500;font-size:clamp(34px,5.4vw,58px);line-height:1.05;letter-spacing:-.02em;margin:26px 0 14px}
+h1 em{font-style:italic;color:var(--teal);background:linear-gradient(transparent 64%,var(--teal-bg) 64%)}
+.lede{color:var(--dim);max-width:680px;margin:0 0 22px;line-height:1.75}
+.lede b{color:var(--ink);font-weight:600}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.tag{font-family:var(--mono);font-size:11px;padding:4px 12px;border:1.5px solid var(--line);border-radius:999px;color:var(--dim);background:var(--card)}
+
+/* 10-second explainer strip */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px}
+@media (max-width:760px){.strip{grid-template-columns:1fr}}
+.strip .s{
+  background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:14px 18px;
+  box-shadow:3px 3px 0 var(--ink);font-size:13px;color:var(--dim);line-height:1.6;
+}
+.strip .s b{color:var(--ink);font-weight:700;display:block;margin-bottom:3px}
+.strip .s .n{
+  display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;
+  border:2px solid var(--ink);font-family:var(--mono);font-size:11px;font-weight:600;margin-right:8px;
+}
+.strip .s:nth-child(1) .n{background:var(--teal-bg)}
+.strip .s:nth-child(2) .n{background:var(--yellow-bg)}
+.strip .s:nth-child(3) .n{background:var(--coral-bg)}
+
+/* workspace */
+.workspace{display:grid;grid-template-columns:300px 1fr;gap:24px;margin-bottom:40px}
+@media (max-width:880px){.workspace{grid-template-columns:1fr}}
+.panel{background:var(--card);border:2px solid var(--ink);border-radius:20px;padding:20px 22px;box-shadow:4px 4px 0 var(--ink);align-self:start}
+.panel h3{
+  font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  margin:0 0 16px;display:inline-block;padding:4px 12px;border:1.5px solid var(--ink);border-radius:999px;background:var(--teal-bg);
+}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.preset{
+  flex:1;min-width:78px;background:var(--paper);border:2px solid var(--ink);border-radius:12px;
+  font-family:var(--body);font-size:11.5px;font-weight:700;padding:8px 6px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);transition:transform .12s, box-shadow .12s;
+}
+.preset:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.preset:active{transform:translate(1px,1px);box-shadow:0 0 0 var(--ink)}
+.ctrl{margin-bottom:15px}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--dim);margin-bottom:6px;font-weight:600}
+.ctrl label .val{color:var(--teal);font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums}
+.ctrl input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;background:var(--line);
+  border-radius:99px;outline:none;cursor:pointer;
+}
+.ctrl input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:17px;height:17px;background:var(--teal);
+  border:2px solid var(--ink);border-radius:50%;cursor:pointer;
+}
+.ctrl input[type=range]::-moz-range-thumb{width:15px;height:15px;background:var(--teal);border:2px solid var(--ink);border-radius:50%;cursor:pointer}
+.ctrl .hint{font-size:10.5px;color:var(--dim);margin-top:3px;font-family:var(--mono)}
+.btns{display:flex;gap:8px;margin-top:14px}
+button.btn{
+  flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 12px;border:2px solid var(--ink);border-radius:999px;background:var(--card);
+  color:var(--ink);font-family:var(--body);font-size:13px;font-weight:700;cursor:pointer;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .15s, box-shadow .15s;
+}
+button.btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+button.btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+button.btn.primary{background:var(--teal);color:#fff}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+.pde-box{font-family:var(--mono);font-size:12px;color:var(--dim);line-height:1.9;background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px}
+.pde-box b{color:var(--ink)}
+
+/* viz column */
+.status{
+  display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--ink);
+  border-radius:999px;padding:8px 18px;font-size:13px;font-weight:600;box-shadow:3px 3px 0 var(--ink);
+  margin-bottom:16px;
+}
+.status .dot{width:9px;height:9px;border-radius:50%;background:var(--dim);flex:0 0 auto}
+.status.training .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(15,181,163,.7);animation:pulse 1.4s infinite}
+.status.error .dot{background:var(--coral)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(15,181,163,.55)}70%{box-shadow:0 0 0 7px rgba(15,181,163,0)}100%{box-shadow:0 0 0 0 rgba(15,181,163,0)}}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:10px 14px;box-shadow:2px 2px 0 var(--ink)}
+.stat .k{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.stat .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.stat .v.hl{color:var(--teal)}
+
+.viz-card{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:14px 16px;box-shadow:4px 4px 0 var(--ink);margin-bottom:16px}
+.viz-card .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px;flex-wrap:wrap}
+.viz-card .ttl{font-weight:700;font-size:14px}
+.viz-card .sub{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.viz-card canvas{display:block;width:100%;border:1.5px solid var(--line);border-radius:10px;background:var(--paper)}
+#sol-canvas{height:260px}
+#slice-canvas{height:190px}
+#loss-canvas{height:170px}
+.colorbar{display:flex;align-items:center;gap:12px;margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--dim)}
+.colorbar .grad{flex:1;height:9px;border-radius:99px;border:1.5px solid var(--line);background:linear-gradient(to right,#053061,#2166ac,#4393c3,#92c5de,#f7f7f7,#fddbc7,#f4a582,#d6604d,#b2182b,#67001f)}
+
+/* explainer */
+.explain{background:var(--card);border:2px solid var(--ink);border-radius:22px;padding:30px 34px;box-shadow:5px 5px 0 var(--ink);margin-bottom:40px}
+.explain h2{font-family:var(--display);font-weight:600;font-size:clamp(24px,3.4vw,32px);margin:0 0 14px;letter-spacing:-.01em}
+.explain h2 em{font-style:italic;color:var(--teal)}
+.explain p{color:var(--dim);margin:0 0 13px;max-width:760px;font-size:14px;line-height:1.75}
+.explain p b{color:var(--ink);font-weight:600}
+.explain .eq{
+  background:var(--paper);padding:13px 18px;margin:14px 0;border:1.5px solid var(--line);
+  border-left:4px solid var(--teal);border-radius:10px;font-family:var(--mono);font-size:13px;overflow-x:auto;
+}
+.explain h4{
+  font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  display:inline-block;padding:3px 12px;border:1.5px solid var(--ink);border-radius:999px;
+  background:var(--yellow-bg);margin:18px 0 10px;
+}
+footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+@media (prefers-reduced-motion: reduce){ *{transition-duration:.01ms !important;animation-duration:.01ms !important} }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<header>
+  <div class="bar">
+    <a class="crumb" href="../../">← tomás.erdmannsdörffer</a>
+    <span class="chip live">● trains live on your GPU · TensorFlow.js</span>
+  </div>
+</header>
+
+<h1>Watch a neural network <em>learn physics</em>.</h1>
+<p class="lede">
+  This page trains a <b>Physics-Informed Neural Network</b> in your browser to solve the 1D viscous
+  Burgers equation — the canonical benchmark from Raissi et al. (2019). <b>No data labels, no ground
+  truth</b>: the network learns purely from the PDE residual, boundary and initial conditions.
+  Hit a preset and watch it converge.
+</p>
+<div class="tagrow">
+  <span class="tag">PINN</span><span class="tag">Burgers equation</span><span class="tag">TensorFlow.js</span>
+  <span class="tag">WebGL</span><span class="tag">Autodiff</span><span class="tag">Zero data</span>
+</div>
+
+<div class="strip">
+  <div class="s"><b><span class="n">1</span>A net guesses u(t, x)</b> A small MLP maps any point in spacetime to a solution value. At first it's nonsense.</div>
+  <div class="s"><b><span class="n">2</span>Autodiff grades it</b> Exact derivatives ∂u/∂t, ∂u/∂x are plugged into the PDE. The violation <i>is</i> the loss.</div>
+  <div class="s"><b><span class="n">3</span>Adam fixes it</b> Each step nudges the weights until the heatmap below satisfies the physics everywhere.</div>
+</div>
+
+<div class="workspace">
+
+  <!-- CONTROLS -->
+  <div class="panel">
+    <h3>controls</h3>
+
+    <div class="presets">
+      <button class="preset" data-preset="quick">⚡ quick<br>demo</button>
+      <button class="preset" data-preset="shock">🌊 shock<br>wave</button>
+      <button class="preset" data-preset="tiny">🐜 tiny<br>net</button>
+    </div>
+
+    <div class="ctrl">
+      <label>Viscosity ν <span class="val" id="visc-val">0.01/π</span></label>
+      <input type="range" id="visc" min="0" max="4" step="1" value="1">
+      <div class="hint">smaller ν → sharper shock</div>
+    </div>
+    <div class="ctrl">
+      <label>Hidden width <span class="val" id="width-val">32</span></label>
+      <input type="range" id="width" min="8" max="64" step="8" value="32">
+    </div>
+    <div class="ctrl">
+      <label>Hidden layers <span class="val" id="depth-val">4</span></label>
+      <input type="range" id="depth" min="2" max="6" step="1" value="4">
+    </div>
+    <div class="ctrl">
+      <label>Learning rate <span class="val" id="lr-val">1e-3</span></label>
+      <input type="range" id="lr" min="0" max="4" step="1" value="2">
+    </div>
+    <div class="ctrl">
+      <label>Collocation pts <span class="val" id="nf-val">2000</span></label>
+      <input type="range" id="nf" min="500" max="5000" step="500" value="2000">
+    </div>
+    <div class="ctrl">
+      <label>PDE weight λ <span class="val" id="lam-val">1.0</span></label>
+      <input type="range" id="lam" min="0" max="6" step="1" value="3">
+    </div>
+
+    <div class="btns">
+      <button class="btn primary" id="btn-train">▶ train</button>
+      <button class="btn" id="btn-reset">reset</button>
+    </div>
+    <div class="btns" style="margin-top:8px">
+      <button class="btn" id="btn-rebuild">rebuild model</button>
+    </div>
+
+    <div class="pde-box">
+      <b>∂u/∂t + u·∂u/∂x = ν·∂²u/∂x²</b><br>
+      x ∈ [−1, 1] · t ∈ [0, 1]<br>
+      u(0, x) = −sin(πx)<br>
+      u(t, ±1) = 0
+    </div>
+  </div>
+
+  <!-- VIZ -->
+  <div>
+    <div class="status" id="status">
+      <span class="dot"></span>
+      <span id="status-text">Loading TensorFlow.js…</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">iteration</div><div class="v" id="stat-iter">0</div></div>
+      <div class="stat"><div class="k">total loss</div><div class="v hl" id="stat-loss">—</div></div>
+      <div class="stat"><div class="k">pde residual</div><div class="v" id="stat-pde">—</div></div>
+      <div class="stat"><div class="k">boundary + ic</div><div class="v" id="stat-bc">—</div></div>
+    </div>
+
+    <div class="viz-card">
+      <div class="head">
+        <span class="ttl">Predicted solution u(t, x)</span>
+        <span class="sub">x → horizontal · t → vertical (0 top, 1 bottom)</span>
+      </div>
+      <canvas id="sol-canvas"></canvas>
+      <div class="colorbar"><span>u = −1</span><div class="grad"></div><span>u = +1</span></div>
+    </div>
+
+    <div class="viz-card">
+      <div class="head">
+        <span class="ttl">Solution slices u(x) over time</span>
+        <span class="sub" id="slice-sub">t = 0 → 1, teal → coral</span>
+      </div>
+      <canvas id="slice-canvas"></canvas>
+    </div>
+
+    <div class="viz-card">
+      <div class="head">
+        <span class="ttl">Loss curves (log scale)</span>
+        <span class="sub" id="loss-sub">— total · — pde · — boundary</span>
+      </div>
+      <canvas id="loss-canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- EXPLAINER -->
+<section class="explain">
+  <h2>What's a <em>Physics-Informed Neural Network</em>?</h2>
+  <p>
+    A standard neural network learns from input/output pairs. A <b>PINN</b> learns from a differential
+    equation. Instead of asking <i>"what's the right answer for this input?"</i> it asks
+    <i>"how badly does my prediction violate the laws of physics?"</i> — and uses that violation as the loss.
+  </p>
+  <p>
+    We build a network u<sub>θ</sub>(t, x) that maps a point in spacetime to a solution value, use
+    automatic differentiation to get its partial derivatives — exactly, not numerically — and plug
+    them into the PDE residual:
+  </p>
+  <div class="eq">r(t, x) = ∂u/∂t + u · ∂u/∂x − ν · ∂²u/∂x²</div>
+  <p>
+    A perfect solution has r = 0 everywhere, so the loss is the mean squared residual at random
+    collocation points, plus penalties for the initial and boundary conditions:
+  </p>
+  <div class="eq">L = λ · ‖r‖² + ‖u(0, x) + sin(πx)‖² + ‖u(t, ±1)‖²</div>
+
+  <h4>why this matters</h4>
+  <p>
+    <b>No training data is required</b> — the "supervision" is the physics itself. That makes PINNs
+    valuable for inverse problems, high-dimensional PDEs where meshes explode, and domains where the
+    governing equations are known but measurements are scarce — like <b>cardiac biomechanics</b>,
+    my MSc research area.
+  </p>
+
+  <h4>things to try</h4>
+  <p>
+    · Hit <b>🌊 shock wave</b> and watch a discontinuity form near t ≈ 0.4.<br>
+    · Set the PDE weight λ to 0.01 — the network only learns the boundaries and ignores the physics.<br>
+    · Hit <b>🐜 tiny net</b> — an 8×2 MLP simply can't represent the solution. Underfitting, live.<br>
+    · Push collocation points to 5000 for cleaner residuals at a higher cost per step.
+  </p>
+
+  <h4>implementation notes</h4>
+  <p>
+    Fully-connected tanh MLP. First derivatives via <b>tf.grad</b>; the second derivative u<sub>xx</sub>
+    uses a central difference of u<sub>x</sub> at x ± ε, since TensorFlow.js can't differentiate through
+    tf.grad like PyTorch's <b>create_graph=True</b> or JAX's <b>jacfwd/jacrev</b> — gradients still flow
+    correctly because each u<sub>x</sub> is itself a full autodiff result. Adam optimizer, WebGL backend,
+    and the training loop adapts how many steps it runs per frame to keep the page smooth on your device.
+  </p>
+</section>
+
+<footer>
+  <span>© 2026 Tomás Erdmannsdörffer · <a href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener" style="font-weight:700">github</a></span>
+  <a href="../../">← back to portfolio</a>
+</footer>
+
+</div>
+
+<script>
+'use strict';
+
+/* ============ PINN for 1D viscous Burgers ============ */
+const VISC_OPTS = [
+  {label:'1.0/π',  value: 1.0/Math.PI},
+  {label:'0.01/π', value: 0.01/Math.PI},
+  {label:'0.005/π',value: 0.005/Math.PI},
+  {label:'0.002/π',value: 0.002/Math.PI},
+  {label:'0.001/π',value: 0.001/Math.PI},
+];
+const LR_OPTS  = [1e-4, 5e-4, 1e-3, 3e-3, 1e-2];
+const LAM_OPTS = [0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0];
+
+const PRESET_DEFS = {
+  quick: { visc:0, width:32, depth:4, lr:3, nf:1500, lam:3 },   // smooth ν=1/π converges fast
+  shock: { visc:2, width:48, depth:4, lr:2, nf:2500, lam:3 },   // ν=0.005/π, sharp front
+  tiny:  { visc:1, width:8,  depth:2, lr:2, nf:1000, lam:3 },   // visible underfitting
+};
+
+const state = {
+  visc: 0.01/Math.PI, width: 32, depth: 4, lr: 1e-3, nF: 2000, lambda: 1.0,
+  vars: [], optimizer: null, iter: 0, training: false, history: [],
+  stepMsEma: 20,
+};
+
+function $(id){ return document.getElementById(id); }
+
+/* ---------- model ---------- */
+function buildModel(width, depth){
+  disposeVars();
+  const vars = [];
+  const sizes = [2];
+  for(let i = 0; i < depth; i++) sizes.push(width);
+  sizes.push(1);
+  for(let i = 0; i < sizes.length - 1; i++){
+    const limit = Math.sqrt(6 / (sizes[i] + sizes[i+1]));
+    vars.push({
+      W: tf.variable(tf.randomUniform([sizes[i], sizes[i+1]], -limit, limit), true, 'W'+i),
+      b: tf.variable(tf.zeros([sizes[i+1]]), true, 'b'+i),
+    });
+  }
+  state.vars = vars;
+  state.optimizer = tf.train.adam(state.lr);
+  state.iter = 0;
+  state.history = [];
+}
+function disposeVars(){
+  for(const {W, b} of state.vars){ W.dispose(); b.dispose(); }
+  state.vars = [];
+}
+function forward(tx){
+  let h = tx;
+  const L = state.vars.length;
+  for(let i = 0; i < L; i++){
+    const {W, b} = state.vars[i];
+    h = tf.add(tf.matMul(h, W), b);
+    if(i < L - 1) h = tf.tanh(h);
+  }
+  return h;
+}
+function uOfTX(t, x){ return forward(tf.concat([t, x], 1)); }
+
+/* ---------- training step ---------- */
+function trainStep(){
+  const nu = state.visc, lam = state.lambda, nF = state.nF;
+  const FD_EPS = 1e-3;
+  let pdeS = 0, bcS = 0, totS = 0;
+
+  state.optimizer.minimize(() => tf.tidy(() => {
+    const tF = tf.randomUniform([nF, 1], 0, 1);
+    const xF = tf.randomUniform([nF, 1], -1, 1);
+
+    const u_t = tf.grad(tIn => uOfTX(tIn, xF).sum())(tF);
+    const u_x = tf.grad(xIn => uOfTX(tF, xIn).sum())(xF);
+    // u_xx via central difference of autodiff u_x (tfjs can't nest tf.grad)
+    const u_x_p = tf.grad(xIn => uOfTX(tF, xIn).sum())(xF.add(FD_EPS));
+    const u_x_m = tf.grad(xIn => uOfTX(tF, xIn).sum())(xF.sub(FD_EPS));
+    const u_xx = tf.div(tf.sub(u_x_p, u_x_m), 2 * FD_EPS);
+
+    const u = uOfTX(tF, xF);
+    const r = tf.add(tf.add(u_t, tf.mul(u, u_x)), tf.mul(-nu, u_xx));
+    const pdeLoss = tf.mean(tf.square(r));
+
+    const xI = tf.randomUniform([200, 1], -1, 1);
+    const icLoss = tf.mean(tf.square(tf.add(uOfTX(tf.zeros([200, 1]), xI), tf.sin(tf.mul(xI, Math.PI)))));
+
+    const tB = tf.randomUniform([200, 1], 0, 1);
+    const xB = tf.concat([tf.fill([100, 1], -1), tf.fill([100, 1], 1)], 0);
+    const bcLoss = tf.mean(tf.square(uOfTX(tB, xB)));
+
+    const bcTotal = tf.add(icLoss, bcLoss);
+    const total = tf.add(tf.mul(lam, pdeLoss), bcTotal);
+
+    pdeS = pdeLoss.dataSync()[0];
+    bcS = bcTotal.dataSync()[0];
+    totS = total.dataSync()[0];
+    return total;
+  }), false, state.vars.flatMap(({W, b}) => [W, b]));
+
+  state.iter++;
+  state.history.push({ iter: state.iter, total: totS, pde: pdeS, bc: bcS });
+  if(state.history.length > 2000) state.history.shift();
+}
+
+/* ---------- canvases (DPR-aware, responsive) ---------- */
+const DPR = Math.min(window.devicePixelRatio || 1, 1.75);
+const solC = $('sol-canvas'), sliceC = $('slice-canvas'), lossC = $('loss-canvas');
+let lastGrid = null;                      // cached solution grid for redraws
+const GW = 100, GH = 80;
+
+function sizeCanvases(){
+  for(const c of [solC, sliceC, lossC]){
+    const r = c.getBoundingClientRect();
+    c.width  = Math.max(2, Math.round(r.width * DPR));
+    c.height = Math.max(2, Math.round(r.height * DPR));
+  }
+  if(lastGrid){ paintSolution(lastGrid); paintSlices(lastGrid); }
+  drawLoss();
+}
+addEventListener('resize', sizeCanvases, { passive:true });
+
+/* RdBu_r colormap, v in [-1, 1] */
+function cmap(v){
+  v = Math.max(-1, Math.min(1, v));
+  const s = [[-1,5,48,97],[-.66,33,102,172],[-.33,67,147,195],[0,247,247,247],[.33,244,165,130],[.66,214,96,77],[1,103,0,31]];
+  for(let i = 0; i < s.length - 1; i++){
+    if(v <= s[i+1][0]){
+      const t = (v - s[i][0]) / (s[i+1][0] - s[i][0]);
+      return [s[i][1]+t*(s[i+1][1]-s[i][1]) | 0, s[i][2]+t*(s[i+1][2]-s[i][2]) | 0, s[i][3]+t*(s[i+1][3]-s[i][3]) | 0];
+    }
+  }
+  return [103, 0, 31];
+}
+
+const off = document.createElement('canvas');
+off.width = GW; off.height = GH;
+const offCtx = off.getContext('2d');
+
+function paintSolution(arr){
+  const ctx = solC.getContext('2d');
+  const img = offCtx.createImageData(GW, GH);
+  for(let i = 0; i < GW * GH; i++){
+    const [r, g, b] = cmap(arr[i]);
+    img.data[i*4] = r; img.data[i*4+1] = g; img.data[i*4+2] = b; img.data[i*4+3] = 255;
+  }
+  offCtx.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.clearRect(0, 0, solC.width, solC.height);
+  ctx.drawImage(off, 0, 0, solC.width, solC.height);
+}
+
+function paintSlices(arr){
+  const ctx = sliceC.getContext('2d');
+  const W = sliceC.width, H = sliceC.height;
+  ctx.clearRect(0, 0, W, H);
+  // axes
+  ctx.strokeStyle = '#e6ddcc'; ctx.lineWidth = 1 * DPR;
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+  const tSlices = [0, .25, .5, .75, 1];
+  const a = { r:15, g:181, b:163 }, b2 = { r:255, g:93, b:115 };   // teal → coral
+  tSlices.forEach((tv, si) => {
+    const row = Math.min(GH - 1, Math.round(tv * (GH - 1)));
+    const k = si / (tSlices.length - 1);
+    ctx.strokeStyle = `rgb(${a.r+(b2.r-a.r)*k|0},${a.g+(b2.g-a.g)*k|0},${a.b+(b2.b-a.b)*k|0})`;
+    ctx.lineWidth = (si === 0 ? 1.2 : 1.8) * DPR;
+    ctx.globalAlpha = si === 0 ? .55 : 1;
+    ctx.beginPath();
+    for(let i = 0; i < GW; i++){
+      const v = Math.max(-1.2, Math.min(1.2, arr[row * GW + i]));
+      const x = i / (GW - 1) * W;
+      const y = H/2 - (v / 1.2) * (H/2 - 8 * DPR);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  });
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#6e6a80';
+  ctx.font = `${10 * DPR}px JetBrains Mono, monospace`;
+  ctx.fillText('x = -1', 6 * DPR, H - 6 * DPR);
+  ctx.fillText('x = +1', W - 42 * DPR, H - 6 * DPR);
+}
+
+async function drawSolution(){
+  if(!state.vars.length) return;
+  const u = tf.tidy(() => {
+    const tArr = new Float32Array(GW * GH), xArr = new Float32Array(GW * GH);
+    for(let j = 0; j < GH; j++)
+      for(let i = 0; i < GW; i++){
+        tArr[j*GW+i] = j / (GH - 1);
+        xArr[j*GW+i] = -1 + 2 * i / (GW - 1);
+      }
+    return uOfTX(tf.tensor(tArr, [GW*GH, 1]), tf.tensor(xArr, [GW*GH, 1]));
+  });
+  const arr = await u.data();
+  u.dispose();
+  lastGrid = arr;
+  paintSolution(arr);
+  paintSlices(arr);
+}
+
+function drawLoss(){
+  const ctx = lossC.getContext('2d');
+  const W = lossC.width, H = lossC.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = '#eee5d4'; ctx.lineWidth = 1 * DPR;
+  for(let i = 0; i <= 4; i++){
+    const y = i / 4 * H;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  const data = state.history;
+  if(data.length < 2) return;
+
+  const series = ['total', 'pde', 'bc'];
+  const colors = { total:'#ff5d73', pde:'#0fb5a3', bc:'#7c5cff' };
+  let ymin = Infinity, ymax = -Infinity;
+  for(const d of data) for(const k of series){
+    if(d[k] > 0 && isFinite(d[k])){
+      const lv = Math.log10(d[k]);
+      ymin = Math.min(ymin, lv); ymax = Math.max(ymax, lv);
+    }
+  }
+  if(!isFinite(ymin)) return;
+  if(ymax - ymin < .5){ ymax += .25; ymin -= .25; }
+  ymax += .1; ymin -= .1;
+
+  const padL = 40 * DPR, padT = 6 * DPR, padB = 8 * DPR;
+  const plotW = W - padL - 6 * DPR, plotH = H - padT - padB;
+  const x0 = data[0].iter, xr = Math.max(1, data[data.length-1].iter - x0);
+
+  ctx.fillStyle = '#9d99a8';
+  ctx.font = `${9.5 * DPR}px JetBrains Mono, monospace`;
+  for(let i = 0; i <= 4; i++){
+    const ly = ymax - i/4 * (ymax - ymin);
+    ctx.fillText('1e' + ly.toFixed(1), 2 * DPR, padT + i/4 * plotH + 3 * DPR);
+  }
+  for(const k of series){
+    ctx.strokeStyle = colors[k];
+    ctx.lineWidth = (k === 'total' ? 2 : 1.3) * DPR;
+    ctx.beginPath();
+    let started = false;
+    for(const d of data){
+      if(!(d[k] > 0) || !isFinite(d[k])) continue;
+      const px = padL + (d.iter - x0) / xr * plotW;
+      const py = padT + (1 - (Math.log10(d[k]) - ymin) / (ymax - ymin)) * plotH;
+      started ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      started = true;
+    }
+    ctx.stroke();
+  }
+  const last = data[data.length-1];
+  $('loss-sub').innerHTML =
+    `<span style="color:${colors.total}">● total ${last.total.toExponential(1)}</span> · ` +
+    `<span style="color:${colors.pde}">● pde ${last.pde.toExponential(1)}</span> · ` +
+    `<span style="color:${colors.bc}">● bc ${last.bc.toExponential(1)}</span>`;
+}
+
+function updateStats(){
+  $('stat-iter').textContent = state.iter;
+  const h = state.history;
+  const last = h[h.length-1];
+  $('stat-loss').textContent = last ? last.total.toExponential(1) : '—';
+  $('stat-pde').textContent  = last ? last.pde.toExponential(1)  : '—';
+  $('stat-bc').textContent   = last ? last.bc.toExponential(1)   : '—';
+}
+
+/* ---------- UI ---------- */
+function syncLabels(){
+  state.visc = VISC_OPTS[+$('visc').value].value;
+  $('visc-val').textContent = VISC_OPTS[+$('visc').value].label;
+  state.width = +$('width').value;  $('width-val').textContent = state.width;
+  state.depth = +$('depth').value;  $('depth-val').textContent = state.depth;
+  state.lr = LR_OPTS[+$('lr').value];
+  $('lr-val').textContent = state.lr.toExponential(0).replace('+','');
+  state.nF = +$('nf').value;        $('nf-val').textContent = state.nF;
+  state.lambda = LAM_OPTS[+$('lam').value];
+  $('lam-val').textContent = state.lambda.toString();
+}
+['visc','width','depth','lr','nf','lam'].forEach(id => {
+  $(id).addEventListener('input', () => {
+    syncLabels();
+    if(id === 'lr' && state.optimizer) state.optimizer = tf.train.adam(state.lr);
+  });
+});
+
+function setStatus(text, cls){
+  const el = $('status');
+  el.classList.remove('training','error');
+  if(cls) el.classList.add(cls);
+  $('status-text').innerHTML = text;
+}
+
+function startTraining(){
+  if(!state.vars.length) buildModel(state.width, state.depth);
+  state.training = true;
+  $('btn-train').textContent = '⏸ pause';
+  setStatus('Training on <b>' + tf.getBackend() + '</b> backend…', 'training');
+  runTrainLoop();
+}
+function stopTraining(){
+  state.training = false;
+  $('btn-train').textContent = '▶ train';
+  setStatus('Paused at iteration <b>' + state.iter + '</b>');
+}
+
+$('btn-train').addEventListener('click', () => state.training ? stopTraining() : startTraining());
+
+$('btn-reset').addEventListener('click', () => {
+  state.training = false;
+  $('btn-train').textContent = '▶ train';
+  disposeVars();
+  state.iter = 0; state.history = []; lastGrid = null;
+  solC.getContext('2d').clearRect(0, 0, solC.width, solC.height);
+  sliceC.getContext('2d').clearRect(0, 0, sliceC.width, sliceC.height);
+  drawLoss(); updateStats();
+  setStatus('Reset. Press <b>train</b> to start.');
+});
+
+$('btn-rebuild').addEventListener('click', () => {
+  state.training = false;
+  $('btn-train').textContent = '▶ train';
+  buildModel(state.width, state.depth);
+  lastGrid = null;
+  solC.getContext('2d').clearRect(0, 0, solC.width, solC.height);
+  drawLoss(); updateStats();
+  setStatus('Rebuilt: ' + state.depth + ' × ' + state.width + ' MLP. Press <b>train</b>.');
+});
+
+document.querySelectorAll('.preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const p = PRESET_DEFS[btn.dataset.preset];
+    $('visc').value = p.visc; $('width').value = p.width; $('depth').value = p.depth;
+    $('lr').value = p.lr; $('nf').value = p.nf; $('lam').value = p.lam;
+    syncLabels();
+    state.training = false;
+    buildModel(state.width, state.depth);
+    startTraining();
+  });
+});
+
+/* ---------- training loop with adaptive steps/frame ---------- */
+async function runTrainLoop(){
+  let lastDraw = 0;
+  while(state.training){
+    try{
+      // adapt how many steps run per frame: target ~26ms of compute
+      const spf = Math.max(1, Math.min(5, Math.floor(26 / state.stepMsEma)));
+      const t0 = performance.now();
+      for(let i = 0; i < spf && state.training; i++) trainStep();
+      const msPer = (performance.now() - t0) / spf;
+      state.stepMsEma = state.stepMsEma * .9 + msPer * .1;
+    } catch(e){
+      console.error(e);
+      setStatus('Error: ' + e.message, 'error');
+      state.training = false;
+      $('btn-train').textContent = '▶ train';
+      return;
+    }
+    updateStats();
+    drawLoss();
+    const now = performance.now();
+    if(now - lastDraw > 280){
+      await drawSolution();
+      lastDraw = now;
+    }
+    await tf.nextFrame();
+  }
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  syncLabels();
+  sizeCanvases();
+  await tf.ready();
+  try{ await tf.setBackend('webgl'); } catch(e){ await tf.setBackend('cpu'); }
+  buildModel(state.width, state.depth);
+  updateStats(); drawLoss();
+  setStatus('Ready on <b>' + tf.getBackend() + '</b>. Hit <b>⚡ quick demo</b> or press <b>train</b>.');
+}
+boot();
+</script>
+</body>
+</html>
