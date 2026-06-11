@@ -1,7 +1,0 @@
-REPLACE THIS FILE.
-
-The portfolio's "cv (pdf)" button links to /cv.pdf in the root folder.
-Drop your real CV here as `cv.pdf` (the file you sent me, Curriculum_2_0__3_.pdf) and delete this placeholder.
-
-On Windows: just rename your PDF to `cv.pdf` and copy it into this folder.
-On WSL/macOS:  cp ~/Downloads/Curriculum_2_0__3_.pdf ./cv.pdf
