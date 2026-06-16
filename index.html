@@ -1016,6 +1016,40 @@ footer a:hover{color:var(--ink)}
 })();
 </script>
 
+<style>
+/* ===== page buddy: lives on the cards ===== */
+#buddy3d{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:60}
+.buddy-bubble{
+  position:fixed;transform:translate(-50%,-100%);
+  background:var(--card);color:var(--ink);
+  border:2px solid var(--ink);border-radius:14px;box-shadow:var(--sh-sm);
+  padding:7px 14px;font-family:var(--body);font-weight:600;font-size:14px;
+  white-space:nowrap;z-index:97;pointer-events:none;
+  opacity:0;transition:opacity .25s ease;will-change:left,top}
+.buddy-bubble.show{opacity:1;pointer-events:auto}
+.buddy-bubble::after{
+  content:'';position:absolute;left:50%;margin-left:-6px;bottom:-9px;
+  width:12px;height:12px;background:var(--card);
+  border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);
+  transform:rotate(45deg)}
+.buddy-close{
+  position:absolute;top:-11px;right:-11px;width:22px;height:22px;
+  line-height:1;padding:0;border:2px solid var(--ink);border-radius:50%;
+  background:var(--coral);color:#fff;font-size:13px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 var(--ink)}
+.buddy-close:hover{background:var(--ink)}
+.buddy-bubble.think{font-style:italic;color:var(--dim)}
+.buddy-heart{position:fixed;transform:translate(-50%,-50%);color:var(--coral);font-size:18px;
+  z-index:97;pointer-events:none;animation:buddyHeart 1s ease-out forwards}
+@keyframes buddyHeart{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}
+  20%{opacity:1}100%{opacity:0;transform:translate(-50%,-170%) scale(1.15)}}
+@keyframes buddyWobble{0%,100%{transform:translateX(0)}15%{transform:translate(-3px,1px) rotate(-2.5deg)}
+  30%{transform:translate(3px,-1px) rotate(2.5deg)}45%{transform:translate(-2px,1px) rotate(-1.5deg)}
+  60%{transform:translate(2px,0) rotate(1.5deg)}80%{transform:translate(-1px,0) rotate(-.6deg)}}
+.buddy-wobble{animation:buddyWobble .45s ease}
+@keyframes buddyFlash{0%{outline-color:transparent}25%{outline-color:var(--bflash,var(--coral))}100%{outline-color:transparent}}
+.buddy-flash{outline:3px solid transparent;outline-offset:3px;border-radius:inherit;animation:buddyFlash .6s ease}
+</style>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js';
 
@@ -1451,6 +1485,335 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
     });
   };
 }, { fov:42 });
+
+/* ================= PAGE BUDDY: a little guy who lives on the page ================= */
+(function buddy(){
+  if (reduced) return;
+  if (localStorage.getItem('buddyDismissed') === '1') return;
+
+  const canvas = document.createElement('canvas');
+  canvas.id = 'buddy3d'; canvas.setAttribute('aria-hidden','true');
+  document.body.appendChild(canvas);
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true }); }
+  catch(e){ canvas.remove(); return; }
+  renderer.setPixelRatio(DPR); renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'buddy-bubble';
+  bubble.innerHTML = '<span class="bt"></span><button class="buddy-close" title="send him home" aria-label="Hide the little guy">×</button>';
+  document.body.appendChild(bubble);
+  const bubbleText = bubble.querySelector('.bt');
+  bubble.querySelector('.buddy-close').addEventListener('click', dismiss);
+
+  const heartEl  = document.getElementById('heart3d');
+  const smileyEl = document.getElementById('smiley3d');
+
+  /* ---- pixel-space ortho camera (world == screen px, y up) ---- */
+  let W = innerWidth, H = innerHeight;
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(0, W, H, 0, .1, 2000);
+  camera.position.set(0, 0, 500);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe9d9c2, 1.2));
+  const keyL = new THREE.DirectionalLight(0xffffff, 1.7); keyL.position.set(-.5, 1, .9); scene.add(keyL);
+  const fill = new THREE.DirectionalLight(0xcfd8ff, .5); fill.position.set(.6, -.2, .5); scene.add(fill);
+
+  /* ---- model ---- */
+  const guy = new THREE.Group();
+  const SWEAT = 0x474652, PANTS = 0x2f2e3b;
+  const mat = (c, e={}) => new THREE.MeshStandardMaterial({ color:c, roughness:.6, metalness:0, ...e });
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .5, 6, 14), mat(SWEAT)); torso.position.y = .1; guy.add(torso);
+  const head = new THREE.Group(); head.position.y = .78; guy.add(head);
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(.40, 24, 18), mat(0x8d8478)));
+  const faceTex = new THREE.TextureLoader().load('face.png'); faceTex.colorSpace = THREE.SRGBColorSpace; faceTex.anisotropy = 4;
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(.94, .94), new THREE.MeshBasicMaterial({ map:faceTex, transparent:true, depthWrite:false }));
+  face.position.set(0, .03, .46); head.add(face);
+  function limb(len, c){ const g = new THREE.CapsuleGeometry(.11, len, 5, 10); g.translate(0, -len/2 - .11, 0); return new THREE.Mesh(g, mat(c)); }
+  const legL = limb(.42, PANTS); legL.position.set(-.16, -.18, 0); guy.add(legL);
+  const legR = limb(.42, PANTS); legR.position.set( .16, -.18, 0); guy.add(legR);
+  const armL = limb(.40, SWEAT); armL.position.set(-.40, .42, 0); guy.add(armL);
+  const armR = limb(.40, SWEAT); armR.position.set( .40, .42, 0); guy.add(armR);
+  const FOOT = -0.82; guy.position.y = -FOOT;
+  const rig = new THREE.Group(); rig.add(guy);
+  const SIZE = 94, S = SIZE / 2.0; rig.scale.setScalar(S); scene.add(rig);
+
+  /* ---- constants & state ---- */
+  const GRAV = 2400, JUMP_V = 860, WALK = 92, TOP_LIMIT = 64, SNAP = 16;
+  let px = W*.5, feet = 140, vx = WALK, vy = 0, dir = 1;
+  let st = 'fall', stT = 0, curPlat = null, behind = false;
+  let walkT = 0, actT = 2.0, onstageT = 22 + Math.random()*24, goneT = 0, holdDur = 2;
+  let peekEl = null, peekTarget = 0, kick = 0, napT = 4, sideSign = 1;
+  let touchKind = 'card', touchEl = null, touchDone = false;
+  let mx = W*.5, my = H*.5;
+
+  /* ---- platforms ---- */
+  const SEL = '.demo, .proj-card, .tl-card, .stat, .heart-card, .smiley-wrap';
+  let platEls = [];
+  const collectEls = () => platEls = Array.prototype.slice.call(document.querySelectorAll(SEL));
+  collectEls();
+  const plats = [];
+  function rects(){
+    plats.length = 0;
+    for (const el of platEls){
+      const r = el.getBoundingClientRect();
+      if (r.width < 40 || r.bottom < -60 || r.top > H + 60) continue;
+      let kind = 'card';
+      if (el.matches('.heart-card')) kind = 'heart';
+      else if (el.matches('.smiley-wrap')) kind = 'smiley';
+      plats.push({ left:r.left, right:r.right, top:r.top, el, kind });
+    }
+    plats.push({ left:0, right:W, top:H - 4, el:null, kind:'floor' });
+  }
+  const getPlat = el => el ? plats.find(p => p.el === el) : plats[plats.length-1];
+  const liveTop = el => el ? el.getBoundingClientRect().top : H - 4;
+  const visibleCards = () => plats.filter(p => p.el && p.top > TOP_LIMIT && p.top < H - 90 && (p.right - p.left) > 80);
+
+  function resize(){ W = innerWidth; H = innerHeight; renderer.setSize(W, H, false); camera.right = W; camera.top = H; camera.updateProjectionMatrix(); }
+  addEventListener('resize', resize); resize();
+
+  /* ---- input ---- */
+  let lastSY = scrollY, scrollDelta = 0;
+  addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; }, { passive:true });
+  addEventListener('pointerdown', e => {
+    if (!rig.visible || behind) return;
+    if (['gone','peekUp','peekHold','duck','climb','fall','jump','slip'].indexOf(st) >= 0) return;
+    const dx = Math.abs(e.clientX - px), dy = e.clientY - (feet - SIZE*.55);
+    if (dx < SIZE*.5 && dy > -SIZE*.6 && dy < SIZE*.5) pet();
+  }, { passive:true });
+
+  /* ---- helpers ---- */
+  const GREET = ['hi! 👋','hey!','hi there!','hello! 👋','keep scrolling 👀'];
+  function say(t, think){ bubbleText.textContent = t; bubble.classList.toggle('think', !!think); bubble.classList.add('show'); }
+  function hush(){ bubble.classList.remove('show'); }
+  function setBehind(b){ behind = b; canvas.style.zIndex = b ? '0' : '60'; }
+
+  function pet(){ st = 'pet'; stT = 0; setBehind(false); say(['hehe','🫶','hi!','♥'][Math.random()*4|0]); spawnHeart(); }
+  function spawnHeart(){
+    const h = document.createElement('div'); h.className = 'buddy-heart'; h.textContent = '♥';
+    h.style.left = px + 'px'; h.style.top = (feet - SIZE*.9) + 'px';
+    document.body.appendChild(h); setTimeout(() => h.remove(), 1000);
+  }
+  function flashCard(el){
+    const cols = ['var(--coral)','var(--teal)','var(--violet)','var(--yellow)','var(--blue)','var(--pink)'];
+    el.style.setProperty('--bflash', cols[Math.random()*cols.length|0]);
+    el.classList.remove('buddy-flash'); void el.offsetWidth; el.classList.add('buddy-flash');
+    setTimeout(() => el.classList.remove('buddy-flash'), 650);
+  }
+  function wobbleCard(el){ el.classList.remove('buddy-wobble'); void el.offsetWidth; el.classList.add('buddy-wobble'); setTimeout(() => el.classList.remove('buddy-wobble'), 480); }
+  function findHop(){
+    let best = null, bd = 1e9;
+    for (const p of plats){ const up = feet - p.top; if (up < 26 || up > 150 || p.top < TOP_LIMIT) continue;
+      const cx = Math.max(p.left, Math.min(px, p.right)); const dx = Math.abs(cx - px); if (dx > 130) continue;
+      const d = dx + up*.5; if (d < bd){ bd = d; best = p; } }
+    return best;
+  }
+
+  function goGone(){ st = 'gone'; rig.visible = false; hush(); setBehind(false); goneT = 16 + Math.random()*32; }
+  function emerge(){
+    const cards = visibleCards();
+    rig.visible = true;
+    if (!cards.length){ setBehind(false); st = 'walk'; curPlat = getPlat(null); dir = Math.random()<.5?1:-1; px = dir>0?20:W-20; feet = H-4; onstageT = 22+Math.random()*24; return; }
+    const p = cards[Math.random()*cards.length|0];
+    peekEl = p.el; setBehind(true);
+    px = Math.max(p.left+36, Math.min(p.left + (p.right-p.left)*Math.random(), p.right-36));
+    const target = p.top - 14 + SIZE*.95;
+    feet = target + 64; peekTarget = target; st = 'peekUp'; stT = 0;
+  }
+  function leave(){
+    onstageT = 22 + Math.random()*24;
+    if (curPlat && curPlat.el && Math.random() < .7){ peekEl = curPlat.el; setBehind(true); st = 'duck'; stT = 0; peekTarget = liveTop(peekEl) - 14 + SIZE*.95 + 70; }
+    else { st = 'bye'; dir = (px < W/2) ? -1 : 1; vx = dir*WALK*1.2; setBehind(false); }
+  }
+
+  /* ---- per-state steps ---- */
+  function stepWalk(dt){
+    onstageT -= dt; actT -= dt;
+    px += vx*dt;
+    if (px < 26){ px = 26; dir = 1; } if (px > W-26){ px = W-26; dir = -1; } vx = dir*WALK;
+    const p = getPlat(curPlat ? curPlat.el : undefined);
+    if (!p){ st = 'fall'; vy = 0; curPlat = null; return; }
+    if (!(px > p.left-6 && px < p.right+6)){ st = 'fall'; vy = 0; curPlat = null; return; }
+    if (p.top - feet > SNAP){ st = 'fall'; vy = 0; return; }
+    if (p.el && p.top < TOP_LIMIT){ st = 'fall'; vy = 60; return; }
+    feet = p.top; curPlat = p;
+    if (onstageT <= 0){ leave(); return; }
+    if (actT <= 0){
+      actT = 1.3 + Math.random()*2.4; const r = Math.random();
+      if (r < .13){ st = 'greet'; stT = 0; say(GREET[Math.random()*GREET.length|0]); }
+      else if (r < .30 && p.el){ st = 'touch'; stT = 0; touchKind = p.kind; touchEl = p.el; touchDone = false; }
+      else if (r < .45){ const h = findHop(); if (h){ vy = -JUMP_V; st = 'jump'; curPlat = null; dir = (h.left+h.right)/2 > px ? 1 : -1; vx = dir*WALK*1.4; } }
+      else if (r < .62 && p.el){ st = 'sit'; stT = 0; kick = walkT; sideSign = dir > 0 ? 1 : -1; }
+      else if (r < .72){ dir = -dir; }
+      else if (r < .80){ st = 'nap'; stT = 0; napT = 3 + Math.random()*4; say('Zzz', true); }
+    }
+  }
+  function stepSit(dt){
+    onstageT -= dt; actT -= dt;
+    const p = getPlat(curPlat ? curPlat.el : undefined);
+    if (!p || !p.el){ st = 'fall'; vy = 0; return; }
+    if (p.top < TOP_LIMIT){ st = 'fall'; vy = 40; return; }
+    if (p.top - feet > SNAP){ st = 'fall'; vy = 0; return; }
+    feet = p.top; curPlat = p;
+    if (stT > .8 && Math.abs(scrollDelta) > 5 && Math.random() < Math.min(.5, Math.abs(scrollDelta)*.012)){ slip(); return; }
+    if (onstageT <= 0){ leave(); return; }
+    if (actT <= 0){
+      actT = 1.5 + Math.random()*2.5; const r = Math.random();
+      if (r < .3){ st = 'walk'; }
+      else if (r < .45){ st = 'greet'; stT = 0; say(GREET[Math.random()*GREET.length|0]); }
+      else if (r < .6){ st = 'nap'; stT = 0; napT = 3 + Math.random()*4; say('Zzz', true); }
+      else kick = walkT;
+    }
+  }
+  function slip(){ setBehind(true); st = 'slip'; vy = 120; curPlat = null; say('whoa!'); setTimeout(hush, 700); }
+  function stepAir(dt){
+    px += vx*dt;
+    if (px < 20){ px = 20; dir = 1; vx = Math.abs(vx); } if (px > W-20){ px = W-20; dir = -1; vx = -Math.abs(vx); }
+    const prev = feet; vy += GRAV*dt; feet += vy*dt;
+    if (vy > 0){
+      let landed = null;
+      for (const p of plats){ if (px > p.left-6 && px < p.right+6 && prev <= p.top+SNAP && feet >= p.top){ if (!landed || p.top < landed.top) landed = p; } }
+      if (landed){
+        if (behind){ goGone(); return; }
+        feet = landed.top; vy = 0; curPlat = landed; st = 'walk'; vx = dir*WALK; onstageT = Math.max(onstageT, 6); return;
+      }
+    }
+    if (feet > H+200){ if (behind){ goGone(); return; } feet = -40; vy = 0; px = 20 + Math.random()*(W-40); }
+  }
+  function stepTouch(dt){
+    const p = getPlat(curPlat ? curPlat.el : undefined); if (p && p.el) feet = p.top;
+    if (!touchDone && stT > .22){
+      touchDone = true;
+      if (touchKind === 'heart' && heartEl){ heartEl.dispatchEvent(new MouseEvent('click', { bubbles:true })); say('♥', true); }
+      else if (touchKind === 'smiley' && smileyEl){ smileyEl.dispatchEvent(new MouseEvent('click', { bubbles:true })); say('wheee'); }
+      else if (touchEl){ Math.random() < .6 ? flashCard(touchEl) : wobbleCard(touchEl); say(['tap!','boop','✦'][Math.random()*3|0]); }
+    }
+    if (stT > 1.1){ hush(); st = 'walk'; actT = 1 + Math.random()*1.5; }
+  }
+  function stepNap(dt){
+    const p = getPlat(curPlat ? curPlat.el : undefined);
+    if (p && p.el){ if (p.top < TOP_LIMIT){ st = 'fall'; vy = 40; hush(); return; } feet = p.top; }
+    const near = Math.abs(mx-px) < SIZE*1.2 && Math.abs(my-feet) < SIZE*1.4;
+    if (near || Math.abs(scrollDelta) > 20 || stT > napT){ hush(); st = 'walk'; actT = .5 + Math.random(); }
+  }
+  function stepPeek(dt){
+    if (!peekEl){ goGone(); return; }
+    const top = liveTop(peekEl);
+    if (top < -40 || top > H+40){ goGone(); return; }
+    const headPoke = top - 14 + SIZE*.95;
+    if (st === 'peekUp'){
+      peekTarget = headPoke; feet += (peekTarget - feet) * Math.min(1, dt*6);
+      if (Math.abs(feet - peekTarget) < 3){ st = 'peekHold'; stT = 0; holdDur = 1.4 + Math.random()*2.2; if (Math.random() < .5) say(['hi!','peek!','👀'][Math.random()*3|0]); }
+    } else if (st === 'peekHold'){
+      feet = headPoke;
+      if (stT > holdDur){ hush(); if (Math.random() < .55){ st = 'climb'; setBehind(false); } else { st = 'duck'; peekTarget = headPoke + 70; } stT = 0; }
+    } else if (st === 'climb'){
+      feet += (top - feet) * Math.min(1, dt*5);
+      if (Math.abs(feet - top) < 3){ feet = top; curPlat = getPlat(peekEl); st = Math.random()<.5?'sit':'walk'; vx = dir*WALK; onstageT = 20+Math.random()*24; if (st==='sit'){ kick = walkT; sideSign = dir > 0 ? 1 : -1; } }
+    } else if (st === 'duck'){
+      feet += (peekTarget - feet) * Math.min(1, dt*5);
+      if (Math.abs(feet - peekTarget) < 4) goGone();
+    }
+  }
+
+  /* ---- pose & placement ---- */
+  const LOUNGE = 1.5;
+  function pose(dt){
+    const ph = walkT*9; let look = 0;
+    rig.rotation.z += ((st === 'sit' ? sideSign*LOUNGE : 0) - rig.rotation.z) * .18;  // tip onto his side only when lounging
+    if (st === 'walk' || st === 'bye'){
+      legL.rotation.x = Math.sin(ph)*.7; legR.rotation.x = -Math.sin(ph)*.7;
+      armL.rotation.x = -Math.sin(ph)*.5; armR.rotation.x = Math.sin(ph)*.5; armR.rotation.z = 0; armL.rotation.z = 0;
+      rig.rotation.y += (dir*.18 - rig.rotation.y)*.2; look = .12;
+    } else if (st === 'sit'){               // lying on his side, head propped, face to camera
+      const br = Math.sin(walkT*1.6)*.05;                       // gentle breathing
+      armL.rotation.x = -.2;  armL.rotation.z =  sideSign*1.55; // lower arm folds up to prop the head
+      armR.rotation.x = -.1;  armR.rotation.z = -sideSign*.35;  // upper arm rests along the hip
+      legL.rotation.x = .10;  legL.rotation.z =  sideSign*.06;
+      legR.rotation.x = .30;  legR.rotation.z =  sideSign*.16;  // top leg bent over the lower one
+      const ty = Math.max(-.45, Math.min(.45, (mx-px)/200));
+      head.rotation.y += (ty - head.rotation.y)*.1;            // still glances at the cursor
+      head.rotation.z += ((-sideSign*(LOUNGE-.28)) - head.rotation.z)*.15; // upright-ish, tilted as if resting on hand
+      head.rotation.x += (.06 + br - head.rotation.x)*.1;
+      rig.rotation.y += (0 - rig.rotation.y)*.1; look = 0;
+    } else if (st === 'fall' || st === 'jump' || st === 'slip'){
+      legL.rotation.x = -.5; legR.rotation.x = .35; armL.rotation.x = -1.6; armR.rotation.x = -1.6; armR.rotation.z = -.2; armL.rotation.z = .2;
+      rig.rotation.y += (dir*.12 - rig.rotation.y)*.2;
+    } else if (st === 'greet'){
+      legL.rotation.x *= .8; legR.rotation.x *= .8; armL.rotation.x = 0; armR.rotation.z = -2.1; armR.rotation.x = Math.sin(walkT*11)*.5;
+      head.rotation.z = Math.sin(walkT*4)*.05; rig.rotation.y += (0 - rig.rotation.y)*.2;
+    } else if (st === 'pet'){
+      const w = Math.sin(walkT*22);
+      armL.rotation.z = .4 + w*.6; armR.rotation.z = -.4 - w*.6; armL.rotation.x = -.8; armR.rotation.x = -.8;
+      legL.rotation.x = Math.sin(walkT*16)*.2; legR.rotation.x = -Math.sin(walkT*16)*.2;
+      head.rotation.z = Math.sin(walkT*16)*.12; rig.rotation.y += (0 - rig.rotation.y)*.3;
+    } else if (st === 'touch'){
+      legL.rotation.x *= .8; legR.rotation.x *= .8; armR.rotation.z = 0; armR.rotation.x = 1.2; armL.rotation.x = .2;
+      rig.rotation.y += (dir*.25 - rig.rotation.y)*.25; head.rotation.x += (.2 - head.rotation.x)*.2;
+    } else if (st === 'nap'){
+      legL.rotation.x = 1.1; legR.rotation.x = 1.1; armL.rotation.x = .2; armR.rotation.x = .2;
+      head.rotation.z += (.5 - head.rotation.z)*.1; head.rotation.x += (.25 - head.rotation.x)*.1; rig.rotation.y += (0 - rig.rotation.y)*.1;
+    } else { // peek family
+      armL.rotation.x = -1.4; armR.rotation.x = -1.4; armL.rotation.z = .3; armR.rotation.z = -.3;
+      legL.rotation.x = .2; legR.rotation.x = .2; rig.rotation.y += (0 - rig.rotation.y)*.2;
+      if (st === 'peekHold') head.rotation.y = Math.sin(walkT*1.5)*.5;
+    }
+    if (look > 0){
+      const hy = feet - SIZE*.72;
+      const ty = Math.max(-.6, Math.min(.6, (mx-px)/180));
+      const tx = Math.max(-.3, Math.min(.35, (my-hy)/240));
+      head.rotation.y += (ty - head.rotation.y)*look;
+      head.rotation.x += (tx - head.rotation.x)*look;
+      head.rotation.z *= .85;
+    }
+  }
+  function place(){
+    let drawFeet = feet, drawX = px, sx = 1, sy = 1;
+    if (st === 'sit'){ drawFeet = feet + 6; drawX = px + sideSign * SIZE*0.42; } // body lies sideways from the foot pivot; recentre & rest on the surface
+    else if (st === 'nap') drawFeet = feet + 24;
+    if (st === 'pet'){ const b = Math.abs(Math.sin(walkT*16)); sy = 1 + b*.06; sx = 1 - b*.04; }
+    const bob = (st === 'walk' || st === 'bye') ? Math.abs(Math.sin(walkT*9))*3 : 0;
+    rig.scale.set(S*sx, S*sy, S);
+    rig.position.set(drawX, H - (drawFeet - bob), 0);
+  }
+
+  /* ---- main loop ---- */
+  let raf = 0, running = true, last = performance.now();
+  function frame(){
+    if (!running) return;
+    raf = requestAnimationFrame(frame);
+    const now = performance.now(); let dt = (now-last)/1000; last = now; if (dt > .05) dt = .05;
+    walkT += dt; stT += dt;
+    scrollDelta = scrollY - lastSY; lastSY = scrollY;
+    rects();
+
+    switch (st){
+      case 'walk': stepWalk(dt); break;
+      case 'sit': stepSit(dt); break;
+      case 'fall': case 'jump': case 'slip': stepAir(dt); break;
+      case 'touch': stepTouch(dt); break;
+      case 'nap': stepNap(dt); break;
+      case 'greet': if (stT > 2.6){ hush(); st = 'walk'; actT = 1 + Math.random()*1.5; } break;
+      case 'pet': if (stT > 1.5){ hush(); st = 'walk'; actT = 1 + Math.random(); } break;
+      case 'peekUp': case 'peekHold': case 'duck': case 'climb': stepPeek(dt); break;
+      case 'bye': { onstageT = 99; px += vx*dt; if (px < 14 || px > W-14) goGone(); } break;
+      case 'gone': goneT -= dt; if (goneT <= 0) emerge(); break;
+    }
+
+    pose(dt); place();
+    renderer.render(scene, camera);
+    if (bubble.classList.contains('show')){ bubble.style.left = px + 'px'; bubble.style.top = (feet - SIZE*.95 - 6) + 'px'; }
+  }
+
+  function dismiss(){
+    localStorage.setItem('buddyDismissed', '1');
+    running = false; cancelAnimationFrame(raf); clearInterval(regather);
+    bubble.remove(); canvas.remove(); renderer.dispose();
+  }
+  const regather = setInterval(() => { if (running) collectEls(); }, 2000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') last = performance.now(); });
+
+  raf = requestAnimationFrame(frame);
+})();
 </script>
 
 </body>
