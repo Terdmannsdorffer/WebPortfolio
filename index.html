@@ -1535,7 +1535,9 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
   const armR = limb(.40, SWEAT); armR.position.set( .40, .42, 0); guy.add(armR);
   const FOOT = -0.82; guy.position.y = -FOOT;
   const rig = new THREE.Group(); rig.add(guy);
-  const SIZE = 94, S = SIZE / 2.0; rig.scale.setScalar(S); scene.add(rig);
+  const TOUCH = matchMedia('(pointer: coarse)').matches;       // phones / tablets: no hover
+  const pickSize = () => innerWidth < 640 ? 62 : innerWidth < 900 ? 78 : 94;
+  let SIZE = pickSize(), S = SIZE / 2.0; rig.scale.setScalar(S); scene.add(rig);
 
   /* ---- constants & state ---- */
   const GRAV = 2400, JUMP_V = 860, WALK = 92, TOP_LIMIT = 64, SNAP = 16;
@@ -1544,6 +1546,7 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
   let walkT = 0, actT = 2.0, onstageT = 22 + Math.random()*24, goneT = 0, holdDur = 2;
   let peekEl = null, peekTarget = 0, kick = 0, napT = 4, sideSign = 1;
   let touchKind = 'card', touchEl = null, touchDone = false;
+  let waving = false;
   let mx = W*.5, my = H*.5;
 
   /* ---- platforms ---- */
@@ -1568,7 +1571,7 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
   const liveTop = el => el ? el.getBoundingClientRect().top : H - 4;
   const visibleCards = () => plats.filter(p => p.el && p.top > TOP_LIMIT && p.top < H - 90 && (p.right - p.left) > 80);
 
-  function resize(){ W = innerWidth; H = innerHeight; renderer.setSize(W, H, false); camera.right = W; camera.top = H; camera.updateProjectionMatrix(); }
+  function resize(){ W = innerWidth; H = innerHeight; SIZE = pickSize(); S = SIZE / 2.0; renderer.setSize(W, H, false); camera.right = W; camera.top = H; camera.updateProjectionMatrix(); }
   addEventListener('resize', resize); resize();
 
   /* ---- input ---- */
@@ -1582,7 +1585,9 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
   }, { passive:true });
 
   /* ---- helpers ---- */
-  const GREET = ['hi! 👋','hey!','hi there!','hello! 👋','keep scrolling 👀'];
+  const GREET = ['hi! 👋','hey!','hi there!','hello! 👋','keep scrolling 👀','nice to see you!','enjoying the cards? ✨'];
+  const PEEK_HI = ['peek-a-boo! 👋','hi! 👋','found me? 👋','hey there! 👋','👋','over here! 👋','boo! 👋'];
+  const CHEER   = ['woohoo!','yay! 🎉','wheee!','nailed it!','✨','nice!'];
   function say(t, think){ bubbleText.textContent = t; bubble.classList.toggle('think', !!think); bubble.classList.add('show'); }
   function hush(){ bubble.classList.remove('show'); }
   function setBehind(b){ behind = b; canvas.style.zIndex = b ? '0' : '60'; }
@@ -1608,19 +1613,22 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
     return best;
   }
 
-  function goGone(){ st = 'gone'; rig.visible = false; hush(); setBehind(false); goneT = 16 + Math.random()*32; }
+  function goGone(){ st = 'gone'; rig.visible = false; hush(); setBehind(false); goneT = 5 + Math.random()*9; }
+  function peekBehind(el){            // duck behind a card, then pop up over the top edge
+    peekEl = el; setBehind(true); waving = false;
+    const target = liveTop(el) - 14 + SIZE*.45;    // pop high enough that head + both raised hands clear the edge
+    feet = target + 80; peekTarget = target; st = 'peekUp'; stT = 0;
+  }
   function emerge(){
     const cards = visibleCards();
     rig.visible = true;
-    if (!cards.length){ setBehind(false); st = 'walk'; curPlat = getPlat(null); dir = Math.random()<.5?1:-1; px = dir>0?20:W-20; feet = H-4; onstageT = 22+Math.random()*24; return; }
+    if (!cards.length){ setBehind(false); st = 'walk'; curPlat = getPlat(null); dir = Math.random()<.5?1:-1; px = dir>0?20:W-20; feet = H-4; onstageT = 14+Math.random()*16; return; }
     const p = cards[Math.random()*cards.length|0];
-    peekEl = p.el; setBehind(true);
     px = Math.max(p.left+36, Math.min(p.left + (p.right-p.left)*Math.random(), p.right-36));
-    const target = p.top - 14 + SIZE*.95;
-    feet = target + 64; peekTarget = target; st = 'peekUp'; stT = 0;
+    peekBehind(p.el);
   }
   function leave(){
-    onstageT = 22 + Math.random()*24;
+    onstageT = 12 + Math.random()*16;
     if (curPlat && curPlat.el && Math.random() < .7){ peekEl = curPlat.el; setBehind(true); st = 'duck'; stT = 0; peekTarget = liveTop(peekEl) - 14 + SIZE*.95 + 70; }
     else { st = 'bye'; dir = (px < W/2) ? -1 : 1; vx = dir*WALK*1.2; setBehind(false); }
   }
@@ -1636,15 +1644,21 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
     if (p.top - feet > SNAP){ st = 'fall'; vy = 0; return; }
     if (p.el && p.top < TOP_LIMIT){ st = 'fall'; vy = 60; return; }
     feet = p.top; curPlat = p;
+    // notice the cursor passing nearby and wave hello (desktop only)
+    if (!TOUCH && actT > .4 && Math.abs(mx - px) < SIZE*.85 && Math.abs(my - (feet - SIZE*.5)) < SIZE && Math.random() < .05){
+      st = 'greet'; stT = 0; actT = 2 + Math.random()*2; say(GREET[Math.random()*GREET.length|0]); return;
+    }
     if (onstageT <= 0){ leave(); return; }
     if (actT <= 0){
-      actT = 1.3 + Math.random()*2.4; const r = Math.random();
-      if (r < .13){ st = 'greet'; stT = 0; say(GREET[Math.random()*GREET.length|0]); }
-      else if (r < .30 && p.el){ st = 'touch'; stT = 0; touchKind = p.kind; touchEl = p.el; touchDone = false; }
-      else if (r < .45){ const h = findHop(); if (h){ vy = -JUMP_V; st = 'jump'; curPlat = null; dir = (h.left+h.right)/2 > px ? 1 : -1; vx = dir*WALK*1.4; } }
-      else if (r < .62 && p.el){ st = 'sit'; stT = 0; kick = walkT; sideSign = dir > 0 ? 1 : -1; }
-      else if (r < .72){ dir = -dir; }
-      else if (r < .80){ st = 'nap'; stT = 0; napT = 3 + Math.random()*4; say('Zzz', true); }
+      actT = 1.1 + Math.random()*2.2; const r = Math.random();
+      if (r < .12){ st = 'greet'; stT = 0; say(GREET[Math.random()*GREET.length|0]); }
+      else if (r < .26 && p.el){ st = 'touch'; stT = 0; touchKind = p.kind; touchEl = p.el; touchDone = false; }
+      else if (r < .42 && p.el){ peekBehind(p.el); }                 // duck behind this card & pop up waving
+      else if (r < .55){ const h = findHop(); if (h){ vy = -JUMP_V; st = 'jump'; curPlat = null; dir = (h.left+h.right)/2 > px ? 1 : -1; vx = dir*WALK*1.4; } }
+      else if (r < .68 && p.el){ st = 'sit'; stT = 0; sideSign = dir > 0 ? 1 : -1; }
+      else if (r < .77){ dir = -dir; }
+      else if (r < .86){ st = 'nap'; stT = 0; napT = 3 + Math.random()*4; say('Zzz', true); }
+      else if (r < .93){ st = 'cheer'; stT = 0; say(CHEER[Math.random()*CHEER.length|0]); }
     }
   }
   function stepSit(dt){
@@ -1674,7 +1688,10 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
       for (const p of plats){ if (px > p.left-6 && px < p.right+6 && prev <= p.top+SNAP && feet >= p.top){ if (!landed || p.top < landed.top) landed = p; } }
       if (landed){
         if (behind){ goGone(); return; }
-        feet = landed.top; vy = 0; curPlat = landed; st = 'walk'; vx = dir*WALK; onstageT = Math.max(onstageT, 6); return;
+        feet = landed.top; vy = 0; curPlat = landed; vx = dir*WALK; onstageT = Math.max(onstageT, 6);
+        if (landed.el && Math.random() < .3){ st = 'cheer'; stT = 0; say(CHEER[Math.random()*CHEER.length|0]); }  // stuck the landing!
+        else st = 'walk';
+        return;
       }
     }
     if (feet > H+200){ if (behind){ goGone(); return; } feet = -40; vy = 0; px = 20 + Math.random()*(W-40); }
@@ -1699,13 +1716,13 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
     if (!peekEl){ goGone(); return; }
     const top = liveTop(peekEl);
     if (top < -40 || top > H+40){ goGone(); return; }
-    const headPoke = top - 14 + SIZE*.95;
+    const headPoke = top - 14 + SIZE*.45;    // peek height: head + both raised hands clear the top edge
     if (st === 'peekUp'){
       peekTarget = headPoke; feet += (peekTarget - feet) * Math.min(1, dt*6);
-      if (Math.abs(feet - peekTarget) < 3){ st = 'peekHold'; stT = 0; holdDur = 1.4 + Math.random()*2.2; if (Math.random() < .5) say(['hi!','peek!','👀'][Math.random()*3|0]); }
+      if (Math.abs(feet - peekTarget) < 3){ st = 'peekHold'; stT = 0; holdDur = 1.8 + Math.random()*2.0; waving = true; say(PEEK_HI[Math.random()*PEEK_HI.length|0]); }
     } else if (st === 'peekHold'){
       feet = headPoke;
-      if (stT > holdDur){ hush(); if (Math.random() < .55){ st = 'climb'; setBehind(false); } else { st = 'duck'; peekTarget = headPoke + 70; } stT = 0; }
+      if (stT > holdDur){ hush(); waving = false; if (Math.random() < .55){ st = 'climb'; setBehind(false); } else { st = 'duck'; peekTarget = headPoke + 70; } stT = 0; }
     } else if (st === 'climb'){
       feet += (top - feet) * Math.min(1, dt*5);
       if (Math.abs(feet - top) < 3){ feet = top; curPlat = getPlat(peekEl); st = Math.random()<.5?'sit':'walk'; vx = dir*WALK; onstageT = 20+Math.random()*24; if (st==='sit'){ kick = walkT; sideSign = dir > 0 ? 1 : -1; } }
@@ -1716,24 +1733,24 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
   }
 
   /* ---- pose & placement ---- */
-  const LOUNGE = 1.5;
   function pose(dt){
     const ph = walkT*9; let look = 0;
-    rig.rotation.z += ((st === 'sit' ? sideSign*LOUNGE : 0) - rig.rotation.z) * .18;  // tip onto his side only when lounging
+    rig.rotation.z += (0 - rig.rotation.z) * .18;                            // stay upright (his photo-face reads best head-on)
+    rig.rotation.x += ((st === 'sit' ? -.12 : 0) - rig.rotation.x) * .15;    // gentle lean-back while sitting on a ledge
     if (st === 'walk' || st === 'bye'){
       legL.rotation.x = Math.sin(ph)*.7; legR.rotation.x = -Math.sin(ph)*.7;
       armL.rotation.x = -Math.sin(ph)*.5; armR.rotation.x = Math.sin(ph)*.5; armR.rotation.z = 0; armL.rotation.z = 0;
       rig.rotation.y += (dir*.18 - rig.rotation.y)*.2; look = .12;
-    } else if (st === 'sit'){               // lying on his side, head propped, face to camera
-      const br = Math.sin(walkT*1.6)*.05;                       // gentle breathing
-      armL.rotation.x = -.2;  armL.rotation.z =  sideSign*1.55; // lower arm folds up to prop the head
-      armR.rotation.x = -.1;  armR.rotation.z = -sideSign*.35;  // upper arm rests along the hip
-      legL.rotation.x = .10;  legL.rotation.z =  sideSign*.06;
-      legR.rotation.x = .30;  legR.rotation.z =  sideSign*.16;  // top leg bent over the lower one
-      const ty = Math.max(-.45, Math.min(.45, (mx-px)/200));
-      head.rotation.y += (ty - head.rotation.y)*.1;            // still glances at the cursor
-      head.rotation.z += ((-sideSign*(LOUNGE-.28)) - head.rotation.z)*.15; // upright-ish, tilted as if resting on hand
-      head.rotation.x += (.06 + br - head.rotation.x)*.1;
+    } else if (st === 'sit'){               // sitting on the card's edge, legs dangling over the front
+      const sw = Math.sin(walkT*2)*.12;                        // idly swings his legs
+      legL.rotation.x = .30 + sw; legL.rotation.z =  .05;
+      legR.rotation.x = -.18 - sw; legR.rotation.z = -.05;
+      armL.rotation.x = .2;  armL.rotation.z =  .1;            // hands resting on the ledge beside him
+      armR.rotation.x = .2;  armR.rotation.z = -.1;
+      const ty = Math.max(-.4, Math.min(.4, (mx-px)/200));
+      head.rotation.y += (ty - head.rotation.y)*.1;           // glances around / at the cursor
+      head.rotation.z += (Math.sin(walkT*1.3)*.05 - head.rotation.z)*.1;
+      head.rotation.x += (.08 - head.rotation.x)*.1;
       rig.rotation.y += (0 - rig.rotation.y)*.1; look = 0;
     } else if (st === 'fall' || st === 'jump' || st === 'slip'){
       legL.rotation.x = -.5; legR.rotation.x = .35; armL.rotation.x = -1.6; armR.rotation.x = -1.6; armR.rotation.z = -.2; armL.rotation.z = .2;
@@ -1749,13 +1766,25 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
     } else if (st === 'touch'){
       legL.rotation.x *= .8; legR.rotation.x *= .8; armR.rotation.z = 0; armR.rotation.x = 1.2; armL.rotation.x = .2;
       rig.rotation.y += (dir*.25 - rig.rotation.y)*.25; head.rotation.x += (.2 - head.rotation.x)*.2;
-    } else if (st === 'nap'){
-      legL.rotation.x = 1.1; legR.rotation.x = 1.1; armL.rotation.x = .2; armR.rotation.x = .2;
-      head.rotation.z += (.5 - head.rotation.z)*.1; head.rotation.x += (.25 - head.rotation.x)*.1; rig.rotation.y += (0 - rig.rotation.y)*.1;
-    } else { // peek family
-      armL.rotation.x = -1.4; armR.rotation.x = -1.4; armL.rotation.z = .3; armR.rotation.z = -.3;
+    } else if (st === 'nap'){               // dozing off, head lolled to the side (face still shows)
+      legL.rotation.x = .35; legR.rotation.x = .35; armL.rotation.x = .2; armR.rotation.x = .2;
+      head.rotation.z += (.45 - head.rotation.z)*.1; head.rotation.x += (.06 - head.rotation.x)*.1; rig.rotation.y += (0 - rig.rotation.y)*.1;
+    } else if (st === 'cheer'){             // happy little celebration, arms up in a V
+      armL.rotation.z = -2.4 + Math.sin(walkT*16)*.15; armL.rotation.x = -.2;
+      armR.rotation.z =  2.4 - Math.sin(walkT*16)*.15; armR.rotation.x = -.2;
+      legL.rotation.x = -.2; legR.rotation.x = .2;
+      head.rotation.z = Math.sin(walkT*16)*.1; rig.rotation.y += (0 - rig.rotation.y)*.2;
+    } else { // peek family — peeking over the top edge of a card
       legL.rotation.x = .2; legR.rotation.x = .2; rig.rotation.y += (0 - rig.rotation.y)*.2;
-      if (st === 'peekHold') head.rotation.y = Math.sin(walkT*1.5)*.5;
+      if (st === 'peekHold' && waving){
+        armL.rotation.x = -.2; armL.rotation.z = -2.15;                       // left hand up over the edge
+        armR.rotation.x = -.2; armR.rotation.z = 2.0 + Math.sin(walkT*13)*.4; // right hand up, waving hello
+        head.rotation.z = Math.sin(walkT*4)*.06; head.rotation.x += (-.05 - head.rotation.x)*.1;
+        head.rotation.y = Math.sin(walkT*2)*.22;
+      } else {
+        armL.rotation.x = -1.4; armR.rotation.x = -1.4; armL.rotation.z = .3; armR.rotation.z = -.3;
+        if (st === 'peekHold') head.rotation.y = Math.sin(walkT*1.5)*.5;
+      }
     }
     if (look > 0){
       const hy = feet - SIZE*.72;
@@ -1768,10 +1797,11 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
   }
   function place(){
     let drawFeet = feet, drawX = px, sx = 1, sy = 1;
-    if (st === 'sit'){ drawFeet = feet + 6; drawX = px + sideSign * SIZE*0.42; } // body lies sideways from the foot pivot; recentre & rest on the surface
-    else if (st === 'nap') drawFeet = feet + 24;
+    if (st === 'sit'){ drawFeet = feet + 30; }        // hip rests on the edge, legs hang below the card top
+    else if (st === 'nap') drawFeet = feet + 14;
     if (st === 'pet'){ const b = Math.abs(Math.sin(walkT*16)); sy = 1 + b*.06; sx = 1 - b*.04; }
-    const bob = (st === 'walk' || st === 'bye') ? Math.abs(Math.sin(walkT*9))*3 : 0;
+    const bob = (st === 'walk' || st === 'bye') ? Math.abs(Math.sin(walkT*9))*3
+              : (st === 'cheer') ? Math.abs(Math.sin(walkT*8))*10 : 0;   // little hops while celebrating
     rig.scale.set(S*sx, S*sy, S);
     rig.position.set(drawX, H - (drawFeet - bob), 0);
   }
@@ -1793,6 +1823,7 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
       case 'touch': stepTouch(dt); break;
       case 'nap': stepNap(dt); break;
       case 'greet': if (stT > 2.6){ hush(); st = 'walk'; actT = 1 + Math.random()*1.5; } break;
+      case 'cheer': if (stT > 1.5){ hush(); st = 'walk'; actT = 1 + Math.random()*1.5; } break;
       case 'pet': if (stT > 1.5){ hush(); st = 'walk'; actT = 1 + Math.random(); } break;
       case 'peekUp': case 'peekHold': case 'duck': case 'climb': stepPeek(dt); break;
       case 'bye': { onstageT = 99; px += vx*dt; if (px < 14 || px > W-14) goGone(); } break;
@@ -1801,7 +1832,10 @@ createView(document.getElementById('smiley3d'), (scene, camera, el) => {
 
     pose(dt); place();
     renderer.render(scene, camera);
-    if (bubble.classList.contains('show')){ bubble.style.left = px + 'px'; bubble.style.top = (feet - SIZE*.95 - 6) + 'px'; }
+    if (bubble.classList.contains('show')){
+      bubble.style.left = Math.max(66, Math.min(W - 66, px)) + 'px';      // keep the bubble on-screen (narrow phones)
+      bubble.style.top  = Math.max(34, feet - SIZE*.95 - 6) + 'px';
+    }
   }
 
   function dismiss(){
