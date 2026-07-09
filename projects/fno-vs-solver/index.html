@@ -3,12 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FNO vs. Solver — Neural Operator Speed Demo · Tomás Erdmannsdörffer</title>
-<meta name="description" content="Watch an operator surrogate solve viscous Burgers orders of magnitude faster than a finite-difference solver. Both start at the same time — live race in your browser.">
+<title>FNO vs. Solver - Neural Operator Speed Demo · Tomás Erdmannsdörffer</title>
+<meta name="description" content="Watch an operator surrogate solve viscous Burgers orders of magnitude faster than a finite-difference solver. Both start at the same time, live race in your browser.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces-italic.woff2') format('woff2');font-weight:400 500;font-style:italic;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('../../fonts/space-grotesk.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('../../fonts/jetbrains-mono.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+</style>
 <style>
 :root{
   --paper:#f7f2e8; --card:#fffdf7;
@@ -171,7 +174,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   Two algorithms, same PDE, <b>same starting gun</b>. The <b>finite-difference solver</b> (left, teal)
   crawls timestep by timestep, the way numerical codes have for decades. The <b>operator surrogate</b>
   (right, coral) jumps straight from initial condition to any time t in one shot. Same answer to within
-  a couple percent — watch which one finishes. This is the story neural operators (FNO, DeepONet) tell,
+  a couple percent, watch which one finishes. This is the story neural operators (FNO, DeepONet) tell,
   and why they're one of the hottest directions in scientific ML.
 </p>
 <div class="tagrow">
@@ -224,9 +227,9 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
     <canvas id="fd-canvas"></canvas>
     <div class="progress"><i id="fd-prog"></i></div>
     <div class="stats">
-      <div class="stat"><div class="k">step</div><div class="v hl" id="fd-step">—</div></div>
-      <div class="stat"><div class="k">sim t</div><div class="v" id="fd-time">—</div></div>
-      <div class="stat"><div class="k">compute ms</div><div class="v" id="fd-wall">—</div></div>
+      <div class="stat"><div class="k">step</div><div class="v hl" id="fd-step">-</div></div>
+      <div class="stat"><div class="k">sim t</div><div class="v" id="fd-time">-</div></div>
+      <div class="stat"><div class="k">compute ms</div><div class="v" id="fd-wall">-</div></div>
     </div>
   </div>
 
@@ -241,9 +244,9 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
     <canvas id="op-canvas"></canvas>
     <div class="progress"><i id="op-prog"></i></div>
     <div class="stats">
-      <div class="stat"><div class="k">setup ms</div><div class="v" id="op-setup">—</div></div>
-      <div class="stat"><div class="k">eval ms</div><div class="v hl" id="op-eval">—</div></div>
-      <div class="stat"><div class="k">total ms</div><div class="v" id="op-wall">—</div></div>
+      <div class="stat"><div class="k">setup ms</div><div class="v" id="op-setup">-</div></div>
+      <div class="stat"><div class="k">eval ms</div><div class="v hl" id="op-eval">-</div></div>
+      <div class="stat"><div class="k">total ms</div><div class="v" id="op-wall">-</div></div>
     </div>
   </div>
 
@@ -253,24 +256,24 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
 <div class="verdict">
   <div>
     <div class="lbl">speedup</div>
-    <div class="speedup" id="v-speedup">—</div>
+    <div class="speedup" id="v-speedup">-</div>
   </div>
   <div>
     <div class="lbl">accuracy</div>
     <div class="err" id="v-err">press race to find out</div>
   </div>
-  <div class="note" id="v-note">After the race, the solver's final answer is overlaid (dashed) on the operator's — they should sit on top of each other.</div>
+  <div class="note" id="v-note">After the race, the solver's final answer is overlaid (dashed) on the operator's, they should sit on top of each other.</div>
 </div>
 
 <!-- EXPLAINER -->
 <section class="explain">
   <h2>What you're actually <em>watching</em></h2>
-  <p>Both sides solve the 1D viscous Burgers equation — the canonical nonlinear PDE benchmark mixing advection and diffusion:</p>
+  <p>Both sides solve the 1D viscous Burgers equation, the canonical nonlinear PDE benchmark mixing advection and diffusion:</p>
   <div class="eq">∂u/∂t + u · ∂u/∂x = ν · ∂²u/∂x² &nbsp;&nbsp; x ∈ [0, 1], periodic</div>
 
   <h4>the solver (left)</h4>
   <p>
-    Classical explicit finite differences. The CFL stability condition forces tiny timesteps — for
+    Classical explicit finite differences. The CFL stability condition forces tiny timesteps, for
     ν = 0.02 at Nx = 256 that's <b>thousands of sequential steps</b> to reach t = 0.5, and you can't
     compute step n before step n−1 exists. The animation deliberately shows the time-marching.
   </p>
@@ -278,7 +281,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   <h4>the operator (right)</h4>
   <p>
     Burgers admits the <b>Cole-Hopf transformation</b>: substitute u = −2ν·φₓ/φ and φ obeys the
-    <i>linear</i> heat equation, which is diagonal in Fourier space — every mode just decays
+    <i>linear</i> heat equation, which is diagonal in Fourier space, every mode just decays
     exponentially. So the "operator" maps the initial condition to its spectral coefficients once,
     and evaluating the solution at <b>any</b> time t is a single O(Nx·K) pass. No time marching at all.
   </p>
@@ -286,7 +289,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
 
   <h4>why this is the neural-operator story</h4>
   <p>
-    A neural operator like <b>FNO</b> (Li et al., 2021) does conceptually the same thing — it learns a
+    A neural operator like <b>FNO</b> (Li et al., 2021) does conceptually the same thing, it learns a
     map from initial conditions to solutions, parameterized in frequency space, for problems where
     no analytic transform exists (Navier-Stokes, Darcy flow, weather). Trained once on solver
     outputs, then deployed at constant inference cost. Published FNO speedups reach 1000×+; what you
@@ -294,7 +297,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   </p>
 
   <div class="honest">
-    <b>Honest framing.</b> The right-hand racer is <i>not</i> a trained neural network — it's the exact
+    <b>Honest framing.</b> The right-hand racer is <i>not</i> a trained neural network, it's the exact
     Cole-Hopf operator. Deliberate choice: training a real FNO and shipping weights would add days of GPU
     time without changing the visual story, and the analytic operator makes the accuracy comparison clean.
     A real FNO replaces the analytic step with a learned one. Same architecture concept, same punchline.
@@ -302,10 +305,10 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
 
   <h4>try this</h4>
   <ul>
-    <li>Hit <b>🔥 make it brutal</b> — high viscosity + fine grid crushes the solver (~10,000+ steps); the operator barely notices.</li>
-    <li>Drop <b>modes K to 6</b> — watch the surrogate lose the sharp shock but keep its speed. Accuracy/cost knob, live.</li>
-    <li>Try the <b>smoothed step</b> IC — Burgers steepens it into a traveling shock front.</li>
-    <li>At the lowest ν the truncated operator struggles near shocks — push K to 40+ to recover accuracy.</li>
+    <li>Hit <b>🔥 make it brutal</b>: high viscosity + fine grid crushes the solver (~10,000+ steps); the operator barely notices.</li>
+    <li>Drop <b>modes K to 6</b>: watch the surrogate lose the sharp shock but keep its speed. Accuracy/cost knob, live.</li>
+    <li>Try the <b>smoothed step</b> IC, Burgers steepens it into a traveling shock front.</li>
+    <li>At the lowest ν the truncated operator struggles near shocks, push K to 40+ to recover accuracy.</li>
   </ul>
 </section>
 
@@ -533,7 +536,7 @@ async function runOp(ic){
   const evalMs = (performance.now() - t1) / 20;
   const total = setupMs + evalMs;
 
-  // quick visual sweep t: 0 → T so you see it "solve" — done in a blink
+  // quick visual sweep t: 0 → T so you see it "solve", done in a blink
   const sweep = 24;
   for(let i = 1; i <= sweep; i++){
     const t = i / sweep * T_FINAL;
@@ -544,17 +547,17 @@ async function runOp(ic){
   $('op-setup').textContent = setupMs.toFixed(2);
   $('op-eval').textContent  = evalMs.toFixed(2);
   $('op-wall').textContent  = total.toFixed(2);
-  $('op-status').textContent = 'done — waiting';
+  $('op-status').textContent = 'done, waiting';
   $('op-status').className = 'badge done';
   return { uOp, setupMs, evalMs, total };
 }
 
 async function race(){
   const ic = makeIC(state.icType, state.Nx);
-  ['fd-step','fd-time','fd-wall','op-setup','op-eval','op-wall'].forEach(id => $(id).textContent = '—');
+  ['fd-step','fd-time','fd-wall','op-setup','op-eval','op-wall'].forEach(id => $(id).textContent = '-');
   $('fd-prog').style.width = '0%';
   $('op-prog').style.width = '0%';
-  $('v-speedup').textContent = '—';
+  $('v-speedup').textContent = '-';
   $('v-err').textContent = 'racing…';
 
   // 🏁 both start on the same gun
@@ -574,7 +577,7 @@ async function race(){
   const speedup = fd.wall / op.total;
 
   $('v-speedup').textContent = speedup.toFixed(0) + '×';
-  $('v-err').innerHTML = `relative L2 error <b>${relErr.toFixed(2)}%</b> — dashed line = solver's answer, overlaid on the operator's`;
+  $('v-err').innerHTML = `relative L2 error <b>${relErr.toFixed(2)}%</b>: dashed line = solver's answer, overlaid on the operator's`;
   $('v-note').textContent = `solver: ${fd.wall.toFixed(0)} ms over ${fd.totalSteps} sequential steps · operator: ${op.total.toFixed(2)} ms (setup ${op.setupMs.toFixed(1)} + one eval ${op.evalMs.toFixed(2)})`;
 
   state.running = false;

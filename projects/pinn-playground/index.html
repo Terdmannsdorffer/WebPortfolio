@@ -3,12 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PINN Playground — Burgers Equation in the Browser · Tomás Erdmannsdörffer</title>
+<title>PINN Playground - Burgers Equation in the Browser · Tomás Erdmannsdörffer</title>
 <meta name="description" content="Train a physics-informed neural network in your browser. Solves the 1D viscous Burgers equation in real time using TensorFlow.js.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces-italic.woff2') format('woff2');font-weight:400 500;font-style:italic;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('../../fonts/space-grotesk.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('../../fonts/jetbrains-mono.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 <style>
 :root{
@@ -176,7 +179,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
 <h1>Watch a neural network <em>learn physics</em>.</h1>
 <p class="lede">
   This page trains a <b>Physics-Informed Neural Network</b> in your browser to solve the 1D viscous
-  Burgers equation — the canonical benchmark from Raissi et al. (2019). <b>No data labels, no ground
+  Burgers equation, the canonical benchmark from Raissi et al. (2019). <b>No data labels, no ground
   truth</b>: the network learns purely from the PDE residual, boundary and initial conditions.
   Hit a preset and watch it converge.
 </p>
@@ -254,9 +257,9 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
 
     <div class="stats">
       <div class="stat"><div class="k">iteration</div><div class="v" id="stat-iter">0</div></div>
-      <div class="stat"><div class="k">total loss</div><div class="v hl" id="stat-loss">—</div></div>
-      <div class="stat"><div class="k">pde residual</div><div class="v" id="stat-pde">—</div></div>
-      <div class="stat"><div class="k">boundary + ic</div><div class="v" id="stat-bc">—</div></div>
+      <div class="stat"><div class="k">total loss</div><div class="v hl" id="stat-loss">-</div></div>
+      <div class="stat"><div class="k">pde residual</div><div class="v" id="stat-pde">-</div></div>
+      <div class="stat"><div class="k">boundary + ic</div><div class="v" id="stat-bc">-</div></div>
     </div>
 
     <div class="viz-card">
@@ -279,7 +282,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
     <div class="viz-card">
       <div class="head">
         <span class="ttl">Loss curves (log scale)</span>
-        <span class="sub" id="loss-sub">— total · — pde · — boundary</span>
+        <span class="sub" id="loss-sub">- total ·, pde ·, boundary</span>
       </div>
       <canvas id="loss-canvas"></canvas>
     </div>
@@ -292,11 +295,11 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   <p>
     A standard neural network learns from input/output pairs. A <b>PINN</b> learns from a differential
     equation. Instead of asking <i>"what's the right answer for this input?"</i> it asks
-    <i>"how badly does my prediction violate the laws of physics?"</i> — and uses that violation as the loss.
+    <i>"how badly does my prediction violate the laws of physics?"</i>, and uses that violation as the loss.
   </p>
   <p>
     We build a network u<sub>θ</sub>(t, x) that maps a point in spacetime to a solution value, use
-    automatic differentiation to get its partial derivatives — exactly, not numerically — and plug
+    automatic differentiation to get its partial derivatives, exactly, not numerically, and plug
     them into the PDE residual:
   </p>
   <div class="eq">r(t, x) = ∂u/∂t + u · ∂u/∂x − ν · ∂²u/∂x²</div>
@@ -308,17 +311,17 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
 
   <h4>why this matters</h4>
   <p>
-    <b>No training data is required</b> — the "supervision" is the physics itself. That makes PINNs
+    <b>No training data is required</b>: the "supervision" is the physics itself. That makes PINNs
     valuable for inverse problems, high-dimensional PDEs where meshes explode, and domains where the
-    governing equations are known but measurements are scarce — like <b>cardiac biomechanics</b>,
+    governing equations are known but measurements are scarce, like <b>cardiac biomechanics</b>,
     my MSc research area.
   </p>
 
   <h4>things to try</h4>
   <p>
     · Hit <b>🌊 shock wave</b> and watch a discontinuity form near t ≈ 0.4.<br>
-    · Set the PDE weight λ to 0.01 — the network only learns the boundaries and ignores the physics.<br>
-    · Hit <b>🐜 tiny net</b> — an 8×2 MLP simply can't represent the solution. Underfitting, live.<br>
+    · Set the PDE weight λ to 0.01, the network only learns the boundaries and ignores the physics.<br>
+    · Hit <b>🐜 tiny net</b>: an 8×2 MLP simply can't represent the solution. Underfitting, live.<br>
     · Push collocation points to 5000 for cleaner residuals at a higher cost per step.
   </p>
 
@@ -326,7 +329,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   <p>
     Fully-connected tanh MLP. First derivatives via <b>tf.grad</b>; the second derivative u<sub>xx</sub>
     uses a central difference of u<sub>x</sub> at x ± ε, since TensorFlow.js can't differentiate through
-    tf.grad like PyTorch's <b>create_graph=True</b> or JAX's <b>jacfwd/jacrev</b> — gradients still flow
+    tf.grad like PyTorch's <b>create_graph=True</b> or JAX's <b>jacfwd/jacrev</b>: gradients still flow
     correctly because each u<sub>x</sub> is itself a full autodiff result. Adam optimizer, WebGL backend,
     and the training loop adapts how many steps it runs per frame to keep the page smooth on your device.
   </p>
@@ -600,9 +603,9 @@ function updateStats(){
   $('stat-iter').textContent = state.iter;
   const h = state.history;
   const last = h[h.length-1];
-  $('stat-loss').textContent = last ? last.total.toExponential(1) : '—';
-  $('stat-pde').textContent  = last ? last.pde.toExponential(1)  : '—';
-  $('stat-bc').textContent   = last ? last.bc.toExponential(1)   : '—';
+  $('stat-loss').textContent = last ? last.total.toExponential(1) : '-';
+  $('stat-pde').textContent  = last ? last.pde.toExponential(1)  : '-';
+  $('stat-bc').textContent   = last ? last.bc.toExponential(1)   : '-';
 }
 
 /* ---------- UI ---------- */

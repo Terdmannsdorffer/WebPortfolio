@@ -3,12 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ask My Research — RAG over Scientific ML papers · Tomás Erdmannsdörffer</title>
+<title>Ask My Research - RAG over Scientific ML papers · Tomás Erdmannsdörffer</title>
 <meta name="description" content="A transparent RAG system over a curated corpus of scientific ML papers. BM25 retrieval in the browser, extractive answers with zero setup, or bring your own LLM key.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces-italic.woff2') format('woff2');font-weight:400 500;font-style:italic;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('../../fonts/space-grotesk.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('../../fonts/jetbrains-mono.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+</style>
 <style>
 :root{
   --paper:#f7f2e8; --card:#fffdf7;
@@ -224,9 +227,9 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
 <h1>Ask my <em>research corpus</em>.</h1>
 <p class="lede">
   A transparent <b>RAG system</b> over a curated corpus of papers on physics-informed neural
-  networks, neural operators, model compression, and LLM inference — the literature I actually
+  networks, neural operators, model compression, and LLM inference, the literature I actually
   use day-to-day. BM25 retrieval runs client-side, and answers work <b>instantly with no setup</b>
-  (extractive mode) — or plug in any OpenAI-compatible LLM for generative answers. The
+  (extractive mode), or plug in any OpenAI-compatible LLM for generative answers. The
   behind-the-scenes panel shows retrieved chunks, scores, and the exact prompt: if retrieval
   fails, you can see why.
 </p>
@@ -237,7 +240,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
 
 <div class="settings-bar" id="settings-bar">
   <span class="led"></span>
-  <span class="lbl">answers:</span><span id="cfg-summary">⚡ extractive mode — works now, no key needed</span>
+  <span class="lbl">answers:</span><span id="cfg-summary">⚡ extractive mode, works now, no key needed</span>
   <span style="color:var(--line)">·</span>
   <span class="lbl">index:</span><span id="idx-summary">loading…</span>
   <button class="cfg" id="open-cfg">⚙ use an LLM</button>
@@ -251,7 +254,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
       <div class="empty" id="empty-state">
         <div class="icon">🔎</div>
         <h4>Ask anything about the corpus.</h4>
-        <p>Retrieval is instant and local. Try one of these — no API key required:</p>
+        <p>Retrieval is instant and local. Try one of these, no API key required:</p>
         <div class="suggestions">
           <button class="sug-btn" data-q="How do physics-informed neural networks work?">How do physics-informed neural networks work?</button>
           <button class="sug-btn" data-q="What is the Fourier Neural Operator and why is it resolution-invariant?">What is the Fourier Neural Operator and why is it resolution-invariant?</button>
@@ -274,9 +277,9 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
       <div class="panel-h"><span>retrieval</span><span>[01]</span></div>
       <div class="panel-body">
         <div class="stat"><span>Algorithm</span><span class="v">BM25 + tag boost</span></div>
-        <div class="stat"><span>Corpus size</span><span class="v" id="stat-chunks">—</span></div>
+        <div class="stat"><span>Corpus size</span><span class="v" id="stat-chunks">-</span></div>
         <div class="stat"><span>Top-k retrieved</span><span class="v">4</span></div>
-        <div class="stat"><span>Last query</span><span class="v" id="stat-latency">—</span></div>
+        <div class="stat"><span>Last query</span><span class="v" id="stat-latency">-</span></div>
       </div>
     </div>
 
@@ -290,7 +293,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
     <div class="panel">
       <div class="panel-h"><span>prompt / context</span><span>[03]</span></div>
       <div class="panel-body">
-        <div class="prompt-block" id="prompt-preview">—</div>
+        <div class="prompt-block" id="prompt-preview">-</div>
       </div>
     </div>
   </div>
@@ -302,7 +305,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   <h2>What's actually <em>happening</em> here?</h2>
   <p>
     Most "chat with your PDFs" demos hide retrieval behind a black box. This one shows everything:
-    the chunks pulled, their scores, and the exact prompt. That transparency is the point — when
+    the chunks pulled, their scores, and the exact prompt. That transparency is the point, when
     retrieval fails, you can see why.
   </p>
 
@@ -310,14 +313,14 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   <ul>
     <li><b>Static corpus:</b> 24 hand-curated chunks from 16 scientific ML papers, shipped as one small JSON file. No vector DB, no backend.</li>
     <li><b>Retrieval:</b> BM25 with light stemming, computed in the browser. Title, section, and tag tokens are up-weighted; a small tag-overlap rerank runs after scoring. Top-4 retained.</li>
-    <li><b>Extractive mode (default):</b> with no LLM configured, the answer is stitched from the highest-scoring sentences inside the retrieved chunks — each sentence scored by IDF-weighted query overlap. Zero setup, fully local, honestly labeled.</li>
-    <li><b>Generative mode:</b> any OpenAI-compatible endpoint — OpenAI, Groq, OpenRouter, local Ollama. Your key stays in <code>localStorage</code> and is sent only to the endpoint you configure.</li>
+    <li><b>Extractive mode (default):</b> with no LLM configured, the answer is stitched from the highest-scoring sentences inside the retrieved chunks, each sentence scored by IDF-weighted query overlap. Zero setup, fully local, honestly labeled.</li>
+    <li><b>Generative mode:</b> any OpenAI-compatible endpoint, OpenAI, Groq, OpenRouter, local Ollama. Your key stays in <code>localStorage</code> and is sent only to the endpoint you configure.</li>
   </ul>
 
   <h4>honest trade-offs</h4>
   <ul>
-    <li><b>BM25 vs dense embeddings.</b> Production RAG uses dense embeddings + a reranker; they handle synonyms and paraphrase better. BM25 wins for a 24-chunk corpus and ships with zero infrastructure — at scale I'd swap it.</li>
-    <li><b>Extractive answers can read choppy.</b> They're real sentences from real papers, in rank order, with citations — not fluent prose. That's the trade for zero-setup honesty.</li>
+    <li><b>BM25 vs dense embeddings.</b> Production RAG uses dense embeddings + a reranker; they handle synonyms and paraphrase better. BM25 wins for a 24-chunk corpus and ships with zero infrastructure, at scale I'd swap it.</li>
+    <li><b>Extractive answers can read choppy.</b> They're real sentences from real papers, in rank order, with citations, not fluent prose. That's the trade for zero-setup honesty.</li>
     <li><b>No conversational memory.</b> Each question is independent; multi-turn needs history-aware query rewriting (one extra LLM call).</li>
   </ul>
 
@@ -325,7 +328,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   <p>
     A focused corpus is the whole point. The system is good at scientific ML <b>because</b> the chunks
     are tagged, sectioned, and curated. Throw 10,000 random PDFs at the same architecture and recall
-    collapses. Choosing a scope is a real engineering decision — and a more interesting portfolio
+    collapses. Choosing a scope is a real engineering decision, and a more interesting portfolio
     piece than another generic Q&amp;A bot.
   </p>
 </section>
@@ -342,7 +345,7 @@ footer{padding:0 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);
   <div class="box">
     <h3>Use an LLM for answers</h3>
     <p class="sub">
-      Optional — extractive mode already works with no setup. Bring your own key for fluent
+      Optional, extractive mode already works with no setup. Bring your own key for fluent
       generative answers; it stays in <b>localStorage</b> and is only sent to the endpoint below.
     </p>
     <label>
@@ -511,7 +514,7 @@ function updateSettingsBar(){
     $('open-cfg').textContent = '⚙ configure';
   } else {
     bar.classList.remove('ok');
-    $('cfg-summary').textContent = '⚡ extractive mode — works now, no key needed';
+    $('cfg-summary').textContent = '⚡ extractive mode, works now, no key needed';
     $('open-cfg').textContent = '⚙ use an LLM';
   }
 }
@@ -535,7 +538,7 @@ $('cfg-clear').onclick = () => {
   cfg = {};
   saveCfg(); updateSettingsBar();
   $('cfg-modal').classList.remove('open');
-  toast('Key cleared — back to extractive mode.');
+  toast('Key cleared, back to extractive mode.');
 };
 $('cfg-preset').onchange = e => {
   const p = PRESETS[e.target.value];
@@ -576,7 +579,7 @@ function renderChunks(results){
     return `
       <div class="chunk-card" data-i="${r.i}">
         <div class="h">
-          <span class="ttl">${c.paper.split(' — ')[0]}</span>
+          <span class="ttl">${c.paper.split(', ')[0]}</span>
           <span class="score">${r.score.toFixed(2)}</span>
         </div>
         <div class="scorebar"><i style="width:${pct}%"></i></div>
@@ -595,7 +598,7 @@ function buildPrompt(query, results){
     return `[${idx+1}] ${c.paper} (${c.section})\n${c.text}`;
   }).join('\n\n');
   return {
-    system: `You are a precise scientific assistant. Answer the user's question using ONLY the context passages below. Cite passages by their bracketed number, like [1] or [2]. If the context doesn't contain the answer, say "the corpus doesn't cover this" — do not make things up.`,
+    system: `You are a precise scientific assistant. Answer the user's question using ONLY the context passages below. Cite passages by their bracketed number, like [1] or [2]. If the context doesn't contain the answer, say "the corpus doesn't cover this", do not make things up.`,
     user: `CONTEXT:\n${ctx}\n\nQUESTION: ${query}\n\nAnswer concisely, citing the relevant passages.`,
   };
 }
@@ -629,7 +632,7 @@ function escapeHtml(s){
 function citationsHtml(results){
   return '<div class="citations">' + results.map((r, i) => {
     const c = corpus[r.i];
-    return `<span class="cite" title="${escapeHtml(c.section)}">[${i+1}] ${escapeHtml(c.paper.split(' — ')[0])}</span>`;
+    return `<span class="cite" title="${escapeHtml(c.section)}">[${i+1}] ${escapeHtml(c.paper.split(', ')[0])}</span>`;
   }).join('') + '</div>';
 }
 
@@ -662,8 +665,8 @@ async function ask(){
   renderChunks(results);
 
   if(!results.length){
-    $('prompt-preview').textContent = '(no retrieval — query has no high-confidence matches)';
-    appendMsg('assistant', "The corpus doesn't cover this — no relevant chunks were retrieved with high enough confidence. Try asking about PINNs, neural operators, model compression, LLM inference, or cardiac biomechanics.");
+    $('prompt-preview').textContent = '(no retrieval, query has no high-confidence matches)';
+    appendMsg('assistant', "The corpus doesn't cover this, no relevant chunks were retrieved with high enough confidence. Try asking about PINNs, neural operators, model compression, LLM inference, or cardiac biomechanics.");
     $('send-btn').disabled = false;
     return;
   }
@@ -674,11 +677,11 @@ async function ask(){
   if(!hasLLM()){
     /* extractive mode: instant, local, honest */
     const ans = extractiveAnswer(q, results) ||
-      'The retrieved passages matched, but no single sentence answers this directly — expand the chunks in the side panel to read them in full.';
+      'The retrieved passages matched, but no single sentence answers this directly, expand the chunks in the side panel to read them in full.';
     const div = appendMsg('assistant', ans);
     div.insertAdjacentHTML('beforeend',
       citationsHtml(results) +
-      '<div class="modenote">⚡ extractive mode — sentences quoted verbatim from the retrieved passages. Configure an LLM (⚙) for generative answers.</div>');
+      '<div class="modenote">⚡ extractive mode, sentences quoted verbatim from the retrieved passages. Configure an LLM (⚙) for generative answers.</div>');
     $('msgs').scrollTop = $('msgs').scrollHeight;
     $('send-btn').disabled = false;
     return;
@@ -710,7 +713,7 @@ async function boot(){
   } catch(e){
     console.error(e);
     $('idx-summary').textContent = 'failed to load';
-    toast('Failed to load corpus.json — if you opened this via file://, run a local server.', true);
+    toast('Failed to load corpus.json, if you opened this via file://, run a local server.', true);
   }
 }
 boot();

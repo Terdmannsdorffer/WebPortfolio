@@ -3,12 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Optimizer Race — Tomás Erdmannsdörffer</title>
+<title>Optimizer Race - Tomás Erdmannsdörffer</title>
 <meta name="description" content="SGD, Momentum, RMSProp and Adam race down interactive 3D loss landscapes. Click the surface to restart them anywhere.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎢</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces-italic.woff2') format('woff2');font-weight:400 500;font-style:italic;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('../../fonts/space-grotesk.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('../../fonts/jetbrains-mono.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+</style>
 <style>
 :root{
   --paper:#f7f2e8; --card:#fffdf7;
@@ -111,7 +114,7 @@ footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--di
 
 <h1>The <em>Optimizer</em> Race</h1>
 <p class="lede">
-  Four gradient-descent variants minimize the same loss surface from the same start —
+  Four gradient-descent variants minimize the same loss surface from the same start -
   <b>click anywhere on the surface to drop them somewhere new</b>. Drag to orbit, scroll to zoom.
   Watch SGD stall in local minima while Adam's adaptive step sails past, or Momentum overshoot
   the valley it was aiming for. Implemented from scratch: <code>θ ← θ − η·∇L(θ)</code> and friends.
@@ -126,7 +129,7 @@ footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--di
 </div>
 
 <div class="stage">
-  <canvas id="race" aria-label="3D loss landscape with four optimizers racing downhill — click to restart them at a new point"></canvas>
+  <canvas id="race" aria-label="3D loss landscape with four optimizers racing downhill, click to restart them at a new point"></canvas>
   <div class="foot">
     <span id="formula">L(x,y) = 0.15(x²+y²) + 0.7·sin(1.5x)·cos(1.5y)</span>
     <span>click surface = new start point</span>
@@ -139,12 +142,12 @@ footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--di
   <div class="card">
     <h3>What you're seeing</h3>
     <p>
-      The surface is a 2-parameter loss function — a toy stand-in for the millions-dimensional
+      The surface is a 2-parameter loss function, a toy stand-in for the millions-dimensional
       landscapes real networks train on. Each ball runs its update rule on the <b>analytic gradient</b>,
       a few steps per frame:
     </p>
     <p>
-      <b>SGD</b> follows the raw gradient. <b>Momentum</b> (β=0.92) accumulates velocity — faster in
+      <b>SGD</b> follows the raw gradient. <b>Momentum</b> (β=0.92) accumulates velocity, faster in
       ravines, prone to overshooting. <b>RMSProp</b> divides by a running RMS of the gradient,
       equalizing step sizes across dimensions. <b>Adam</b> combines both with bias correction.
     </p>
@@ -157,7 +160,7 @@ footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--di
       these pathological ravines and saddles.
     </p>
     <p>
-      Picking and tuning the optimizer isn't a detail there — it's the difference between a heart
+      Picking and tuning the optimizer isn't a detail there, it's the difference between a heart
       model that converges and one that doesn't. This toy is how I explain that problem in one picture.
     </p>
   </div>
@@ -337,7 +340,7 @@ const racers = optimizers.map(opt => {
   const el = document.createElement('div');
   el.className = 'opt';
   el.innerHTML = '<span class="dot" style="background:' + opt.css + '"></span>' + opt.label +
-                 ' <span class="loss">L=—</span>';
+                 ' <span class="loss">L=-</span>';
   legend.appendChild(el);
 
   return { opt, ball, trail, trailGeo, p:[0,0], steps:0, count:0, lossEl:el.querySelector('.loss') };

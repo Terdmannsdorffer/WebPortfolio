@@ -1,11 +1,23 @@
-# Tomás Erdmannsdörffer — Portfolio
+# Tomás Erdmannsdörffer - Portfolio
 
-Personal portfolio site with three interactive ML demos. Pure static site, no build step. Single repo deploys to any host.
+Personal portfolio site with five interactive ML demos. Pure static site, no build step. Single repo deploys to any host.
 
 ```
 portfolio/
-├── index.html                              # main portfolio (timeline + demos + CV)
-├── cv.pdf                                  # ← drop your CV here
+├── index.html                              # main portfolio (markup only)
+├── css/main.css                            # design system + all styles
+├── js/
+│   ├── site.js                             # scroll effects + mobile nav (no-module fallback)
+│   ├── main.js                             # module entry (WebGL features)
+│   ├── scenes.js                           # heart/smiley/demo previews, ONE shared WebGL context
+│   ├── world.js                            # overlay world: coordinate system, platforms, loop
+│   ├── toys.js                             # hero physics toys (drag/throw, buddy platforms)
+│   └── buddy.js                            # the page buddy
+├── fonts/                                  # self-hosted variable fonts (Fraunces, Space Grotesk, JetBrains Mono)
+├── me.jpg                                  # hero polaroid photo
+├── og.jpg                                  # social share card (1200x630)
+├── face.png                                # buddy face texture
+├── cv.pdf                                  # ← drop your CV here (currently missing!)
 ├── README.md
 ├── .gitignore
 └── projects/
@@ -13,7 +25,9 @@ portfolio/
     ├── rag-scientific-ml/
     │   ├── index.html                      # 02 RAG over scientific ML papers
     │   └── corpus.json                     # 24 curated chunks
-    └── fno-vs-solver/index.html            # 03 Neural operator vs. FD solver race
+    ├── fno-vs-solver/index.html            # 03 Neural operator vs. FD solver race
+    ├── fluid-playground/index.html         # 04 Stable-fluids Navier-Stokes toy
+    └── optimizer-race/index.html           # 05 SGD/Momentum/RMSProp/Adam race
 ```
 
 ---
