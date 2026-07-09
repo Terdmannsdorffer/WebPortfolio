@@ -11,6 +11,11 @@
 @font-face{font-family:'Fraunces';src:url('../../fonts/fraunces-italic.woff2') format('woff2');font-weight:400 500;font-style:italic;font-display:swap}
 @font-face{font-family:'Space Grotesk';src:url('../../fonts/space-grotesk.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
 @font-face{font-family:'JetBrains Mono';src:url('../../fonts/jetbrains-mono.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+/* view transition: the demo card on the main page morphs into this title */
+@view-transition{navigation:auto}
+h1{view-transition-name:demo-fluid}
+::view-transition-group(*){animation-duration:.35s}
+@media (prefers-reduced-motion: reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important}}
 </style>
 <style>
 :root{
@@ -418,6 +423,16 @@ function loop(now){
   frames++;
   if(now - fpsT > 1000){
     fpsEl.textContent = frames + ' fps';
+    // remember this visitor's best frame rate; the main page shows it on the demo card
+    if(frames >= 10){
+      try{
+        var _s = JSON.parse(localStorage.getItem('demoStats') || '{}');
+        if(!_s.fluid || frames > _s.fluid.fps){
+          _s.fluid = { fps: frames, t: Date.now() };
+          localStorage.setItem('demoStats', JSON.stringify(_s));
+        }
+      }catch(e){}
+    }
     frames = 0; fpsT = now;
   }
 }

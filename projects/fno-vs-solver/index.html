@@ -11,6 +11,11 @@
 @font-face{font-family:'Fraunces';src:url('../../fonts/fraunces-italic.woff2') format('woff2');font-weight:400 500;font-style:italic;font-display:swap}
 @font-face{font-family:'Space Grotesk';src:url('../../fonts/space-grotesk.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
 @font-face{font-family:'JetBrains Mono';src:url('../../fonts/jetbrains-mono.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
+/* view transition: the demo card on the main page morphs into this title */
+@view-transition{navigation:auto}
+h1{view-transition-name:demo-fno}
+::view-transition-group(*){animation-duration:.35s}
+@media (prefers-reduced-motion: reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important}}
 </style>
 <style>
 :root{
@@ -579,6 +584,13 @@ async function race(){
   $('v-speedup').textContent = speedup.toFixed(0) + '×';
   $('v-err').innerHTML = `relative L2 error <b>${relErr.toFixed(2)}%</b>: dashed line = solver's answer, overlaid on the operator's`;
   $('v-note').textContent = `solver: ${fd.wall.toFixed(0)} ms over ${fd.totalSteps} sequential steps · operator: ${op.total.toFixed(2)} ms (setup ${op.setupMs.toFixed(1)} + one eval ${op.evalMs.toFixed(2)})`;
+
+  // remember this visitor's measured result; the main page shows it on the demo card
+  try{
+    const _s = JSON.parse(localStorage.getItem('demoStats') || '{}');
+    _s.fno = { speedup: +speedup.toFixed(1), t: Date.now() };
+    localStorage.setItem('demoStats', JSON.stringify(_s));
+  }catch(e){}
 
   state.running = false;
   $('btn-race').disabled = false;

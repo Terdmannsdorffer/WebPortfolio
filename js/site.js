@@ -26,6 +26,25 @@
     });
   }
 
+  /* ---- live demo stats: results this visitor measured on their own machine ---- */
+  try {
+    var stats = JSON.parse(localStorage.getItem('demoStats') || '{}');
+    var stamp = function (sel, text) {
+      var prev = document.querySelector(sel + ' .preview');
+      if (!prev) return;
+      var s = document.createElement('span');
+      s.className = 'tag you';
+      s.textContent = text;
+      prev.appendChild(s);
+    };
+    if (stats.fno && stats.fno.speedup >= 2 && stats.fno.speedup < 1000)
+      stamp('.demo.d3', 'you measured ' + Math.round(stats.fno.speedup) + '×');
+    if (stats.pinn && stats.pinn.loss > 0 && stats.pinn.loss < 10)
+      stamp('.demo.d1', 'your run: loss ' + Number(stats.pinn.loss).toExponential(1));
+    if (stats.fluid && stats.fluid.fps >= 10)
+      stamp('.demo.d4', 'you ran it at ' + Math.round(stats.fluid.fps) + ' fps');
+  } catch (e) {}
+
   /* ---- reveal-on-scroll ---- */
   var els = document.querySelectorAll('.fx');
   if (!('IntersectionObserver' in window)) {

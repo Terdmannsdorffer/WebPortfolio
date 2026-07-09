@@ -252,6 +252,7 @@ ul.now li .when{
 }
 .demo .preview .tag.bl{left:10px;bottom:10px}
 .demo .preview .tag.br{right:10px;bottom:10px}
+.demo .preview .tag.you{right:10px;top:10px;background:var(--yellow);transform:rotate(2deg)}
 .bg-teal{background:var(--teal-bg)} .bg-violet{background:var(--violet-bg)}
 .bg-yellow{background:var(--yellow-bg)} .bg-pink{background:var(--pink-bg)} .bg-blue{background:var(--blue-bg)}
 .demo .body{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}
@@ -477,6 +478,17 @@ footer a:hover{color:var(--ink)}
   .stat{min-width:132px;padding:13px 18px}
 }
 
+/* ---------- view transitions (cross-document, progressive enhancement) ----------
+   Clicking a demo card morphs it into that demo page's title and back.
+   Browsers without support just navigate normally. */
+@view-transition{navigation:auto}
+.demo.d1{view-transition-name:demo-pinn}
+.demo.d2{view-transition-name:demo-rag}
+.demo.d3{view-transition-name:demo-fno}
+.demo.d4{view-transition-name:demo-fluid}
+.demo.d5{view-transition-name:demo-optim}
+::view-transition-group(*){animation-duration:.35s}
+
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
@@ -485,4 +497,5 @@ footer a:hover{color:var(--ink)}
   .status .pulse{animation:none}
   footer .blink{animation:none}
   *{transition-duration:.01ms !important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important}
 }

@@ -77,6 +77,15 @@ export function initBuddy(world, toys) {
   let nudgeCd = 0, knockCd = 0;
   let plats = [];
 
+  /* ---- one-time welcome: walk in, wave, tell the visitor what's playable ---- */
+  let intro = false, introLine = 0, introScroll = 0;
+  try { intro = !sessionStorage.getItem('buddyIntro'); } catch (e) {}
+  if (intro) { st = 'introWait'; rig.visible = false; }
+  function markIntroDone() {
+    intro = false;
+    try { sessionStorage.setItem('buddyIntro', '1'); } catch (e) {}
+  }
+
   /* ---- platform helpers (arithmetic only, no layout reads) ---- */
   const findPlat = c => {
     if (!c) return null;
@@ -121,7 +130,11 @@ export function initBuddy(world, toys) {
     world.setLayer(rig, b ? 'back' : 'front');
   }
 
-  function pet() { st = 'pet'; stT = 0; setBehind(false); say(['hehe', '🫶', 'hi!', '♥'][Math.random() * 4 | 0]); spawnHeart(); }
+  function pet() {
+    if (intro) markIntroDone();          // they found the interaction on their own
+    st = 'pet'; stT = 0; setBehind(false);
+    say(['hehe', '🫶', 'hi!', '♥'][Math.random() * 4 | 0]); spawnHeart();
+  }
   function spawnHeart() {
     const h = document.createElement('div'); h.className = 'buddy-heart'; h.textContent = '♥';
     h.style.left = px + 'px'; h.style.top = (feet - SIZE * .9) + 'px';
@@ -320,7 +333,7 @@ export function initBuddy(world, toys) {
     armL.rotation.set(0, 0, 0); armR.rotation.set(0, 0, 0);
     rig.rotation.z += (0 - rig.rotation.z) * .18;
     rig.rotation.x += ((st === 'sit' ? -.12 : 0) - rig.rotation.x) * .15;
-    if (st === 'walk' || st === 'bye') {
+    if (st === 'walk' || st === 'bye' || st === 'introWalk') {
       legL.rotation.x = Math.sin(ph) * .7; legR.rotation.x = -Math.sin(ph) * .7;
       armL.rotation.x = -Math.sin(ph) * .5; armR.rotation.x = Math.sin(ph) * .5;
       rig.rotation.y += (dir * .18 - rig.rotation.y) * .2; look = .12;
@@ -338,7 +351,7 @@ export function initBuddy(world, toys) {
     } else if (st === 'fall' || st === 'jump' || st === 'slip') {
       legL.rotation.x = -.5; legR.rotation.x = .35; armL.rotation.x = -1.6; armR.rotation.x = -1.6; armR.rotation.z = -.2; armL.rotation.z = .2;
       rig.rotation.y += (dir * .12 - rig.rotation.y) * .2;
-    } else if (st === 'greet') {
+    } else if (st === 'greet' || st === 'introTalk') {
       legL.rotation.x *= .8; legR.rotation.x *= .8; armL.rotation.x = 0; armR.rotation.z = -2.1; armR.rotation.x = Math.sin(walkT * 11) * .5;
       head.rotation.z = Math.sin(walkT * 4) * .05; rig.rotation.y += (0 - rig.rotation.y) * .2;
     } else if (st === 'pet') {
@@ -384,7 +397,7 @@ export function initBuddy(world, toys) {
     if (sitAmt > 0.001) drawFeet = feet + 30 * sitAmt;
     else if (st === 'nap') drawFeet = feet + 14;
     if (st === 'pet') { const b = Math.abs(Math.sin(walkT * 16)); sy = 1 + b * .06; sx = 1 - b * .04; }
-    const bob = (st === 'walk' || st === 'bye') ? Math.abs(Math.sin(walkT * 9)) * 3
+    const bob = (st === 'walk' || st === 'bye' || st === 'introWalk') ? Math.abs(Math.sin(walkT * 9)) * 3
               : (st === 'cheer') ? Math.abs(Math.sin(walkT * 8)) * 10 : 0;
     rig.scale.set(S * sx, S * sy, S);
     rig.position.set(drawX, world.H - (drawFeet - bob), 0);
@@ -417,6 +430,29 @@ export function initBuddy(world, toys) {
       case 'peekUp': case 'peekHold': case 'duck': case 'climb': stepPeek(dt); break;
       case 'bye': { onstageT = 99; px += vx * dt; if (px < 14 || px > world.W - 14) goGone(); } break;
       case 'gone': goneT -= dt; if (goneT <= 0) emerge(); break;
+      case 'introWait':
+        if (stT > 1.4) {
+          rig.visible = true; px = -30; feet = world.H - 4; dir = 1;
+          cur = { kind: 'floor' }; st = 'introWalk'; stT = 0;
+        }
+        break;
+      case 'introWalk':
+        feet = world.H - 4;
+        px += WALK * 1.5 * dt;
+        if (px >= Math.min(world.W * .42, 470)) { st = 'introTalk'; stT = 0; introLine = 0; say('hi! I live on this page 👋'); }
+        break;
+      case 'introTalk':
+        feet = world.H - 4;
+        if (stT > 2.3 && introLine < 1) { introLine = 1; say('drag the toys, they bounce ✦'); }
+        if (stT > 4.7 && introLine < 2) { introLine = 2; say('you can pet me too 🫶'); }
+        if (stT > 7.0) { hush(); markIntroDone(); st = 'walk'; actT = 2; onstageT = 24; }
+        break;
+    }
+
+    // a visitor who scrolls off during the intro has seen enough: wrap it up
+    if (intro && (st === 'introWalk' || st === 'introTalk')) {
+      introScroll += Math.abs(world.scrollDelta);
+      if (introScroll > 900) { hush(); markIntroDone(); st = 'walk'; cur = { kind: 'floor' }; feet = world.H - 4; actT = 1.5; }
     }
 
     pose(dt); place();
