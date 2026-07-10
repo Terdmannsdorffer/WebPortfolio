@@ -156,12 +156,15 @@ function buildWaveToy() {
 /* ---------- placement ---------- */
 
 function anchorSlots(world) {
-  // Anchors hang around the polaroid on desktop; on narrow screens
-  // (polaroid hidden) a small set floats in the strip under the CTAs.
+  // Anchors hang around the polaroid while it's at full size; when it's
+  // small (narrow screens) the slots spread across the strip under the
+  // hero content instead. Every slot is clamped into the viewport so a
+  // right-edge polaroid can't push toys off-screen on ~1000-1250px windows.
+  const clampX = x => Math.max(52, Math.min(world.W - 52, x));
   const hero = document.querySelector('section.hero');
   const pol = document.getElementById('polaroid');
   const sy = window.scrollY || 0;
-  if (pol && getComputedStyle(pol).display !== 'none') {
+  if (pol && getComputedStyle(pol).display !== 'none' && pol.getBoundingClientRect().width > 240) {
     const r = pol.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + sy + r.height / 2;
     return [
@@ -171,7 +174,7 @@ function anchorSlots(world) {
       [cx - r.width * .88, cy + r.height * .34],
       [cx - r.width * .55, cy - r.height * .68],
       [cx + r.width * .55, cy + r.height * .62],
-    ];
+    ].map(s => [clampX(s[0]), s[1]]);
   }
   const r = hero.getBoundingClientRect();
   const top = r.top + sy;
@@ -180,31 +183,33 @@ function anchorSlots(world) {
     [world.W * .18, y],
     [world.W * .5, y - 12],
     [world.W * .82, y],
-  ];
+  ].map(s => [clampX(s[0]), s[1]]);
 }
 
 /* ---------- the toy system ---------- */
 
 export function initToys(world) {
-  const small = world.W < 980;
+  const mqSmall = matchMedia('(max-width: 979px)');
   const defs = [
-    { name: 'heart', build: buildHeartToy, r: 34, label: 'a little beating heart' },
-    { name: 'nabla', build: buildNablaToy, r: 30, label: 'a nabla operator' },
-    { name: 'net', build: buildNetToy, r: 36, label: 'a tiny neural network' },
-    { name: 'gpu', build: buildGpuToy, r: 36, label: 'a GPU card' },
-    { name: 'mug', build: buildMugToy, r: 28, label: 'a coffee mug' },
-    { name: 'wave', build: buildWaveToy, r: 34, label: 'a wave tile' },
-  ].slice(0, small ? 3 : 6);
+    { name: 'heart', build: buildHeartToy, r: 39, label: 'a little beating heart' },
+    { name: 'nabla', build: buildNablaToy, r: 34, label: 'a nabla operator' },
+    { name: 'net', build: buildNetToy, r: 41, label: 'a tiny neural network' },
+    { name: 'gpu', build: buildGpuToy, r: 41, label: 'a GPU card' },
+    { name: 'mug', build: buildMugToy, r: 32, label: 'a coffee mug' },
+    { name: 'wave', build: buildWaveToy, r: 39, label: 'a wave tile' },
+  ];
 
+  // all six are built up front; applyMode() decides how many are live,
+  // so rotating a phone or resizing a window updates the set.
   const toys = defs.map((d, i) => {
     const built = d.build();
-    const r = d.r * (small ? .8 : 1);
-    built.group.scale.setScalar(r);
+    built.group.scale.setScalar(d.r);
     built.group.position.z = -80;                // toys render behind the buddy
     world.front.scene.add(built.group);
     const hit = world.makeProxy('toy', 'play with ' + d.label + ' (drag to throw)');
     const toy = {
-      name: d.name, group: built.group, anim: built.update, hit, r,
+      name: d.name, group: built.group, anim: built.update, hit,
+      idx: i, base: d.r, r: d.r, active: true,
       x: 0, y: 0, vx: 0, vy: 0, homeX: 0, homeY: 0,
       rotY: Math.random() * .6 - .3, rotVY: (Math.random() - .5) * .5,
       rotZ: 0, rotVZ: 0,
@@ -218,6 +223,20 @@ export function initToys(world) {
     return toy;
   });
 
+  function applyMode() {
+    const small = mqSmall.matches;
+    for (const toy of toys) {
+      toy.r = toy.base * (small ? .8 : 1);
+      const on = !small || toy.idx < 3;
+      if (on && !toy.active) { toy.x = toy.homeX; toy.y = toy.homeY; toy.vx = toy.vy = 0; }
+      toy.active = on;
+      if (!on) {
+        toy.group.visible = false; toy.hit.hidden = true;
+        toy.onScreen = false; toy.grabbed = false;
+      }
+    }
+  }
+
   function layout(first) {
     const slots = anchorSlots(world);
     toys.forEach((toy, i) => {
@@ -227,7 +246,9 @@ export function initToys(world) {
     });
   }
   layout(true);
+  applyMode();
   addEventListener('resize', () => layout(false));
+  mqSmall.addEventListener('change', () => { layout(false); applyMode(); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => layout(false));
   addEventListener('load', () => layout(false));
 
@@ -279,6 +300,7 @@ export function initToys(world) {
   world.addTicker((t, dt) => {
     let anyVisible = false;
     for (const toy of toys) {
+      if (!toy.active) continue;
       if (!toy.grabbed) {
         const bobY = Math.sin(t * toy.bobSp + toy.bobPh) * 9;
         const ax = (toy.homeX - toy.x) * SPRING - toy.vx * DAMP;
@@ -298,6 +320,7 @@ export function initToys(world) {
     // toys bump each other
     for (let i = 0; i < toys.length; i++) for (let j = i + 1; j < toys.length; j++) {
       const a = toys[i], b = toys[j];
+      if (!a.active || !b.active) continue;
       const dx = b.x - a.x, dy = b.y - a.y;
       const d = Math.hypot(dx, dy), min = (a.r + b.r) * .9;
       if (d > 0 && d < min) {
@@ -309,6 +332,7 @@ export function initToys(world) {
     }
     // draw + platforms + proxies
     for (const toy of toys) {
+      if (!toy.active) continue;
       const sx = toy.x, syc = toy.y - world.scrollY;
       toy.onScreen = syc > -120 && syc < world.H + 120;
       toy.group.visible = toy.onScreen;

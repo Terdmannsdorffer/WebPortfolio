@@ -21,7 +21,8 @@ export function initBuddy(world, toys) {
   /* ---- speech bubble ---- */
   const bubble = document.createElement('div');
   bubble.className = 'buddy-bubble';
-  bubble.innerHTML = '<span class="bt"></span><button class="buddy-close" title="dismiss message" aria-label="Close this message">×</button>';
+  bubble.setAttribute('aria-hidden', 'true');   // decorative chatter, keep it out of the a11y tree
+  bubble.innerHTML = '<span class="bt"></span><button class="buddy-close" tabindex="-1" title="dismiss message" aria-label="Close this message">×</button>';
   document.body.appendChild(bubble);
   const bubbleText = bubble.querySelector('.bt');
   bubble.querySelector('.buddy-close').addEventListener('click', e => { e.stopPropagation(); hush(); quietT = 6; });
@@ -36,7 +37,7 @@ export function initBuddy(world, toys) {
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .5, 6, 14), mat(SWEAT)); torso.position.y = .1; guy.add(torso);
   const head = new THREE.Group(); head.position.y = .78; guy.add(head);
   head.add(new THREE.Mesh(new THREE.SphereGeometry(.40, 24, 18), mat(0x8d8478)));
-  const faceTex = new THREE.TextureLoader().load('face.png');
+  const faceTex = new THREE.TextureLoader().load('face.webp');
   faceTex.colorSpace = THREE.SRGBColorSpace; faceTex.anisotropy = 4;
   const face = new THREE.Mesh(new THREE.PlaneGeometry(.94, .94), new THREE.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false }));
   face.position.set(0, .03, .46); head.add(face);
@@ -185,7 +186,17 @@ export function initBuddy(world, toys) {
     else { st = 'bye'; dir = (px < world.W / 2) ? -1 : 1; vx = dir * WALK * 1.2; setBehind(false); }
   }
 
-  /* ---- toy contact ---- */
+  /* ---- no-go zones: never loiter over the contact links or hero CTAs ----
+     Only matters while he's floor-walking: the viewport-bottom floor can
+     visually overlap those rows when they sit near the bottom of the screen. */
+  function noGoZone(x) {
+    const floorDoc = world.scrollY + world.H;          // doc-space y of the floor
+    for (const z of world.noGo) {
+      if (x > z.left - 30 && x < z.right + 30 &&
+          z.botDoc > floorDoc - SIZE * 1.7 && z.topDoc < floorDoc + 8) return z;
+    }
+    return null;
+  }
   function toyReactions(dt) {
     nudgeCd -= dt; knockCd -= dt;
     for (const toy of toys) {
@@ -226,12 +237,23 @@ export function initBuddy(world, toys) {
     if (p.el && (p.top < TOP_LIMIT || p.top > world.H - 24)) { goGone(); return; }   // card scrolled away: duck out politely
     feet = p.top; cur = keyOf(p);
     if (p.kind === 'toy' && p.toy) p.toy.vy += 140 * dt;      // his weight makes the toy bob
+    // steer clear of the contact links / CTAs instead of standing on them
+    let fleeing = false;
+    if (p.kind === 'floor') {
+      const z = noGoZone(px);
+      if (z) {
+        fleeing = true; hush();
+        dir = px < (z.left + z.right) / 2 ? -1 : 1;
+        vx = dir * WALK * 1.4;
+        if (px < 30 || px > world.W - 30) { goGone(); return; }   // boxed in against a wall: duck out
+      }
+    }
     // notice the cursor passing nearby and wave hello (desktop only)
-    if (!TOUCH && actT > .4 && Math.abs(world.mx - px) < SIZE * .85 && Math.abs(world.my - (feet - SIZE * .5)) < SIZE && Math.random() < .05) {
+    if (!TOUCH && !fleeing && actT > .4 && Math.abs(world.mx - px) < SIZE * .85 && Math.abs(world.my - (feet - SIZE * .5)) < SIZE && Math.random() < .05) {
       st = 'greet'; stT = 0; actT = 2 + Math.random() * 2; say(greetLine(p)); return;
     }
     if (onstageT <= 0) { leave(); return; }
-    if (actT <= 0) {
+    if (actT <= 0 && !fleeing) {
       actT = 1.1 + Math.random() * 2.2; const r = Math.random();
       if ((p.kind === 'heart' || p.kind === 'smiley' || p.kind === 'toy' || p.kind === 'polaroid') && r < .7) {
         st = 'touch'; stT = 0; touchKind = p.kind; touchEl = p.el; touchToy = p.toy || null; touchDone = false;

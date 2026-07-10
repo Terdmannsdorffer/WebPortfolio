@@ -54,6 +54,7 @@ export function createWorld() {
     tickers: [],
     plats: [],            // doc-space: {left, right, topDoc, el, kind}
     dynPlats: [],         // screen-space, refilled each frame by toys: {left, right, top, kind:'toy', toy}
+    noGo: [],             // doc-space rects the buddy must not loiter over (contact links, CTAs)
     needRender: true,
   };
   world.camera.position.set(0, 0, 500);
@@ -89,6 +90,11 @@ export function createWorld() {
       else if (el.matches('.smiley-wrap')) kind = 'smiley';
       else if (el.matches('.polaroid')) kind = 'polaroid';
       world.plats.push({ left: r.left, right: r.right, topDoc: r.top + sy, el, kind });
+    }
+    world.noGo.length = 0;
+    for (const el of document.querySelectorAll('.contact-list, .cta')) {
+      const r = el.getBoundingClientRect();
+      world.noGo.push({ left: r.left, right: r.right, topDoc: r.top + sy, botDoc: r.bottom + sy });
     }
   };
   world.refreshPlatforms();

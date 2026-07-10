@@ -16,7 +16,7 @@ portfolio/
 ├── fonts/                                  # self-hosted variable fonts (Fraunces, Space Grotesk, JetBrains Mono)
 ├── me.jpg                                  # hero polaroid photo
 ├── og.jpg                                  # social share card (1200x630)
-├── face.png                                # buddy face texture
+├── face.webp                               # buddy face texture (256px, ~19KB)
 ├── cv.pdf                                  # ← drop your CV here (currently missing!)
 ├── README.md
 ├── .gitignore

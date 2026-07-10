@@ -39,13 +39,15 @@
       <a href="#projects">projects</a>
       <a href="#skills">skills</a>
       <a href="#contact">contact</a>
+      <a href="#contact" class="nav-status"><span class="pulse" aria-hidden="true"></span>open to roles</a>
     </nav>
-    <div class="status"><span class="pulse"></span>open to roles</div>
+    <a class="status" href="#contact"><span class="pulse" aria-hidden="true"></span>open to roles</a>
   </div>
 </header>
 
 <!-- HERO -->
 <section class="hero" id="top">
+  <span class="doodle" data-speed=".15" style="top:150px;left:2%;color:var(--pink);font-size:42px" aria-hidden="true">✦</span>
   <div class="shell">
     <div class="hero-grid">
       <div class="hero-inner">
@@ -103,6 +105,7 @@
 
 <!-- CURRENTLY -->
 <section id="now">
+  <span class="doodle" data-speed=".2" style="top:170px;right:3%;color:var(--blue);font-size:48px" aria-hidden="true">✦</span>
   <div class="shell">
     <div class="sec-head fx">
       <span class="sec-mark" style="background:var(--coral-bg)" aria-hidden="true">✦</span>
@@ -122,7 +125,7 @@
           whatever looks fun to build next.
         </p>
         <div class="heart-card">
-          <canvas id="heart3d" aria-label="A beating 3D heart"></canvas>
+          <canvas id="heart3d" role="button" tabindex="0" aria-label="A beating 3D heart. Press Enter to make it pump"></canvas>
           <div class="cap">^ roughly what I study (click it!)</div>
         </div>
       </div>
@@ -490,6 +493,8 @@
 
 <!-- SKILLS -->
 <section id="skills">
+  <span class="doodle ring" data-speed=".14" style="bottom:120px;left:2.5%" aria-hidden="true"></span>
+  <span class="doodle" data-speed=".24" style="top:100px;right:4%;color:var(--yellow);font-size:58px" aria-hidden="true">✦</span>
   <div class="shell">
     <div class="sec-head fx">
       <span class="sec-mark" style="background:var(--pink-bg)" aria-hidden="true">✚</span>
@@ -543,6 +548,7 @@
 
 <!-- CONTACT -->
 <section id="contact">
+  <span class="doodle" data-speed=".18" style="top:130px;left:3%;color:var(--teal);font-size:50px" aria-hidden="true">✦</span>
   <div class="shell">
     <div class="sec-head fx">
       <span class="sec-mark" style="background:var(--blue-bg)" aria-hidden="true">☺</span>
@@ -565,7 +571,7 @@
       </div>
 
       <div class="smiley-wrap fx" style="--d:.1s">
-        <canvas id="smiley3d" aria-label="A friendly 3D smiley. Click to spin it"></canvas>
+        <canvas id="smiley3d" role="button" tabindex="0" aria-label="A friendly 3D smiley. Press Enter to spin it"></canvas>
         <div class="cap">click me, I spin</div>
       </div>
     </div>
