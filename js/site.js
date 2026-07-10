@@ -111,7 +111,10 @@
       var pr = d.parentElement.getBoundingClientRect();
       var c = pr.top + pr.height / 2 - innerHeight / 2;
       var sp = parseFloat(d.dataset.speed) || 0.1;
-      d.style.transform = 'translateY(' + (c * sp) + 'px) rotate(' + (c * 0.03) + 'deg)';
+      // scribbles (equations, plot sketches) keep their hand-set tilt: the
+      // scroll-rotation that looks cute on ✦ stars spins long text illegible
+      var rot = d.classList.contains('scribble') ? 0 : c * 0.03;
+      d.style.transform = 'translateY(' + (c * sp) + 'px) rotate(' + rot + 'deg)';
     });
   }
   function onScroll() {

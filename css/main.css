@@ -64,7 +64,9 @@ body{
   background-image:
     radial-gradient(900px 520px at 85% -5%, rgba(255,196,69,.16), transparent 60%),
     radial-gradient(700px 700px at -8% 35%, rgba(124,92,255,.09), transparent 60%),
-    radial-gradient(800px 600px at 110% 75%, rgba(15,181,163,.09), transparent 60%);
+    radial-gradient(800px 600px at 110% 75%, rgba(15,181,163,.09), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(38,36,58,.042) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(90deg, rgba(38,36,58,.042) 0 1px, transparent 1px 26px);
 }
 ::selection{background:var(--yellow);color:var(--ink)}
 a{color:inherit;text-decoration:none}
@@ -447,6 +449,18 @@ footer a:hover{color:var(--ink)}
 }
 .doodle.ring{width:60px;height:60px;border:7px solid var(--teal);border-radius:50%}
 .doodle.sq{width:46px;height:46px;border:7px solid var(--pink);border-radius:12px}
+/* margin scribbles: faint penciled PDEs + plot sketches in the empty zones.
+   They share the .doodle parallax; the inner wrapper carries the fixed tilt
+   (site.js overwrites the outer transform every frame). */
+.scribble{opacity:.16;color:var(--ink)}
+.scribble.eq{
+  font-family:var(--mono);font-size:13.5px;font-weight:500;
+  letter-spacing:.02em;white-space:nowrap;opacity:.24;
+  width:max-content;   /* right-anchored abs-pos text otherwise shrink-wraps to ~0 and stacks */
+}
+.scribble .tilt{display:inline-block}
+.scribble svg{display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:720px){.scribble{display:none}}
 
 /* ---------- buddy + toys overlay ---------- */
 #world-back{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:0}
