@@ -58,7 +58,9 @@ body{
   background:var(--paper); color:var(--ink);
   font-family:var(--body); font-size:15.5px; line-height:1.65;
   -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
+  /* clip, not hidden: hidden would make body its own scroll container
+     (second scrollbar + window.scrollY frozen, which strands the toy overlay) */
+  overflow-x:clip;
   background-image:
     radial-gradient(900px 520px at 85% -5%, rgba(255,196,69,.16), transparent 60%),
     radial-gradient(700px 700px at -8% 35%, rgba(124,92,255,.09), transparent 60%),
