@@ -7,6 +7,7 @@
 import { initScenes, renderScenes, webglOK } from './scenes.js';
 import { initHero } from './hero.js';
 import { initSky } from './sky.js';
+import { initBackdrop } from './backdrop.js';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -14,6 +15,12 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ?sky= on the URL overrides it while trying them out
 const skyMode = new URLSearchParams(location.search).get('sky') || document.body.dataset.sky || 'ecg';
 window.__sky = initSky({ mode: skyMode });
+
+// the faint layer behind the page: data-backdrop on <body>, ?bg= to try another
+const q = new URLSearchParams(location.search);
+const grain = q.get('grain');
+if (grain) document.body.dataset.grain = grain;
+window.__bg = initBackdrop({ mode: q.get('bg') || document.body.dataset.backdrop || 'contours' });
 
 if (webglOK()) {
   document.documentElement.classList.add('webgl');

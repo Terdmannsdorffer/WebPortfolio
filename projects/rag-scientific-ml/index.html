@@ -462,12 +462,12 @@ function renderChunks(results){
     return `
       <div class="chunk-card" data-i="${r.i}">
         <div class="h">
-          <span class="ttl">${c.paper.split(', ')[0]}</span>
+          <span class="ttl">${escapeHtml(c.paper.split(', ')[0])}</span>
           <span class="score">${r.score.toFixed(2)}</span>
         </div>
         <div class="scorebar"><i style="width:${pct}%"></i></div>
-        <div class="sec">${c.section} · bm25 ${r.bm25.toFixed(2)} · tags +${r.tagOv}</div>
-        <div class="snip">${c.text}</div>
+        <div class="sec">${escapeHtml(c.section)} · bm25 ${r.bm25.toFixed(2)} · tags +${r.tagOv}</div>
+        <div class="snip">${escapeHtml(c.text)}</div>
       </div>`;
   }).join('');
   el.querySelectorAll('.chunk-card').forEach(card => {

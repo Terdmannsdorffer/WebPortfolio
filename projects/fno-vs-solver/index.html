@@ -52,6 +52,8 @@ h1{view-transition-name:demo-fno}
 .verdict{display:flex;align-items:center;gap:26px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 24px;margin-bottom:36px}
 .verdict .lbl{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 .verdict .speedup{font-size:40px;font-weight:500;color:var(--accent);letter-spacing:-.03em;line-height:1;margin-top:4px}
+.verdict .speedup.sm{font-size:26px;color:var(--text)}
+.verdict .speedup.bad{color:var(--muted)}
 .verdict .err{color:var(--muted);font-size:13px;margin-top:4px}
 .verdict .err b{color:var(--text);font-weight:500}
 .verdict .note{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);max-width:380px;text-align:right}
@@ -157,8 +159,12 @@ h1{view-transition-name:demo-fno}
 <!-- VERDICT -->
 <div class="verdict">
   <div>
-    <div class="lbl">speedup</div>
-    <div class="speedup" id="v-speedup">-</div>
+    <div class="lbl">first solve, setup included</div>
+    <div class="speedup sm" id="v-speedup">-</div>
+  </div>
+  <div>
+    <div class="lbl">each further time t</div>
+    <div class="speedup" id="v-speedup2">-</div>
   </div>
   <div>
     <div class="lbl">accuracy</div>
@@ -199,7 +205,14 @@ h1{view-transition-name:demo-fno}
   </p>
 
   <div class="honest">
-    <b>Honest framing.</b> The right-hand racer is <i>not</i> a trained neural network, it's the exact
+    <b>Honest framing.</b> Two numbers, because there are two questions. Building the operator costs a
+    few milliseconds and has to be redone for every new initial condition, so the <b>first solve</b> is
+    only a few times faster than marching. Once it exists, answering at another time t is a single pass,
+    which is the <b>each further time t</b> number. A trained FNO moves the expensive part offline into
+    training, amortised over every initial condition it ever sees, so its inference sits closer to the
+    second number than the first, and that gap is the whole reason operators are interesting.
+    <br><br>
+    The right-hand racer is <i>not</i> a trained neural network, it's the exact
     Cole-Hopf operator. Deliberate choice: training a real FNO and shipping weights would add days of GPU
     time without changing the visual story, and the analytic operator makes the accuracy comparison clean.
     A real FNO replaces the analytic step with a learned one. Same architecture concept, same punchline.
@@ -460,6 +473,7 @@ async function race(){
   $('fd-prog').style.width = '0%';
   $('op-prog').style.width = '0%';
   $('v-speedup').textContent = '-';
+  $('v-speedup2').textContent = '-';
   $('v-err').textContent = 'racing…';
 
   // 🏁 both start on the same gun
@@ -476,17 +490,38 @@ async function race(){
     norm += fd.u[i] ** 2;
   }
   const relErr = norm > 0 ? Math.sqrt(err / norm) * 100 : 0;
-  const speedup = fd.wall / op.total;
+  // two different questions, two different answers:
+  //   firstSolve - you have an initial condition and want u at one time
+  //   perQuery   - the operator already exists and you want another time t
+  const firstSolve = fd.wall / op.total;
+  const perQuery = fd.wall / op.evalMs;
+  // a truncated Cole-Hopf operator can miss a sharp front badly. When it does the
+  // timings are still real, but they time a wrong answer, so don't dress them up.
+  const diverged = relErr > 10;
 
-  $('v-speedup').textContent = speedup.toFixed(0) + '×';
-  $('v-err').innerHTML = `relative L2 error <b>${relErr.toFixed(2)}%</b>: dashed line = solver's answer, overlaid on the operator's`;
-  $('v-note').textContent = `solver: ${fd.wall.toFixed(0)} ms over ${fd.totalSteps} sequential steps · operator: ${op.total.toFixed(2)} ms (setup ${op.setupMs.toFixed(1)} + one eval ${op.evalMs.toFixed(2)})`;
+  $('v-speedup').className = 'speedup sm' + (diverged ? ' bad' : '');
+  $('v-speedup2').className = 'speedup' + (diverged ? ' bad' : '');
+  if(diverged){
+    $('v-speedup').textContent = '—';
+    $('v-speedup2').textContent = '—';
+    $('v-err').innerHTML = `<b>the operator diverged.</b> Relative L2 error ${relErr.toFixed(0)}%: ` +
+      `${state.K} Fourier modes cannot resolve this front at ν = ${state.nu.toFixed(3)}, so the answer ` +
+      `is wrong and a speedup would be meaningless. Raise <b>modes kept K</b>.`;
+  } else {
+    $('v-speedup').textContent = firstSolve.toFixed(1) + '×';
+    $('v-speedup2').textContent = perQuery.toFixed(0) + '×';
+    $('v-err').innerHTML = `relative L2 error <b>${relErr.toFixed(2)}%</b>: dashed line = solver's answer, overlaid on the operator's`;
+  }
+  $('v-note').textContent = `solver: ${fd.wall.toFixed(0)} ms over ${fd.totalSteps} sequential steps · ` +
+    `operator: ${op.setupMs.toFixed(1)} ms to build, then ${op.evalMs.toFixed(2)} ms to answer at any t`;
 
   // remember this visitor's measured result; the main page shows it on the demo card
   try{
-    const _s = JSON.parse(localStorage.getItem('demoStats') || '{}');
-    _s.fno = { speedup: +speedup.toFixed(1), t: Date.now() };
-    localStorage.setItem('demoStats', JSON.stringify(_s));
+    if(!diverged){
+      const _s = JSON.parse(localStorage.getItem('demoStats') || '{}');
+      _s.fno = { speedup: +perQuery.toFixed(1), t: Date.now() };
+      localStorage.setItem('demoStats', JSON.stringify(_s));
+    }
   }catch(e){}
 
   state.running = false;

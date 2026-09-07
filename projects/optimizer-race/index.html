@@ -52,8 +52,9 @@ h1{view-transition-name:demo-optim}
 <p class="lede">
   Four gradient-descent variants minimize the same loss surface from the same start -
   <b>click anywhere on the surface to drop them somewhere new</b>. Drag to orbit, scroll to zoom.
-  Watch SGD stall in local minima while Adam's adaptive step sails past, or Momentum overshoot
-  the valley it was aiming for. Implemented from scratch: <code>θ ← θ − η·∇L(θ)</code> and friends.
+  Watch where each one settles: on the bumpy bowl the others tend to stop in the first dip they fall
+  into while momentum carries straight through it. Drop them somewhere else and the order changes,
+  which is the point. Implemented from scratch: <code>θ ← θ − η·∇L(θ)</code> and friends.
 </p>
 
 <div class="controls">
@@ -362,12 +363,19 @@ function frame(){
       }
       const y = H(r.p[0], r.p[1]);
       r.ball.position.set(r.p[0], y + .12, r.p[1]);
-      if(r.count < MAX_TRAIL){
-        r.trailGeo.attributes.position.setXYZ(r.count, r.p[0], y + .07, r.p[1]);
-        r.count++;
-        r.trailGeo.setDrawRange(0, r.count);
-        r.trailGeo.attributes.position.needsUpdate = true;
+      // when the buffer fills, halve the resolution and carry on: the trail loses
+      // detail far behind but never stops following the ball
+      if(r.count >= MAX_TRAIL){
+        const tp = r.trailGeo.attributes.position.array;
+        for(let k = 0; k < (MAX_TRAIL >> 1); k++){
+          tp[k*3] = tp[k*6]; tp[k*3+1] = tp[k*6+1]; tp[k*3+2] = tp[k*6+2];
+        }
+        r.count = MAX_TRAIL >> 1;
       }
+      r.trailGeo.attributes.position.setXYZ(r.count, r.p[0], y + .07, r.p[1]);
+      r.count++;
+      r.trailGeo.setDrawRange(0, r.count);
+      r.trailGeo.attributes.position.needsUpdate = true;
       r.lossEl.textContent = 'L=' + FN.f(r.p[0], r.p[1]).toFixed(3) + ' · ' + r.steps + ' steps';
     }
   }

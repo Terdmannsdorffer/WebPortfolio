@@ -13,6 +13,7 @@ js/scenes.js            the five demo previews on the landing page (one shared W
 js/main.js              module entry: one render loop for the hero and the previews
 js/site.js              smooth scroll, nav, reveals, scroll-linked motion (plain script)
 js/sky.js               the occasional light across the background (meteor / ecg / glint)
+js/backdrop.js          the faint layer that keeps the dark from reading flat
 heart.bin               the heart surface, ~40k triangles, quantised (see below)
 tools/heartmesh.py      makes heart.bin from a tetrahedral cardiac mesh
 fonts/                  Bricolage Grotesque (display) and Source Serif 4 (text), self-hosted
@@ -52,9 +53,22 @@ python tools/heartmesh.py average.vtk heart.bin 40000
 
 `?yaw=&tilt=&rx=` on the URL override the resting orientation while tuning.
 
+## What fills the dark
+
+A flat near-black page reads as empty, so two layers sit over it, both fixed and both blended so they only lift the black and leave near-white text alone (this is also the only way to sit above `.sheet`, which is opaque so it can slide over the hero).
+
+`data-backdrop` on `<body>` picks the pattern, `?bg=` previews another:
+
+- `contours` (default) iso-lines of a slowly morphing scalar field, drawn with marching squares. Scrolls at its own rate, so new contours keep arriving.
+- `points` a sparse scatter of sample points at three depths, each parallaxing differently.
+- `wash` broad, barely-there variation in the lighting, so the black is not one flat value across the screen.
+- `off` nothing.
+
+`data-grain="on"` adds film grain on top: one fixed tiled `feTurbulence` layer as a data URI, no image request. This is the recipe from illoca.unseen.co (Awwwards Site of the Day, Sep 2026), which does the same thing with a tiled JPEG at `opacity:.2` and `mix-blend-mode:overlay`; on a dark ground the noise is desaturated and kept at ~5% instead. `?grain=off` turns it off.
+
 ## The light in the background
 
-A few seconds after load and then every 16–30 seconds, something crosses the dark: `data-sky` on `<body>` picks which. The default `ecg` is a heartbeat trace that draws itself across and fades; `meteor` is a thin warm streak that flies and burns out; `glint` a distant point that brightens with a soft flare and dies; `off` nothing. `?sky=meteor` on the URL previews another; `window.__sky.fire()` in the console triggers one. The canvas is blended with `screen`, so the light passes behind white text. Off under `prefers-reduced-motion`.
+A few seconds after load and then every 16–30 seconds, something crosses the dark: `data-sky` on `<body>` picks which. The default `ecg` is a heartbeat trace that draws itself across and fades; `meteor` is a thin warm streak that flies and burns out; `glint` a distant point that brightens with a soft flare and dies; `off` nothing. `?sky=meteor` on the URL previews another; `window.__sky.fire()` in the console triggers one. The canvas is blended with `screen`, so the light passes behind white text. The canvas is fixed but each event is anchored to the page at the scroll position it started from, so it stays over the content and scrolls away rather than riding along with the viewport. Off under `prefers-reduced-motion`.
 
 ## Scroll behaviour
 

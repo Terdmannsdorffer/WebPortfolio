@@ -1,9 +1,13 @@
 /* sky.js - an occasional streak of light across the dark background.
 
    One fixed canvas over the page, blended with `screen`, so the light
-   reads as being behind anything bright (text stays white). Events are
-   occasional: one a few seconds after load, then every 16-30 s. Three
-   kinds, picked with data-sky on <body> (or ?sky= on the URL):
+   reads as being behind anything bright (text stays white). The canvas is
+   fixed but each event is anchored to the page: it remembers the scroll
+   position it started at and is drawn with that offset, so it stays put
+   over the content and scrolls away instead of riding along with you.
+
+   Events are occasional: one a few seconds after load, then every
+   16-30 s. Three kinds, picked with data-sky on <body> (or ?sky=):
 
      meteor  a thin warm streak that flies and burns out
      ecg     a heartbeat trace that draws itself across and fades
@@ -134,7 +138,11 @@ export function initSky({ mode = 'ecg' } = {}) {
     for (let i = live.length - 1; i >= 0; i--) {
       const e = live[i];
       e.t += dt;
-      if (e.t >= e.dur) live.splice(i, 1); else e.draw(e.t);
+      if (e.t >= e.dur) { live.splice(i, 1); continue; }
+      ctx.save();
+      ctx.translate(0, e.sy - (window.scrollY || 0));
+      e.draw(e.t);
+      ctx.restore();
     }
     if (live.length) raf = requestAnimationFrame(frame);
     else { raf = 0; ctx.clearRect(0, 0, W, H); }
@@ -142,6 +150,7 @@ export function initSky({ mode = 'ecg' } = {}) {
   function fire(kind = mode) {
     const e = (kinds[kind] || kinds[mode])();
     e.t = 0;
+    e.sy = window.scrollY || 0;          // where the page was when it started
     live.push(e);
     if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
   }
