@@ -3,613 +3,407 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tomás Erdmannsdörffer - ML/AI Engineer</title>
-<meta name="description" content="Machine Learning engineer with a scientific-computing background. PyTorch, JAX, CUDA, Physics-Informed Neural Networks. MSc at PUC Chile, currently visiting researcher at the University of Graz.">
+<title>Tomás Erdmannsdörffer, ML engineer</title>
+<meta name="description" content="Machine learning engineer from Santiago, Chile. Physics-informed neural networks for cardiac mechanics, model compression, and five ML demos that run in your browser.">
 <link rel="canonical" href="https://tdorffer.com/">
-<meta name="theme-color" content="#f7f2e8">
+<meta name="theme-color" content="#0a0a0c">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Tomás Erdmannsdörffer - ML/AI Engineer">
-<meta property="og:description" content="I teach physics to neural networks. PINN research, model compression, and five live in-browser ML demos.">
+<meta property="og:title" content="Tomás Erdmannsdörffer, ML engineer">
+<meta property="og:description" content="I teach physics to neural networks. PINNs for cardiac mechanics, model compression, and five ML demos that run in your browser.">
 <meta property="og:url" content="https://tdorffer.com/">
 <meta property="og:image" content="https://tdorffer.com/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫀</text></svg>">
-<link rel="preload" href="./fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="./fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%230a0a0c%22/><circle cx=%2216%22 cy=%2216%22 r=%227%22 fill=%22none%22 stroke=%22%23ff5a4e%22 stroke-width=%223%22/></svg>">
+<link rel="preload" href="./fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./fonts/source-serif-4.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="./css/main.css">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Person","name":"Tomás Erdmannsdörffer","jobTitle":"Machine Learning Engineer","url":"https://tdorffer.com/","sameAs":["https://github.com/Terdmannsdorffer","https://www.linkedin.com/in/tomas-erdmannsdorffer"]}
+{"@context":"https://schema.org","@type":"Person","name":"Tomás Erdmannsdörffer","jobTitle":"Machine Learning Engineer","url":"https://tdorffer.com/","address":{"@type":"PostalAddress","addressLocality":"Santiago","addressCountry":"CL"},"sameAs":["https://github.com/Terdmannsdorffer","https://www.linkedin.com/in/tomas-erdmannsdorffer"]}
 </script>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js"}}
 </script>
-<noscript><style>.fx{opacity:1;transform:none}</style></noscript>
+<noscript><style>.rv-clip,.hero .lede,.hero .cta,.hero-foot{opacity:1;transform:none;clip-path:none}.hero h1 .line>span{transform:none}</style></noscript>
 </head>
-<body>
+<body data-sky="ecg">
 
-<div id="scrollProgress" aria-hidden="true"></div>
-
-<header class="top">
-  <div class="top-inner">
-    <a href="#top" class="brand">tomás<span class="dot">.</span>erdmannsdörffer</a>
-    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="siteNav"><span class="bar" aria-hidden="true"></span>menu</button>
-    <nav id="siteNav">
-      <a href="#demos">demos</a>
-      <a href="#journey">journey</a>
-      <a href="#projects">projects</a>
-      <a href="#skills">skills</a>
-      <a href="#contact">contact</a>
-      <a href="#contact" class="nav-status"><span class="pulse" aria-hidden="true"></span>open to roles</a>
-    </nav>
-    <a class="status" href="#contact"><span class="pulse" aria-hidden="true"></span>open to roles</a>
+<header class="top" id="top">
+  <a href="#hero" class="brand">Tomás Erdmannsdörffer</a>
+  <nav class="nav" id="siteNav" aria-label="Site">
+    <a href="#demos">Demos</a>
+    <a href="#about">About</a>
+    <a href="#work">Work</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <div class="top-right">
+    <a class="cv-link" href="./cv.pdf" target="_blank" rel="noopener">CV</a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="siteNav">Menu</button>
   </div>
 </header>
 
-<!-- HERO -->
-<section class="hero" id="top">
-  <span class="doodle" data-speed=".15" style="top:150px;left:2%;color:var(--pink);font-size:42px" aria-hidden="true">✦</span>
-  <div class="shell">
-    <div class="hero-grid">
-      <div class="hero-inner">
-        <div class="chip-row fx">
-          <span class="chip wave">👋 hi, I'm Tomás</span>
-          <span class="chip">visiting researcher @ uni graz</span>
-          <span class="chip">msc eng. @ puc chile</span>
-        </div>
+<!-- HERO: pinned under the page; the rest slides over it -->
+<section class="hero" id="hero">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="hero-inner" id="heroInner">
+    <h1>
+      <span class="line"><span>I teach physics</span></span>
+      <span class="line"><span>to neural networks.</span></span>
+    </h1>
+    <p class="lede">
+      I'm Tomás, a machine learning engineer in Santiago, Chile. I build physics-informed
+      neural networks for the mechanics of heart tissue, and compressed versions of them
+      that still get the answer right. MSc student at PUC Chile; visiting researcher at the
+      University of Graz until August 2026, still working with the group from here.
+    </p>
+    <p class="cta">
+      <a href="#demos">See the five demos</a>
+      <a href="./cv.pdf" target="_blank" rel="noopener">Read the CV</a>
+    </p>
+  </div>
+  <div class="hero-foot" id="heroFoot">
+    <p class="fig">
+      <em>Fig. 1</em> The average adult heart of Rodero et al. (2021), a four-chamber
+      simulation mesh built from CT scans, decimated for the browser. Roughly the geometry
+      my networks learn to deform.
+      <button type="button" id="paceBtn">Click anywhere to pace it</button>
+      <span class="readout" id="readout" aria-hidden="true">58 bpm</span>
+    </p>
+  </div>
+</section>
 
-        <h1 class="fx" style="--d:.08s">
-          I teach <em class="hl-coral">physics</em> to
-          <em class="hl-violet">neural networks</em>.
-        </h1>
+<main class="sheet">
 
-        <p class="lede fx" style="--d:.16s">
-          I <b>train, compress, and ship</b> ML models. Everything 3D on this
-          page runs live in your browser, <b>go poke it</b>.
+<!-- DEMOS -->
+<section class="sec" id="demos">
+  <div class="sec-in">
+    <aside class="sec-aside"><span class="label">Demos</span></aside>
+    <div class="sec-body">
+      <div class="sec-head">
+        <h2 data-split>Five demos that run in your browser.</h2>
+        <p class="sec-note">
+          No backend, nothing pre-rendered. Each page is a solver or a model running on your
+          own machine while you watch. The only thing that leaves the page is the answering
+          step of the RAG demo, and that uses a key you bring.
         </p>
-
-        <div class="cta fx" style="--d:.24s">
-          <a class="btn primary" href="#demos">live demos <span class="arr">→</span></a>
-          <a class="btn" href="./cv.pdf" target="_blank" rel="noopener">cv (pdf)</a>
-        </div>
       </div>
 
-      <figure class="polaroid fx" style="--d:.2s" id="polaroid">
-        <img src="./me.jpg" alt="Tomás, wearing a cap and round glasses, on a street in Graz" width="560" height="560">
-        <figcaption class="cap">graz, winter 2026</figcaption>
-      </figure>
+      <div class="demo-list">
+
+        <a href="./projects/pinn-playground/" class="demo d1 featured">
+          <div class="body">
+            <h3 class="t-pinn" data-split>PINN Playground</h3>
+            <p>Train a physics-informed network on the 1D Burgers equation, live. There's no
+               dataset: the loss is the PDE residual, computed with automatic differentiation on
+               your GPU. Give it two minutes and a shock forms.</p>
+            <p class="tags">TensorFlow.js, WebGL, automatic differentiation</p>
+            <span class="open">Open the demo</span>
+          </div>
+          <div class="preview rv-clip" data-parallax="0.06" data-skew>
+            <canvas data-scene="wave" aria-hidden="true"></canvas>
+            <span class="tag">∂u/∂t + u·∂u/∂x = ν·∂²u/∂x²</span>
+          </div>
+        </a>
+
+        <a href="./projects/rag-scientific-ml/" class="demo d2">
+          <div class="body">
+            <h3 class="t-rag" data-split>Ask Research</h3>
+            <p>Retrieval-augmented answers over a corpus of 24 scientific ML papers. BM25
+               retrieval runs in the page; plug in any OpenAI-compatible key (Groq's free tier
+               works) and a model answers from the passages it found.</p>
+            <p class="tags">BM25, retrieval-augmented generation</p>
+            <span class="open">Open the demo</span>
+          </div>
+          <div class="preview rv-clip" data-parallax="0.06" data-skew>
+            <canvas data-scene="rag" aria-hidden="true"></canvas>
+            <span class="tag">query → retrieve → answer</span>
+          </div>
+        </a>
+
+        <a href="./projects/fno-vs-solver/" class="demo d3">
+          <div class="body">
+            <h3 class="t-fno" data-split>FNO vs. Solver</h3>
+            <p>A neural operator and a finite-difference solver get the same Burgers problem.
+               The solver marches through every time step; the operator answers in one call.
+               The speed-up on screen is measured on your machine, not quoted from a paper.</p>
+            <p class="tags">Neural operator, Cole-Hopf transform</p>
+            <span class="open">Open the demo</span>
+          </div>
+          <div class="preview rv-clip" data-parallax="0.06" data-skew>
+            <canvas data-scene="race" aria-hidden="true"></canvas>
+            <span class="tag">solver, every step</span>
+            <span class="tag br">operator, one call</span>
+          </div>
+        </a>
+
+        <a href="./projects/fluid-playground/" class="demo d4">
+          <div class="body">
+            <h3 class="t-fluid" data-split>Fluid Playground</h3>
+            <p>Jos Stam's stable-fluids solver in plain JavaScript. Drag to stir ink through a
+               divergence-free velocity field that gets re-solved every frame.</p>
+            <p class="tags">Navier-Stokes, canvas 2D</p>
+            <span class="open">Open the demo</span>
+          </div>
+          <div class="preview rv-clip" data-parallax="0.06" data-skew>
+            <canvas data-scene="fluid" aria-hidden="true"></canvas>
+            <span class="tag">∇·u = 0</span>
+          </div>
+        </a>
+
+        <a href="./projects/optimizer-race/" class="demo d5">
+          <div class="body">
+            <h3 class="t-optim" data-split>Optimizer Race</h3>
+            <p>SGD, momentum, RMSProp and Adam dropped onto the same 3D loss landscape. Click
+               the surface to move the starting point and see which ones get stuck.</p>
+            <p class="tags">Adam, three.js</p>
+            <span class="open">Open the demo</span>
+          </div>
+          <div class="preview rv-clip" data-parallax="0.06" data-skew>
+            <canvas data-scene="optim" aria-hidden="true"></canvas>
+            <span class="tag">θ ← θ − η·∇L</span>
+          </div>
+        </a>
+
+      </div>
     </div>
   </div>
 </section>
 
-<!-- MARQUEE -->
-<div class="marquee" aria-hidden="true">
-  <div class="mq-shift" id="mqShift">
-  <div class="track">
-    <span>PyTorch</span><span class="s1">✦</span><span>JAX</span><span class="s2">✦</span><span>CUDA</span><span class="s3">✦</span><span>PINNs</span><span class="s4">✦</span><span>RAG</span><span class="s1">✦</span><span>Quantization</span><span class="s2">✦</span><span>Distillation</span><span class="s3">✦</span><span>TensorFlow.js</span><span class="s4">✦</span><span>Django</span><span class="s1">✦</span><span>React</span><span class="s2">✦</span><span>Docker</span><span class="s3">✦</span><span>WebGL</span><span class="s4">✦</span>
-    <span>PyTorch</span><span class="s1">✦</span><span>JAX</span><span class="s2">✦</span><span>CUDA</span><span class="s3">✦</span><span>PINNs</span><span class="s4">✦</span><span>RAG</span><span class="s1">✦</span><span>Quantization</span><span class="s2">✦</span><span>Distillation</span><span class="s3">✦</span><span>TensorFlow.js</span><span class="s4">✦</span><span>Django</span><span class="s1">✦</span><span>React</span><span class="s2">✦</span><span>Docker</span><span class="s3">✦</span><span>WebGL</span><span class="s4">✦</span>
-  </div>
-  </div>
-</div>
+<!-- ABOUT -->
+<section class="sec" id="about">
+  <div class="sec-in">
+    <aside class="sec-aside"><span class="label">About</span></aside>
+    <div class="sec-body">
+      <div class="sec-head">
+        <h2 data-split>Scientific computing first, machine learning second.</h2>
+      </div>
 
-<!-- STATS -->
-<section class="stats" aria-label="Quick numbers">
-  <div class="shell">
-    <div class="stat-strip fx">
-      <div class="stat"><div class="v">4<span class="unit">yrs</span></div><div class="k">building software</div></div>
-      <div class="stat"><div class="v">5<span class="unit">live</span></div><div class="k">in-browser ML demos</div></div>
-      <div class="stat"><div class="v">3<span class="unit">intern.</span></div><div class="k">citi · falabella · graz</div></div>
-      <div class="stat"><div class="v">6<span class="unit">courses</span></div><div class="k">taught as TA</div></div>
+      <div class="about">
+        <div class="about-text">
+          <div class="byline">
+            <img class="avatar" src="./me.jpg" alt="Tomás, in a cap and round glasses" width="64" height="64" loading="lazy">
+            <span>Tomás, Graz, winter 2026</span>
+          </div>
+          <p class="lead" data-read>I got into ML through scientific computing, and most of what I've done since has
+             been about making neural networks respect the physics they're approximating.</p>
+          <p>My undergraduate thesis at Universidad de los Andes compressed physics-informed
+             networks (distillation, pruning, quantization) for non-Newtonian fluid simulation;
+             the manuscript is in preparation. Since 2025 I've been doing an MSc at PUC Chile
+             with Francisco Sahli, on PINNs for cardiac fiber mechanics. That work took me to
+             the University of Graz for the first half of 2026, where I worked with Federica
+             Caforio's group on PINN architectures for cardiac mechanics in JAX. I'm back in
+             Santiago now and the collaboration continues remotely.</p>
+          <p>The rest of the time I build things to find out whether they work: the demos above,
+             a series of language models under 16 MB, a file-transfer system that's still
+             running at a mining company.</p>
+          <dl class="facts">
+            <div><dt>Based</dt><dd>Santiago, Chile</dd></div>
+            <div><dt>Languages</dt><dd>Spanish (native), English (C2), German (A1)</dd></div>
+            <div><dt>Status</dt><dd>Open to ML/AI roles, remote or on-site</dd></div>
+          </dl>
+        </div>
+
+        <div class="now-wrap">
+          <p class="label">Right now</p>
+          <ul class="now">
+            <li><span class="k">Research</span>Cardiac motion estimation with PINNs in JAX, with the Graz group.</li>
+            <li><span class="k">Exploring</span>Language models under 16 MB: custom tokenizers, quantization.</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- CURRENTLY -->
-<section id="now">
-  <span class="doodle" data-speed=".2" style="top:170px;right:3%;color:var(--blue);font-size:48px" aria-hidden="true">✦</span>
-  <span class="doodle scribble" data-speed=".07" style="left:2%;bottom:44px" aria-hidden="true"><span class="tilt" style="transform:rotate(-4deg)">
-    <svg width="122" height="48" viewBox="0 0 122 48"><path d="M4 30h22l6-10 6 18 8-26 8 22 5-8h18l4-6 5 10h30"/></svg>
-  </span></span>
-  <span class="doodle scribble eq" data-speed=".09" style="right:3%;bottom:60px" aria-hidden="true"><span class="tilt" style="transform:rotate(3deg)">σ = ∂ψ/∂F</span></span>
-  <div class="shell">
-    <div class="sec-head fx">
-      <span class="sec-mark" style="background:var(--coral-bg)" aria-hidden="true">✦</span>
-      <h2>Currently</h2>
-    </div>
-
-    <div class="currently">
-      <div class="fx">
-        <h3>Researching <em>cardiac fiber mechanics</em> with PINNs.</h3>
-        <p>
-          I'm a few months into a visiting research stay at the <b>University of Graz</b>,
-          working on physics-informed neural networks for myocardial tissue modeling.
-        </p>
-        <p>
-          Beyond research, I like exploring what programming can do. <b>Web experiments</b> like
-          the five live demos on this page, <b>neural-network architectures</b>, backends,
-          whatever looks fun to build next.
-        </p>
-        <div class="heart-card">
-          <canvas id="heart3d" role="button" tabindex="0" aria-label="A beating 3D heart. Press Enter to make it pump"></canvas>
-          <div class="cap">^ roughly what I study (click it!)</div>
-        </div>
+<!-- WORK -->
+<section class="sec" id="work">
+  <div class="sec-in">
+    <aside class="sec-aside"><span class="label">Work</span></aside>
+    <div class="sec-body">
+      <div class="sec-head">
+        <h2 data-split>Where I've been.</h2>
       </div>
 
-      <ul class="now">
-        <li class="fx"><span class="when tag-coral">research</span><br>
-          <b>Lab work</b>: cardiac motion estimation with PINNs in JAX.</li>
-        <li class="fx" style="--d:.08s"><span class="when tag-violet">writing</span><br>
-          <b>Compression thesis manuscript</b>: knowledge distillation + pruning + quantization on PINNs.</li>
-        <li class="fx" style="--d:.16s"><span class="when tag-yellow">exploring</span><br>
-          <b>Tiny language models</b>: sub-16MB architectures, custom tokenizers &amp; quantization.</li>
-        <li class="fx" style="--d:.24s"><span class="when tag-teal">building</span><br>
-          <b>Browser experiments</b>: PINNs, RAG, neural operators, fluids &amp; optimizers (all live below).</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- LIVE DEMOS -->
-<section id="demos">
-  <span class="doodle" data-speed=".22" style="top:90px;right:4%;color:var(--yellow);font-size:70px" aria-hidden="true">✦</span>
-  <span class="doodle" data-speed=".12" style="bottom:60px;left:2.5%;color:var(--violet);font-size:38px" aria-hidden="true">✦</span>
-  <span class="doodle scribble eq" data-speed=".08" style="left:2.5%;top:38%" aria-hidden="true"><span class="tilt" style="transform:rotate(-5deg)">min_θ L(θ)</span></span>
-  <span class="doodle scribble" data-speed=".06" style="right:2.5%;top:56%" aria-hidden="true"><span class="tilt" style="transform:rotate(4deg)">
-    <svg width="120" height="84" viewBox="0 0 120 84"><path d="M8 6v70h106" stroke-dasharray="3 5"/><path d="M12 12c14 34 24 44 34 22 8-18 16 24 28 26 12 2 24 4 38 6"/></svg>
-  </span></span>
-  <div class="shell">
-    <div class="sec-head fx">
-      <span class="sec-mark" style="background:var(--teal-bg);font-family:var(--display);font-style:italic" aria-hidden="true">∂</span>
-      <h2>Live <em>demos</em></h2>
-      <span class="sec-note">everything runs in your browser</span>
-    </div>
-
-    <div class="demos">
-
-      <a href="./projects/pinn-playground/" class="demo d1 featured fx">
-        <div class="preview bg-teal">
-          <div class="fallback" aria-hidden="true">🌊</div>
-          <canvas data-scene="wave" aria-hidden="true"></canvas>
-          <span class="tag bl">∂u/∂t + u·∂u/∂x = ν·∂²u/∂x²</span>
-        </div>
-        <div class="body">
-          <span class="badge">flagship demo</span>
-          <h3>PINN Playground</h3>
-          <p>Train a <b>physics-informed neural network</b> in your browser to solve the 1D viscous
-             Burgers equation. No labeled data: the network learns from <b>the PDE itself</b>, via
-             automatic differentiation, on your GPU. Watch the loss fall and a shock wave form.</p>
-          <div class="stack">
-            <span class="chip-t">TensorFlow.js</span><span class="chip-t">WebGL</span><span class="chip-t">Autodiff</span>
+      <ol class="rows">
+        <li class="row">
+          <span class="when">Feb – Aug 2026</span>
+          <div class="what">
+            <h3>Visiting researcher</h3>
+            <p class="where">University of Graz, Dr. Federica Caforio's group</p>
+            <p>PINN architectures for high-dimensional PDEs in cardiac fiber mechanics, in JAX:
+               differentiable PDE simulation and multi-view reconstruction scored with MSE and
+               SSIM. We still work together remotely.</p>
           </div>
-          <span class="open">launch demo <span class="arr">→</span></span>
-        </div>
-      </a>
+          <span class="tags">JAX, PINNs, finite elasticity, MRI</span>
+        </li>
 
-      <a href="./projects/rag-scientific-ml/" class="demo d2 fx" style="--d:.1s">
-        <div class="preview bg-violet">
-          <div class="fallback" aria-hidden="true">📚</div>
-          <canvas data-scene="rag" aria-hidden="true"></canvas>
-          <span class="tag bl">query → retrieve → answer</span>
-        </div>
-        <div class="body">
-          <span class="badge">demo · 02</span>
-          <h3>Ask Research</h3>
-          <p><b>RAG system</b> over a curated corpus of 24 scientific ML papers. Retrieval runs
-             in your browser; bring any OpenAI-compatible key for the answers.</p>
-          <div class="stack">
-            <span class="chip-t">BM25</span><span class="chip-t">RAG</span>
+        <li class="row">
+          <span class="when">2025 – present</span>
+          <div class="what">
+            <h3>MSc in Engineering Sciences</h3>
+            <p class="where">Pontificia Universidad Católica de Chile, advised by Prof. Francisco Sahli</p>
+            <p>PINNs for cardiac fiber modeling. Grew out of the undergraduate thesis on
+               compressing them.</p>
           </div>
-          <span class="open">launch demo <span class="arr">→</span></span>
-        </div>
-      </a>
+          <span class="tags">JAX, PyTorch, PDEs, biomechanics</span>
+        </li>
 
-      <a href="./projects/fno-vs-solver/" class="demo d3 fx" style="--d:.2s">
-        <div class="preview bg-yellow">
-          <div class="fallback" aria-hidden="true">⚡</div>
-          <canvas data-scene="race" aria-hidden="true"></canvas>
-          <span class="tag bl">solver · ~1600 steps</span>
-          <span class="tag br">operator · 1 call</span>
-        </div>
-        <div class="body">
-          <span class="badge">demo · 03</span>
-          <h3>FNO vs. Solver</h3>
-          <p>Watch a <b>neural operator</b> solve Burgers 10-50× faster than a finite-difference
-             solver. Same answer, fundamentally different algorithm.</p>
-          <div class="stack">
-            <span class="chip-t">Neural Operator</span><span class="chip-t">Cole-Hopf</span>
+        <li class="row">
+          <span class="when">Jan – Feb 2025</span>
+          <div class="what">
+            <h3>DevOps intern</h3>
+            <p class="where">Citi, Chile Tech Center</p>
+            <p>Kept three legacy applications running and reworked the production CI/CD pipeline
+               so deployments took less time and fewer steps.</p>
           </div>
-          <span class="open">launch demo <span class="arr">→</span></span>
-        </div>
-      </a>
+          <span class="tags">Jenkins, Bitbucket, Docker</span>
+        </li>
 
-      <a href="./projects/fluid-playground/" class="demo d4 fx" style="--d:.1s">
-        <div class="preview bg-pink">
-          <div class="fallback" aria-hidden="true">🌀</div>
-          <canvas data-scene="fluid" aria-hidden="true"></canvas>
-          <span class="tag bl">∇·u = 0 · stable fluids</span>
-        </div>
-        <div class="body">
-          <span class="badge">demo · 04</span>
-          <h3>Fluid Playground</h3>
-          <p>A real-time <b>Navier-Stokes solver</b> (Stam's stable fluids) in pure JavaScript.
-             Drag to stir candy-colored ink through a divergence-free velocity field.</p>
-          <div class="stack">
-            <span class="chip-t">Navier-Stokes</span><span class="chip-t">Canvas</span>
+        <li class="row">
+          <span class="when">2024 – 2025</span>
+          <div class="what">
+            <h3>Undergraduate thesis</h3>
+            <p class="where">Universidad de los Andes, manuscript in preparation</p>
+            <p>Knowledge distillation, pruning and quantization applied to PINN surrogates of
+               Carbopol (non-Newtonian) flow. Built the baseline PINN, then measured what each
+               technique costs in accuracy.</p>
           </div>
-          <span class="open">launch demo <span class="arr">→</span></span>
-        </div>
-      </a>
+          <span class="tags">PyTorch, PINNs, quantization-aware training, CFD</span>
+        </li>
 
-      <a href="./projects/optimizer-race/" class="demo d5 fx" style="--d:.2s">
-        <div class="preview bg-blue">
-          <div class="fallback" aria-hidden="true">🎢</div>
-          <canvas data-scene="optim" aria-hidden="true"></canvas>
-          <span class="tag bl">θ ← θ − η·∇L</span>
-        </div>
-        <div class="body">
-          <span class="badge">demo · 05</span>
-          <h3>Optimizer Race</h3>
-          <p><b>SGD, Momentum, RMSProp &amp; Adam</b> race down a 3D loss landscape. Click the
-             surface to drop them somewhere new. Who escapes the local minima?</p>
-          <div class="stack">
-            <span class="chip-t">Adam</span><span class="chip-t">Three.js</span>
+        <li class="row">
+          <span class="when">Jun 2023 – Dec 2024</span>
+          <div class="what">
+            <h3>Teaching assistant, six courses</h3>
+            <p class="where">Universidad de los Andes, CS department</p>
+            <p>Operating systems, low-level programming in C/C++, mobile apps, web technologies,
+               automata and computability, programming fundamentals. About thirty students a
+               semester.</p>
           </div>
-          <span class="open">launch demo <span class="arr">→</span></span>
-        </div>
-      </a>
+          <span class="tags">C/C++, Python, Linux</span>
+        </li>
 
-    </div>
-  </div>
-</section>
+        <li class="row">
+          <span class="when">Dec 2023 – Feb 2024</span>
+          <div class="what">
+            <h3>AI research intern</h3>
+            <p class="where">Falabella Retail</p>
+            <p>Prototyped automated product descriptions with LLMs, replacing a manual process.
+               The proposal kept being developed after I left.</p>
+          </div>
+          <span class="tags">LLMs, Python, prompt design</span>
+        </li>
 
-<!-- JOURNEY -->
-<section id="journey">
-  <span class="doodle ring" data-speed=".16" style="top:160px;right:6%" aria-hidden="true"></span>
-  <span class="doodle" data-speed=".1" style="bottom:200px;right:12%;color:var(--coral);font-size:46px" aria-hidden="true">✦</span>
-  <span class="doodle scribble" data-speed=".07" style="right:6%;top:420px" aria-hidden="true"><span class="tilt" style="transform:rotate(-6deg)">
-    <svg width="110" height="86" viewBox="0 0 110 86"><ellipse cx="55" cy="43" rx="46" ry="30"/><ellipse cx="55" cy="43" rx="30" ry="18"/><ellipse cx="55" cy="43" rx="15" ry="8"/><path d="M51 39l8 8M59 39l-8 8"/></svg>
-  </span></span>
-  <span class="doodle scribble eq" data-speed=".09" style="right:4.5%;top:700px" aria-hidden="true"><span class="tilt" style="transform:rotate(4deg)">θ ← θ − η·∇L(θ)</span></span>
-  <span class="doodle scribble" data-speed=".06" style="right:9%;top:960px" aria-hidden="true"><span class="tilt" style="transform:rotate(6deg)">
-    <svg width="130" height="80" viewBox="0 0 130 80"><path d="M104 16C60 2 20 24 24 48c4 22 40 30 56 14 13-13 1-29-15-24-11 3-13 16-4 20"/><path d="M61 58l8-2M61 58l3-7"/></svg>
-  </span></span>
-  <div class="shell">
-    <div class="sec-head fx">
-      <span class="sec-mark" style="background:var(--violet-bg)" aria-hidden="true">✎</span>
-      <h2>My <em>journey</em></h2>
-      <span class="sec-note">2020 → today</span>
-    </div>
-
-    <div class="timeline">
-      <span class="tl-progress" id="tlProgress" aria-hidden="true"></span>
-
-      <div class="tl-item research fx">
-        <span class="tl-dot"></span>
-        <div class="tl-card">
-          <div class="when">feb 2026 - present · graz, AT</div>
-          <h3>Visiting Researcher <span class="pill res">research</span></h3>
-          <div class="where">Karl-Franzens-Universität Graz · under Dr. Federica Caforio</div>
-          <p>
-            Designing PINN architectures to solve high-dimensional PDEs in cardiac fiber mechanics
-            using JAX.
-          </p>
-          <div class="highlights">
-            <span class="hl-chip"><span class="n">JAX</span>differentiable PDE simulation</span>
-            <span class="hl-chip"><span class="n">PINN</span>cardiac fiber mechanics</span>
-            <span class="hl-chip"><span class="n">MSE+SSIM</span>multi-view reconstruction eval</span>
+        <li class="row">
+          <span class="when">2020 – 2025</span>
+          <div class="what">
+            <h3>BSc Civil Engineering in Computer Science</h3>
+            <p class="where">Universidad de los Andes, minor in innovation</p>
+            <p>Coursework in AI, LLMs, computer vision, algorithms and competitive programming,
+               databases and web technologies.</p>
           </div>
-          <div class="tech">
-            <span class="t">JAX</span><span class="t">PINN</span><span class="t">Finite Elasticity</span><span class="t">MRI</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="tl-item education fx">
-        <span class="tl-dot"></span>
-        <div class="tl-card">
-          <div class="when">aug 2025 - present · santiago, CL</div>
-          <h3>MSc in Engineering Sciences <span class="pill edu">education</span></h3>
-          <div class="where">Pontificia Universidad Católica de Chile · advised by Prof. Francisco Sahli</div>
-          <p>
-            Researching PINNs for <b>cardiac fiber modeling</b> applied to PDEs, the foundation of
-            my work in Graz. The MSc deepens what started as a thesis on compressing PINNs.
-          </p>
-          <div class="tech">
-            <span class="t">JAX</span><span class="t">PyTorch</span><span class="t">PDEs</span><span class="t">Biomechanics</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="tl-item fx">
-        <span class="tl-dot"></span>
-        <div class="tl-card">
-          <div class="when">jan - feb 2025 · santiago, CL</div>
-          <h3>DevOps Intern <span class="pill work">internship</span></h3>
-          <div class="where">Citi · Chile Tech Center</div>
-          <p>
-            Maintained and optimized <b>3 legacy applications</b>, improved the production
-            <b>CI/CD pipeline</b> to reduce operational complexity and deployment time, and
-            collaborated on code migration via Bitbucket.
-          </p>
-          <div class="highlights">
-            <span class="hl-chip"><span class="n">3</span>legacy apps optimized</span>
-            <span class="hl-chip"><span class="n">↓</span>deployment time reduced</span>
-          </div>
-          <div class="tech">
-            <span class="t">Jenkins</span><span class="t">Bitbucket</span><span class="t">CI/CD</span><span class="t">Docker</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="tl-item research fx">
-        <span class="tl-dot"></span>
-        <div class="tl-card">
-          <div class="when">2024 - 2025 · santiago, CL</div>
-          <h3>Undergrad Thesis: PINN Compression <span class="pill res">research</span></h3>
-          <div class="where">Universidad de los Andes · manuscript in preparation</div>
-          <p>
-            Applied <b>knowledge distillation, pruning, and quantization</b> to PINN surrogates
-            for non-Newtonian (Carbopol) fluid simulation. Built the baseline PINN end-to-end,
-            then quantified precision vs. efficiency trade-offs across techniques.
-          </p>
-          <div class="highlights">
-            <span class="hl-chip"><span class="n">3</span>compression techniques studied</span>
-            <span class="hl-chip"><span class="n">PyTorch</span>baseline + students</span>
-          </div>
-          <div class="tech">
-            <span class="t">PyTorch</span><span class="t">PINN</span><span class="t">QAT</span><span class="t">Distillation</span><span class="t">CFD</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="tl-item teaching fx">
-        <span class="tl-dot"></span>
-        <div class="tl-card">
-          <div class="when">jun 2023 - dec 2024 · santiago, CL</div>
-          <h3>Teaching Assistant, 6 courses <span class="pill teach">teaching</span></h3>
-          <div class="where">Universidad de los Andes · CS Department</div>
-          <p>
-            Supported <b>~30 students per semester</b> across Operating Systems, Low-Level Programming
-            (C/C++), Mobile Apps, Web Technologies, Automata &amp; Computability, and Programming
-            Fundamentals.
-          </p>
-          <div class="tech">
-            <span class="t">C/C++</span><span class="t">Python</span><span class="t">Linux</span><span class="t">Web</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="tl-item fx">
-        <span class="tl-dot"></span>
-        <div class="tl-card">
-          <div class="when">dec 2023 - feb 2024 · santiago, CL</div>
-          <h3>AI Research Intern <span class="pill work">internship</span></h3>
-          <div class="where">Falabella Retail</div>
-          <p>
-            Researched generative AI tools for retail. Built a functional <b>prototype for automated
-            product descriptions</b>, turning a manual process into an automated flow. Delivered
-            a technical proposal that continued in development after the internship.
-          </p>
-          <div class="highlights">
-            <span class="hl-chip"><span class="n">LLM</span>pipeline + prompt engineering</span>
-          </div>
-          <div class="tech">
-            <span class="t">LLM</span><span class="t">Python</span><span class="t">Prompt Eng.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="tl-item education fx">
-        <span class="tl-dot"></span>
-        <div class="tl-card">
-          <div class="when">mar 2020 - oct 2025 · santiago, CL</div>
-          <h3>BSc Civil Engineering in Computer Science <span class="pill edu">education</span></h3>
-          <div class="where">Universidad de los Andes · Minor in Innovation</div>
-          <p>
-            Coursework: <b>Low-Level Programming, AI, LLM, Computer Vision, Algorithms &amp; Competitive
-            Programming</b>, Databases, Web Technologies, Data Structures.
-          </p>
-          <div class="tech">
-            <span class="t">Python</span><span class="t">C/C++</span><span class="t">PyTorch</span><span class="t">React</span><span class="t">SQL</span>
-          </div>
-        </div>
-      </div>
-
+          <span class="tags">Python, C/C++, PyTorch, SQL</span>
+        </li>
+      </ol>
     </div>
   </div>
 </section>
 
 <!-- PROJECTS -->
-<section id="projects">
-  <span class="doodle sq" data-speed=".2" style="top:110px;left:3%" aria-hidden="true"></span>
-  <span class="doodle scribble eq" data-speed=".08" style="right:4%;top:150px" aria-hidden="true"><span class="tilt" style="transform:rotate(-4deg)">∇·u = 0</span></span>
-  <span class="doodle scribble" data-speed=".06" style="left:2%;bottom:120px" aria-hidden="true"><span class="tilt" style="transform:rotate(5deg)">
-    <svg width="104" height="72" viewBox="0 0 104 72"><path d="M10 18l18-8M28 10l-6-1M28 10l-1 6M46 22l18-2M64 20l-6-3M64 20l-4 5M14 46l16 8M30 54l-3-6M30 54l-7 1M52 52l18-6M70 46l-7-2M70 46l-3 6M82 24l14 8M96 32l-3-6M96 32l-7 2"/></svg>
-  </span></span>
-  <div class="shell">
-    <div class="sec-head fx">
-      <span class="sec-mark" style="background:var(--yellow-bg)" aria-hidden="true">✳</span>
-      <h2>Research &amp; <em>software</em></h2>
-      <span class="sec-note">beyond the demos</span>
-    </div>
-
-    <div class="proj-grid">
-
-      <div class="proj-card fx">
-        <div class="proj-bar" style="background:var(--violet)"></div>
-        <div class="inner">
-          <h3>Cardiac PINN Modeling <span class="pill res">lab work</span></h3>
-          <div class="when">2025 - present</div>
-          <p>
-            Lab research applying physics-informed neural networks to cardiac biomechanics.
-          </p>
-          <div class="tech">
-            <span class="t">JAX</span><span class="t">PINN</span><span class="t">jaxpi</span>
-          </div>
-        </div>
+<section class="sec" id="projects">
+  <div class="sec-in">
+    <aside class="sec-aside"><span class="label">Projects</span></aside>
+    <div class="sec-body">
+      <div class="sec-head">
+        <h2 data-split>Beyond the demos.</h2>
       </div>
 
-      <div class="proj-card fx" style="--d:.08s">
-        <div class="proj-bar" style="background:var(--coral)"></div>
-        <div class="inner">
-          <h3>Tiny Language Models <span class="pill work">exploration</span></h3>
-          <div class="when">2025 - present</div>
-          <p>
-            Designing language models under <b>16MB</b>: custom tokenizers and quantized
-            Transformer architectures, benchmarked by bits-per-byte on FineWeb.
-          </p>
-          <ul>
-            <li>Trained locally on RTX 5060 Blackwell (sm_120, PyTorch cu128 nightly).</li>
-            <li>Background in PINN compression directly applicable.</li>
-          </ul>
-          <div class="tech">
-            <span class="t">PyTorch</span><span class="t">CUDA</span><span class="t">Quantization</span><span class="t">Tokenizers</span>
+      <ol class="rows">
+        <li class="row">
+          <span class="when">2025 – present</span>
+          <div class="what">
+            <h3>Cardiac motion with PINNs</h3>
+            <p class="where">Lab work</p>
+            <p>Physics-informed networks for cardiac biomechanics, built on jaxpi. The research
+               behind the heart at the top of this page.</p>
           </div>
-        </div>
-      </div>
+          <span class="tags">JAX, PINNs, jaxpi</span>
+        </li>
 
-      <div class="proj-card fx">
-        <div class="proj-bar" style="background:var(--teal)"></div>
-        <div class="inner">
-          <h3>Turbo Files <span class="pill prod">production</span></h3>
-          <div class="when">sep 2024</div>
-          <p>
-            Fault-tolerant data transfer system shipped to a <b>mining company in production</b>.
-            Fragments large files for resilience over intermittent connectivity.
-          </p>
-          <ul>
-            <li>Google Drive + AWS S3 integration with variable file sizes.</li>
-            <li>Built end-to-end in <b>Django</b>.</li>
-          </ul>
-          <div class="tech">
-            <span class="t">Django</span><span class="t">AWS S3</span><span class="t">Drive API</span>
+        <li class="row">
+          <span class="when">2025 – present</span>
+          <div class="what">
+            <h3>Tiny language models</h3>
+            <p class="where">Exploration</p>
+            <p>Transformers under 16 MB: custom tokenizers and quantized weights, scored by
+               bits-per-byte on FineWeb. Trained at home on an RTX 5060, which meant living on
+               PyTorch nightlies for a while.</p>
           </div>
-        </div>
-      </div>
+          <span class="tags">PyTorch, CUDA, quantization, tokenizers</span>
+        </li>
 
-      <div class="proj-card fx" style="--d:.08s">
-        <div class="proj-bar" style="background:var(--blue)"></div>
-        <div class="inner">
-          <h3>Remote Locker <span class="pill prod">IoT · team</span></h3>
-          <div class="when">2024</div>
-          <p>
-            A connected parcel locker we built as a team: when a package arrives the locker is
-            <b>opened remotely from the cloud</b>, and it only unlocks when the right code is
-            entered on the web app.
-          </p>
-          <ul>
-            <li><b>MicroPython firmware</b> on an ESP32 driving the lock hardware.</li>
-            <li><b>AWS</b> bridges the web app and the device for remote open + code validation.</li>
-          </ul>
-          <div class="tech">
-            <span class="t">MicroPython</span><span class="t">ESP32</span><span class="t">AWS</span><span class="t">Web</span>
+        <li class="row">
+          <span class="when">Sep 2024</span>
+          <div class="what">
+            <h3>Turbo Files</h3>
+            <p class="where">In production at a mining company</p>
+            <p>Fault-tolerant transfer of large files in Django: files travel as fragments so an
+               intermittent connection doesn't kill the transfer. Google Drive and S3 as backends.</p>
           </div>
-        </div>
-      </div>
-
+          <span class="tags">Django, AWS S3, Drive API</span>
+        </li>
+      </ol>
     </div>
   </div>
 </section>
 
-<!-- SKILLS -->
-<section id="skills">
-  <span class="doodle ring" data-speed=".14" style="bottom:120px;left:2.5%" aria-hidden="true"></span>
-  <span class="doodle" data-speed=".24" style="top:100px;right:4%;color:var(--yellow);font-size:58px" aria-hidden="true">✦</span>
-  <span class="doodle scribble" data-speed=".07" style="left:2.5%;top:200px" aria-hidden="true"><span class="tilt" style="transform:rotate(-3deg)">
-    <svg width="110" height="70" viewBox="0 0 110 70"><path d="M6 62h98" stroke-dasharray="3 5"/><path d="M10 60c24 0 30-48 45-48s21 48 45 48"/></svg>
-  </span></span>
-  <span class="doodle scribble eq" data-speed=".09" style="right:3%;bottom:190px" aria-hidden="true"><span class="tilt" style="transform:rotate(3deg)">∂L/∂w = ∂L/∂a · ∂a/∂w</span></span>
-  <div class="shell">
-    <div class="sec-head fx">
-      <span class="sec-mark" style="background:var(--pink-bg)" aria-hidden="true">✚</span>
-      <h2>The <em>stack</em></h2>
-    </div>
-
-    <div class="skills-grid">
-
-      <div class="skill-col c-coral fx">
-        <h3>ML / AI</h3>
-        <div class="core"><span>PyTorch</span><span>JAX</span><span>PINNs</span></div>
-        <div class="rest">
-          <span>HuggingFace</span><span>CUDA</span><span>TensorFlow</span>
-          <span>RAG · agents</span><span>quantization</span><span>distillation</span>
-        </div>
+<!-- STACK -->
+<section class="sec" id="stack">
+  <div class="sec-in">
+    <aside class="sec-aside"><span class="label">Tools</span></aside>
+    <div class="sec-body">
+      <div class="sec-head">
+        <h2 data-split>What I work with.</h2>
       </div>
-
-      <div class="skill-col c-violet fx" style="--d:.06s">
-        <h3>Languages</h3>
-        <div class="core"><span>Python</span></div>
-        <div class="rest">
-          <span>JavaScript</span><span>C / C++</span><span>C#</span><span>SQL</span>
-        </div>
+      <div class="stack">
+        <p><strong>Day to day:</strong> Python, PyTorch, JAX and PINNs, with CUDA when it matters.
+           HuggingFace and TensorFlow when a project already lives there; RAG pipelines and
+           agents; quantization and distillation for making models small.</p>
+        <p><strong>Also fluent in:</strong> JavaScript, C and C++, C#, SQL. Django, Node.js, React,
+           REST APIs, Ruby on Rails. Docker, Git, AWS (S3, Lambda), Jenkins, CI/CD, Linux and WSL2.</p>
       </div>
-
-      <div class="skill-col c-teal fx" style="--d:.12s">
-        <h3>Backend &amp; web</h3>
-        <div class="core"><span>Django</span></div>
-        <div class="rest">
-          <span>Node.js</span><span>React</span><span>REST APIs</span><span>Ruby on Rails</span>
-        </div>
-      </div>
-
-      <div class="skill-col c-yellow fx" style="--d:.18s">
-        <h3>DevOps &amp; cloud</h3>
-        <div class="core"><span>Docker</span><span>Git</span></div>
-        <div class="rest">
-          <span>AWS S3 · Lambda</span><span>Jenkins</span><span>CI/CD</span><span>Linux · WSL2</span>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="lang-row fx">
-      <span class="chip"><b>Spanish</b>&nbsp;native</span>
-      <span class="chip"><b>English</b>&nbsp;C2 (IELTS)</span>
-      <span class="chip"><b>German</b>&nbsp;A1, learning</span>
     </div>
   </div>
 </section>
 
 <!-- CONTACT -->
-<section id="contact">
-  <span class="doodle" data-speed=".18" style="top:130px;left:3%;color:var(--teal);font-size:50px" aria-hidden="true">✦</span>
-  <span class="doodle scribble" data-speed=".07" style="left:3%;bottom:80px" aria-hidden="true"><span class="tilt" style="transform:rotate(4deg)">
-    <svg width="96" height="70" viewBox="0 0 96 70"><path d="M8 10c18 56 62 56 80 0"/><circle cx="48" cy="52" r="5" fill="currentColor" stroke="none"/></svg>
-  </span></span>
-  <span class="doodle scribble eq" data-speed=".09" style="right:5%;top:110px" aria-hidden="true"><span class="tilt" style="transform:rotate(-3deg)">P(reply | hi) ≈ 1</span></span>
-  <div class="shell">
-    <div class="sec-head fx">
-      <span class="sec-mark" style="background:var(--blue-bg)" aria-hidden="true">☺</span>
-      <h2>Say <em>hi</em></h2>
-    </div>
-
-    <div class="contact-grid">
-      <div class="fx">
-        <p class="big">Let's build something <em>that actually runs.</em></p>
-        <p class="intro">
-          Open to ML/AI engineer roles, remote or on-site anywhere.
-          Part-time now, full-time after the MSc.
-        </p>
-        <div class="contact-list">
-          <a class="row" href="mailto:terdmannsdorffer@gmail.com"><span class="k">email</span>terdmannsdorffer@gmail.com</a>
-          <a class="row" href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener"><span class="k">github</span>github.com/Terdmannsdorffer</a>
-          <a class="row" href="https://www.linkedin.com/in/tomas-erdmannsdorffer" target="_blank" rel="noopener"><span class="k">linkedin</span>in/tomas-erdmannsdorffer</a>
-          <div class="row"><span class="k">based</span>Graz, Austria · Santiago, Chile</div>
-        </div>
-      </div>
-
-      <div class="smiley-wrap fx" style="--d:.1s">
-        <canvas id="smiley3d" role="button" tabindex="0" aria-label="A friendly 3D smiley. Press Enter to spin it"></canvas>
-        <div class="cap">click me, I spin, No PDE governs my joy!</div>
-      </div>
+<section class="sec contact" id="contact">
+  <div class="sec-in">
+    <aside class="sec-aside"><span class="label">Contact</span></aside>
+    <div class="sec-body">
+      <h2 data-split data-parallax="0.08" data-axis="x">Write to me.</h2>
+      <p class="intro">
+        For roles, collaborations, or questions about any of the demos. Part-time while I finish
+        the MSc, full-time after; remote or on-site anywhere.
+      </p>
+      <a class="email" href="mailto:terdmannsdorffer@gmail.com">terdmannsdorffer@gmail.com</a>
+      <p class="links">
+        <a href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/tomas-erdmannsdorffer" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="./cv.pdf" target="_blank" rel="noopener">CV</a>
+      </p>
     </div>
   </div>
 </section>
 
-<footer class="shell">
-  <div>© 2026 Tomás Erdmannsdörffer · 100% handmade<span class="blink">_</span></div>
-  <div><a href="#top">back to top ↑</a></div>
+<footer>
+  <span>© 2026 Tomás Erdmannsdörffer</span>
+  <span>Heart: average four-chamber mesh from Rodero et al. 2021, <a href="https://doi.org/10.5281/zenodo.4593738" target="_blank" rel="noopener">Zenodo</a>, CC BY 4.0.</span>
+  <a href="#hero">Back to top</a>
 </footer>
 
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js" defer></script>
 <script src="./js/site.js" defer></script>
 <script type="module" src="./js/main.js"></script>
 

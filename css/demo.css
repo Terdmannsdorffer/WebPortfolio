@@ -1,0 +1,135 @@
+/* ============================================================
+   tdorffer.com - shared design system for the demo pages.
+   Same dark ground, accent and type as the landing page; each
+   page keeps only its own layout rules inline.
+   ============================================================ */
+
+@font-face{
+  font-family:'Bricolage Grotesque';
+  src:url('../fonts/bricolage-grotesque.woff2') format('woff2');
+  font-weight:200 800; font-stretch:75% 100%; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:'Source Serif 4';
+  src:url('../fonts/source-serif-4.woff2') format('woff2');
+  font-weight:200 900; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:'Source Serif 4';
+  src:url('../fonts/source-serif-4-italic.woff2') format('woff2');
+  font-weight:200 900; font-style:italic; font-display:swap;
+}
+
+:root{
+  --bg:#0a0a0c; --bg-2:#0e0e11; --surface:#121216; --surface-2:#17171c;
+  --line:rgba(255,255,255,.1); --line-2:rgba(255,255,255,.18);
+  --text:#f3f1eb; --muted:#c4c3c9; --dim:#c4c3c9; --faint:#6e6d76;
+  --accent:#ff5a4e; --accent-soft:#ffb9ae; --cool:#7a86ff;
+  --sans:'Bricolage Grotesque', 'Helvetica Neue', Arial, sans-serif;
+  --serif:'Source Serif 4', Georgia, serif;
+  --mono:ui-monospace, Consolas, Menlo, monospace;
+  --body:var(--serif); --display:var(--sans);
+  --shell:1100px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{background:var(--bg)}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--serif);font-size:17px;line-height:1.55;
+  font-optical-sizing:auto;-webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent);color:#0a0a0c}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.shell{max-width:var(--shell);margin:0 auto;padding:0 clamp(18px, 4vw, 32px)}
+h1,h2,h3{font-family:var(--sans);font-weight:500;letter-spacing:-.03em}
+
+/* ---------- top bar ---------- */
+header{padding:22px 0 6px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.crumb{font-family:var(--sans);font-size:15px;color:var(--muted);transition:color .2s}
+.crumb:hover{color:var(--text)}
+.chip{font-style:italic;font-size:15px;color:var(--muted)}
+.chip.live{color:var(--accent-soft)}
+
+/* ---------- title block ---------- */
+h1{font-size:clamp(34px, 5vw, 60px);line-height:1.02;margin:36px 0 16px}
+h1 em{font-style:normal;color:var(--accent-soft)}
+.lede{color:var(--muted);max-width:720px;margin:0 0 22px;line-height:1.55;font-size:18px}
+.lede b{color:var(--text);font-weight:600}
+.lede a{color:var(--text);text-decoration:underline;text-underline-offset:.25em;text-decoration-color:rgba(255,255,255,.35)}
+.lede code,.card code,.explain code,.modal .footnote code{
+  font-family:var(--mono);font-size:.85em;color:var(--text);
+  background:var(--surface);border-radius:3px;padding:1px 6px;
+}
+.tagrow{display:flex;gap:4px 0;flex-wrap:wrap;margin-bottom:28px;font-style:italic;color:var(--muted);font-size:15.5px}
+.tag{display:inline}
+.tag+.tag::before{content:', '}
+
+/* ---------- buttons ---------- */
+.btn,button.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:9px 16px;border:1px solid var(--line-2);border-radius:3px;background:transparent;
+  color:var(--text);font-family:var(--sans);font-size:14.5px;font-weight:500;cursor:pointer;
+  transition:border-color .2s, background .2s, color .2s;
+}
+.btn:hover,button.btn:hover{border-color:var(--text)}
+.btn.primary,button.btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn.primary:hover,button.btn.primary:hover{background:var(--accent);border-color:var(--accent);color:#0a0a0c}
+.btn.on{border-color:var(--accent);color:var(--accent-soft)}
+.btn:disabled,button.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- form controls ---------- */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--line-2);
+  border-radius:0;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:14px;height:14px;background:var(--text);border:0;border-radius:50%;cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--text);border:0;border-radius:50%;cursor:pointer}
+input[type=range]:focus-visible{outline-offset:8px}
+select,input[type=text],input[type=password]{
+  background:var(--bg-2);color:var(--text);border:1px solid var(--line-2);border-radius:3px;
+  padding:8px 10px;font-family:var(--mono);font-size:13px;
+}
+select:focus,input[type=text]:focus,input[type=password]:focus{outline:none;border-color:var(--text)}
+
+/* ---------- explainer ---------- */
+.explain{border-top:1px solid var(--line);padding:36px 0 8px;margin:24px 0 40px}
+.explain h2{font-size:clamp(24px, 3vw, 34px);line-height:1.1;margin:0 0 16px}
+.explain h2 em{font-style:normal;color:var(--accent-soft)}
+.explain p{color:var(--muted);margin:0 0 13px;max-width:70ch;font-size:17px;line-height:1.55}
+.explain p b,.explain ul li b{color:var(--text);font-weight:600}
+.explain .eq{
+  background:var(--surface);padding:13px 18px;margin:14px 0;border-left:2px solid var(--accent);
+  border-radius:0 3px 3px 0;font-family:var(--mono);font-size:14px;color:var(--text);overflow-x:auto;
+}
+.explain h4{font-family:var(--sans);font-size:16px;font-weight:600;color:var(--text);margin:26px 0 8px}
+.explain ul{color:var(--muted);font-size:16.5px;padding-left:18px;line-height:1.6;margin:0 0 13px}
+
+/* ---------- footer ---------- */
+footer{
+  border-top:1px solid var(--line);padding:22px 0 44px;font-size:15px;color:var(--muted);
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+footer a{text-decoration:underline;text-underline-offset:.25em;text-decoration-color:rgba(255,255,255,.3)}
+footer a:hover{color:var(--text)}
+
+/* ---------- labels inside the page-specific blocks: sentence case, no tracking.
+   (body-prefixed so they outrank the pages' own inline rules) ---------- */
+body .badge,body .stat .k,body .racer .stat .k,body .panel h3,body .panel-h,body .verdict .lbl,
+body .msg .role,body .viz-card .sub,body .ctrl .hint,body .stage .foot,body .hint,body .opt .loss,
+body .settings-bar .lbl,body .colorbar,body .racer .sub,body .strip .s .n,body .chunk-card .score,
+body .panel-body .stat .v,body .cite,body .msg .modenote,body .empty-state,body .ctrl label,
+body .stat .v,body .racer .stat .v,body .lr .val,body .ctrl label .val,body .ctrl label .v{
+  font-family:var(--sans);text-transform:none;letter-spacing:0;font-style:normal;
+}
+body .pde-box,body .prompt-block,body .explain .eq,body .chunk-card .sec{font-family:var(--mono);text-transform:none;letter-spacing:0}
+body .stat .v,body .racer .stat .v,body .ctrl label .val,body .ctrl label .v{font-variant-numeric:tabular-nums}
+body .stat .k,body .racer .stat .k,body .panel h3,body .panel-h,body .verdict .lbl{font-size:12.5px;color:var(--muted)}
+
+@media (prefers-reduced-motion: reduce){ *{transition-duration:.01ms !important;animation-duration:.01ms !important} }

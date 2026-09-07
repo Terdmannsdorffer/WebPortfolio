@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>og card</title>
+<style>
+@font-face{font-family:'Bricolage Grotesque';src:url('./fonts/bricolage-grotesque.woff2') format('woff2');font-weight:200 800;font-stretch:75% 100%}
+@font-face{font-family:'Source Serif 4';src:url('./fonts/source-serif-4.woff2') format('woff2');font-weight:200 900}
+@font-face{font-family:'Source Serif 4';src:url('./fonts/source-serif-4-italic.woff2') format('woff2');font-weight:200 900;font-style:italic}
+html,body{margin:0;background:#0a0a0c;color:#f3f1eb;font-family:'Bricolage Grotesque',sans-serif;font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+.card{position:relative;width:1200px;height:630px;overflow:hidden;background:#0a0a0c}
+.glow{position:absolute;width:900px;height:900px;right:-260px;top:-135px;background:radial-gradient(closest-side,rgba(255,90,78,.15),transparent 70%)}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.t{position:absolute;left:72px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;z-index:1}
+.eyebrow{font-family:'Source Serif 4',serif;font-style:italic;font-size:20px;color:#a3a2a9;margin-bottom:22px}
+h1{font-size:78px;line-height:.98;letter-spacing:-.035em;font-weight:500;margin:0 0 28px}
+.sub{font-family:'Source Serif 4',serif;font-size:23px;color:#dedcd5;max-width:540px;line-height:1.45}
+.url{position:absolute;left:72px;bottom:44px;font-family:'Source Serif 4',serif;font-style:italic;font-size:18px;color:#a3a2a9;z-index:1}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js"}}</script>
+</head>
+<body>
+<div class="card">
+  <div class="glow"></div>
+  <canvas id="heroCanvas"></canvas>
+  <div class="t">
+    <div class="eyebrow">Tomás Erdmannsdörffer, machine learning engineer</div>
+    <h1>I teach physics<br>to neural networks.</h1>
+    <div class="sub">PINNs for cardiac mechanics, model compression, and five ML demos that run in your browser.</div>
+  </div>
+  <div class="url">tdorffer.com</div>
+</div>
+<script type="module">
+import { initHero } from './js/hero.js';
+const hero = initHero(document.getElementById('heroCanvas'));
+let last = performance.now(), t = 0.8;
+(function f(){
+  requestAnimationFrame(f);
+  const n = performance.now(); const dt = Math.min(.05, (n - last) / 1000); last = n; t += dt;
+  hero.render(t, dt);
+})();
+</script>
+</body>
+</html>

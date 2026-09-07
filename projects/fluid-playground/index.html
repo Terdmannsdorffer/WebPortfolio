@@ -4,99 +4,34 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fluid Playground - Tomás Erdmannsdörffer</title>
-<meta name="description" content="A real-time incompressible Navier-Stokes solver (Jos Stam's stable fluids) running in pure JavaScript. Drag to stir candy-colored ink.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+<meta name="description" content="A real-time incompressible Navier-Stokes solver (Jos Stam's stable fluids) running in pure JavaScript. Drag to stir ink through the velocity field.">
+<meta name="theme-color" content="#0a0a0c">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%230a0a0c%22/><circle cx=%2216%22 cy=%2216%22 r=%227%22 fill=%22none%22 stroke=%22%23ff5a4e%22 stroke-width=%223%22/></svg>">
 <style>
-@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
-@font-face{font-family:'Fraunces';src:url('../../fonts/fraunces-italic.woff2') format('woff2');font-weight:400 500;font-style:italic;font-display:swap}
-@font-face{font-family:'Space Grotesk';src:url('../../fonts/space-grotesk.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
-@font-face{font-family:'JetBrains Mono';src:url('../../fonts/jetbrains-mono.woff2') format('woff2');font-weight:400 600;font-style:normal;font-display:swap}
 /* view transition: the demo card on the main page morphs into this title */
 @view-transition{navigation:auto}
 h1{view-transition-name:demo-fluid}
 ::view-transition-group(*){animation-duration:.35s}
 @media (prefers-reduced-motion: reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important}}
 </style>
+<link rel="stylesheet" href="../../css/demo.css">
 <style>
-:root{
-  --paper:#f7f2e8; --card:#fffdf7;
-  --ink:#26243a; --dim:#6e6a80; --line:#e6ddcc;
-  --coral:#ff5d73; --teal:#0fb5a3; --yellow:#ffc445; --violet:#7c5cff; --pink:#ff8fd2;
-  --coral-bg:#ffe7ea; --teal-bg:#dcf4ef; --yellow-bg:#fff3d4; --violet-bg:#ebe4ff; --pink-bg:#ffe4f3;
-  --body:'Space Grotesk', system-ui, sans-serif;
-  --display:'Fraunces', Georgia, serif;
-  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
-  background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.65;
-  -webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(800px 460px at 90% -5%, rgba(255,143,210,.16), transparent 60%),
-    radial-gradient(700px 700px at -8% 50%, rgba(15,181,163,.10), transparent 60%);
-  background-attachment:fixed;
-}
-::selection{background:var(--yellow);color:var(--ink)}
-a{color:inherit;text-decoration:none}
-.shell{max-width:980px;margin:0 auto;padding:0 24px}
-
-header{padding:22px 0}
-.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.crumb{
-  display:inline-flex;align-items:center;gap:8px;background:var(--card);
-  border:2px solid var(--ink);border-radius:999px;padding:8px 18px;font-weight:700;font-size:13.5px;
-  box-shadow:3px 3px 0 var(--ink);transition:transform .15s, box-shadow .15s;
-}
-.crumb:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
-.chip{
-  display:inline-flex;align-items:center;gap:7px;background:var(--card);border:2px solid var(--ink);
-  border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;box-shadow:2px 2px 0 var(--ink);
-}
-.chip.live{background:var(--teal-bg)}
-
-h1{font-family:var(--display);font-weight:500;font-size:clamp(34px,5.4vw,58px);line-height:1.05;letter-spacing:-.02em;margin:26px 0 14px}
-h1 em{font-style:italic;color:var(--pink);background:linear-gradient(transparent 64%,var(--pink-bg) 64%)}
-.lede{color:var(--dim);max-width:640px;margin:0 0 26px;line-height:1.75}
-.lede b{color:var(--ink);font-weight:600}
-.lede code{font-family:var(--mono);font-size:12.5px;background:var(--card);border:1.5px solid var(--line);border-radius:6px;padding:1px 6px}
-
-.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
-.btn{
-  display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:2px solid var(--ink);
-  border-radius:999px;background:var(--card);color:var(--ink);font-family:var(--body);
-  font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:3px 3px 0 var(--ink);
-  transition:transform .15s, box-shadow .15s;
-}
-.btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
-.btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
-.btn.on{background:var(--violet);color:#fff}
-.hint{font-family:var(--mono);font-size:12px;color:var(--dim);margin-left:auto}
-
-.stage{
-  background:var(--card);border:2px solid var(--ink);border-radius:24px;
-  box-shadow:7px 7px 0 var(--ink);padding:12px;margin-bottom:34px;
-}
-#fluid{
-  display:block;width:100%;height:auto;aspect-ratio:16/10;border-radius:14px;
-  background:var(--paper);cursor:crosshair;touch-action:none;
-}
-.stage .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 8px 2px;font-family:var(--mono);font-size:11.5px;color:var(--dim)}
-
-.explain{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:40px}
+:root{--shell:980px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.hint{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);margin-left:auto}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:34px}
+#fluid{display:block;width:100%;height:auto;aspect-ratio:16/10;border-radius:8px;background:var(--bg-2);cursor:crosshair;touch-action:none}
+.stage .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 6px 2px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.explain{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 0 40px;border-top:0;padding:0}
 @media (max-width:720px){.explain{grid-template-columns:1fr}}
-.card{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:22px 26px;box-shadow:4px 4px 0 var(--ink)}
-.card h3{font-family:var(--display);font-size:21px;font-weight:600;margin:0 0 10px;letter-spacing:-.01em}
-.card p{color:var(--dim);font-size:13.5px;margin:0 0 10px;line-height:1.75}
-.card p b{color:var(--ink);font-weight:600}
-.card code{font-family:var(--mono);font-size:12px;background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:1px 6px}
-.steps{margin:8px 0 0;padding:0;list-style:none;font-size:13px;color:var(--dim)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px 26px}
+.card h3{font-size:20px;font-weight:500;letter-spacing:-.02em;margin:0 0 10px}
+.card p{color:var(--muted);font-size:14px;margin:0 0 10px;line-height:1.7}
+.card p b{color:var(--text);font-weight:500}
+.steps{margin:8px 0 0;padding:0;list-style:none;font-size:13.5px;color:var(--muted)}
 .steps li{padding:4px 0 4px 22px;position:relative}
-.steps li::before{content:"→";position:absolute;left:0;color:var(--pink);font-weight:700}
-.steps li b{color:var(--ink)}
-
-footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
-@media (prefers-reduced-motion: reduce){ *{transition-duration:.01ms !important} }
+.steps li::before{content:"→";position:absolute;left:0;color:var(--accent)}
+.steps li b{color:var(--text);font-weight:500}
 </style>
 </head>
 <body>
@@ -105,7 +40,7 @@ footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--di
 
 <header>
   <div class="bar">
-    <a class="crumb" href="../../">← tomás.erdmannsdörffer</a>
+    <a class="crumb" href="../../">← Tomás Erdmannsdörffer</a>
     <span class="chip live">● live simulation · 120×120 grid</span>
   </div>
 </header>
@@ -120,8 +55,8 @@ footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--di
 
 <div class="controls">
   <button class="btn" id="btnPause">⏸ pause</button>
-  <button class="btn" id="btnClear">🧹 clear</button>
-  <button class="btn on" id="btnVort">🌀 vorticity: on</button>
+  <button class="btn" id="btnClear">clear</button>
+  <button class="btn on" id="btnVort">vorticity: on</button>
   <span class="hint">ink color cycles on its own · works with touch</span>
 </div>
 
@@ -153,7 +88,7 @@ footer{padding:10px 0 44px;font-family:var(--mono);font-size:12px;color:var(--di
     <p>
       This is the other end of the spectrum: a coarse but <b>fully interactive solver at 60&nbsp;fps</b>,
       the kind of resolution/speed trade-off that makes learned surrogates (PINNs, neural operators)
-      so attractive for the expensive cases. See the <a href="../fno-vs-solver/" style="font-weight:700;color:var(--teal)">FNO vs. Solver demo</a> for that story.
+      so attractive for the expensive cases. See the <a href="../fno-vs-solver/" style="color:var(--accent-soft)">FNO vs. Solver demo</a> for that story.
     </p>
   </div>
 </div>
@@ -357,7 +292,7 @@ btnPause.addEventListener('click', function(){
 var btnVort = document.getElementById('btnVort');
 btnVort.addEventListener('click', function(){
   vortOn = !vortOn;
-  btnVort.textContent = '🌀 vorticity: ' + (vortOn ? 'on' : 'off');
+  btnVort.textContent = 'vorticity: ' + (vortOn ? 'on' : 'off');
   btnVort.classList.toggle('on', vortOn);
 });
 
@@ -377,7 +312,7 @@ function sizeCanvas(){
 sizeCanvas();
 addEventListener('resize', sizeCanvas, { passive:true });
 
-var PR = 247, PG = 242, PB = 232;   // paper color
+var PR = 14, PG = 14, PB = 17;   // page background
 function render(){
   var data = img.data, k = 0;
   for(var j = 1; j <= N; j++){
