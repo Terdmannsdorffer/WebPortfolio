@@ -114,7 +114,10 @@ strong{font-weight:600;color:var(--text)}
 .sky{position:fixed;inset:0;width:100%;height:100%;z-index:60;pointer-events:none;mix-blend-mode:screen}
 
 /* ---------- the faint layer that keeps the dark from reading flat (js/backdrop.js) ---------- */
-.backdrop{position:fixed;inset:0;width:100%;height:100%;z-index:55;pointer-events:none;mix-blend-mode:screen}
+/* no blend mode: this layer sits on the black sheet, where screen and normal
+   composite identically, and a full-screen blended layer costs a repaint of
+   the whole viewport on every scrolled frame */
+.backdrop{position:fixed;top:0;left:0;width:100%;height:100%;z-index:55;pointer-events:none;overflow:hidden}
 /* film grain, the illoca/awwwards recipe: one fixed tiled layer over everything.
    Composes with any backdrop; toggled with data-grain on <body>. */
 body[data-grain="on"]::after{

@@ -13,16 +13,21 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // the occasional light in the background: data-sky on <body> picks the kind,
 // ?sky= on the URL overrides it while trying them out
-const skyMode = new URLSearchParams(location.search).get('sky') || document.body.dataset.sky || 'ecg';
-window.__sky = initSky({ mode: skyMode });
-
-// the faint layer behind the page: data-backdrop on <body>, ?bg= to try another
 const q = new URLSearchParams(location.search);
+// ?fx=off kills every optional effect at once, so a slow machine can be
+// bisected in one reload instead of five
+const fxOff = q.get('fx') === 'off';
+if (fxOff) document.body.dataset.grain = 'off';
 const grain = q.get('grain');
 if (grain) document.body.dataset.grain = grain;
-window.__bg = initBackdrop({ mode: q.get('bg') || document.body.dataset.backdrop || 'contours' });
 
-if (webglOK()) {
+const skyMode = q.get('sky') || document.body.dataset.sky || 'ecg';
+window.__sky = fxOff ? null : initSky({ mode: skyMode });
+
+// the faint layer behind the page: data-backdrop on <body>, ?bg= to try another
+window.__bg = fxOff ? null : initBackdrop({ mode: q.get('bg') || document.body.dataset.backdrop || 'contours' });
+
+if (!fxOff && webglOK()) {
   document.documentElement.classList.add('webgl');
   initScenes();
   const hero = initHero(document.getElementById('heroCanvas'), { reduced });

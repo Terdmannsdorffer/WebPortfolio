@@ -102,10 +102,14 @@ export function initHero(canvas, { reduced = false } = {}) {
   const wireMat = new THREE.MeshBasicMaterial({ color: 0xffc1b4, wireframe: true, transparent: true, opacity: 0.07, depthWrite: false });
   let solid = null, wire = null, ready = false;
 
+  const showWire = params.get('wire') !== '0';
   loadHeart('./heart.bin').then(geo => {
     solid = new THREE.Mesh(geo, solidMat);
-    wire = new THREE.Mesh(geo, wireMat);
-    pivot.add(solid, wire);
+    pivot.add(solid);
+    if (showWire) {                    // a second pass over the same triangles
+      wire = new THREE.Mesh(geo, wireMat);
+      pivot.add(wire);
+    }
     ready = true; dirty = true;
   }).catch(err => console.error(err));
 
@@ -160,7 +164,7 @@ export function initHero(canvas, { reduced = false } = {}) {
       // contraction: the wall thickens inward, the long axis shortens a little
       const sq = 1 - 0.075 * beat, sy = 1 - 0.035 * beat;
       solid.scale.set(sq, sq, sy);
-      wire.scale.copy(solid.scale);
+      if (wire) wire.scale.copy(solid.scale);
     }
   }
 
@@ -189,7 +193,7 @@ export function initHero(canvas, { reduced = false } = {}) {
       phase = (phase + dt * rate / 60) % 1;
       const beat = beatAt(phase);
       solidMat.opacity = alpha; solidMat.transparent = alpha < 1;
-      wireMat.opacity = 0.07 * alpha;
+      if (wire) wireMat.opacity = 0.07 * alpha;
 
       cur.x += (mouse.x - cur.x) * Math.min(1, dt * 2.2);
       cur.y += (mouse.y - cur.y) * Math.min(1, dt * 2.2);

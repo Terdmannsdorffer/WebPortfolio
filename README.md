@@ -59,7 +59,7 @@ A flat near-black page reads as empty, so two layers sit over it, both fixed and
 
 `data-backdrop` on `<body>` picks the pattern, `?bg=` previews another:
 
-- `contours` (default) iso-lines of a slowly morphing scalar field, drawn with marching squares. Scrolls at its own rate, so new contours keep arriving.
+- `contours` (default) two fields of iso-lines, drawn with marching squares into two offscreen tiles and then never repainted. Each tile's vertical frequencies are snapped to multiples of its own base frequency, so it is exactly periodic and repeats with no seam. The two tiles have different periods and drift continuously in opposite directions at different rates (one also sways sideways), so the pattern where they cross keeps changing and never settles. The only per-frame work is two `translate3d` values, which the compositor applies without repainting: measured idle, the whole thing costs 0.1 ms per frame, i.e. nothing.
 - `points` a sparse scatter of sample points at three depths, each parallaxing differently.
 - `wash` broad, barely-there variation in the lighting, so the black is not one flat value across the screen.
 - `off` nothing.
@@ -73,6 +73,20 @@ A few seconds after load and then every 16–30 seconds, something crosses the d
 ## Scroll behaviour
 
 Lenis (from jsdelivr) smooths wheel scrolling; if it fails to load the page falls back to native smooth scrolling. The hero is `position: sticky` on desktop so the rest of the page slides over it as a sheet while the heart drifts off and fades. Headings reveal word by word through overflow masks, demo previews clip-reveal, the section label in the left column is sticky, and the lead paragraph in About lights up word by word as you read down. All of it is in `js/site.js` and switched off under `prefers-reduced-motion`.
+
+## Keeping the scroll smooth
+
+Anything on screen while you scroll competes with the scroll. All the numbers below are medians under software rendering, which is pessimistic in absolute terms but fine for attribution. Fast scrolling went from 158 ms per frame to 16.7 ms, and sitting still at the hero from 254 ms to 71 ms.
+
+What fixed it:
+
+- the background is painted once into two periodic tiles and then only ever moved with `translate3d`. Nothing about it repaints, on scroll or otherwise. Measured idle mid-page: 37.6 ms per frame with it, 37.5 ms without.
+- the backdrop dropped `mix-blend-mode`. Over a black sheet it composites identically, but a full-screen blended layer forces a repaint of the whole viewport every frame. The sky canvas is `display:none` while idle for the same reason.
+- `js/site.js` takes every layout measurement in one pass before writing any styles, caches per-element parallax settings, skips opacity writes below 0.02, and stops entirely once the page settles.
+
+The hero is deliberately left as it is. It is the most expensive thing on the page under software rendering, mostly because the faint wireframe is a second full pass over the same 40k triangles (75 ms of 162 ms when measured), but it is fine on a real GPU. `?wire=0` drops that pass if a slow machine ever needs it.
+
+Switches for measuring on a real machine: `?perf=1` shows a live frame-time meter, `?fx=off` disables every optional effect in one go, `?wire=0` drops the heart's wireframe pass, `?bg=off` and `?grain=off` isolate the background layers. If you add anything that paints on scroll, measure it before keeping it.
 
 ## Notes
 

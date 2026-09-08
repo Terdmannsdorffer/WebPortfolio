@@ -24,6 +24,7 @@ export function initSky({ mode = 'ecg' } = {}) {
   const c = document.createElement('canvas');
   c.className = 'sky';
   c.setAttribute('aria-hidden', 'true');
+  c.style.display = 'none';        // only composited while something is on it
   document.body.appendChild(c);
   const ctx = c.getContext('2d');
   let W = 0, H = 0;
@@ -145,13 +146,14 @@ export function initSky({ mode = 'ecg' } = {}) {
       ctx.restore();
     }
     if (live.length) raf = requestAnimationFrame(frame);
-    else { raf = 0; ctx.clearRect(0, 0, W, H); }
+    else { raf = 0; ctx.clearRect(0, 0, W, H); c.style.display = 'none'; }
   }
   function fire(kind = mode) {
     const e = (kinds[kind] || kinds[mode])();
     e.t = 0;
     e.sy = window.scrollY || 0;          // where the page was when it started
     live.push(e);
+    c.style.display = '';
     if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
   }
   function schedule(first) {

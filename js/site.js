@@ -88,7 +88,7 @@
       if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
       return s;
     });
-    readers.push({ el: el, spans: spans });
+    readers.push({ el: el, spans: spans, last: new Float32Array(spans.length).fill(-1) });
   });
 
   /* ---- reveal-on-scroll. Clip-revealed elements start fully clipped, and a
@@ -151,26 +151,55 @@
   var heroFoot = document.getElementById('heroFoot');
   var links = nav ? Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]')) : [];
   var sections = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
-  var parallax = Array.prototype.slice.call(document.querySelectorAll('[data-parallax]'));
-  var lastY = window.scrollY || 0, vel = 0, skew = 0;
+  // read the per-element settings once, not sixty times a second
+  var parallax = Array.prototype.slice.call(document.querySelectorAll('[data-parallax]'))
+    .map(function (el) {
+      return {
+        el: el,
+        sp: parseFloat(el.dataset.parallax) || 0,
+        xAxis: el.dataset.axis === 'x',
+        skew: el.dataset.skew !== undefined
+      };
+    });
+  var lastY = window.scrollY || 0, vel = 0, skew = 0, idle = 0, heroH = 1;
+  var secTop = [], pRect = [], rRect = [];
+
+  function measure() { heroH = hero ? hero.offsetHeight : 1; }
+  measure();
+  addEventListener('resize', measure, { passive: true });
 
   function frame() {
     requestAnimationFrame(frame);
-    var y = window.scrollY || 0, vh = innerHeight;
+    if (document.hidden) return;
+    var i, n, y = window.scrollY || 0, vh = innerHeight;
     var dy = y - lastY; lastY = y;
     vel = vel * 0.82 + dy * 0.18;
 
+    // once the page has stopped and the skew has settled there is nothing to do
+    if (Math.abs(dy) < 0.5 && Math.abs(vel) < 0.05 && Math.abs(skew) < 0.01) {
+      if (++idle > 2) return;
+    } else {
+      idle = 0;
+    }
+
+    /* read phase: take every measurement first, so that a style write never
+       forces a synchronous re-layout in the middle of the pass */
+    for (i = 0, n = sections.length; i < n; i++) {
+      secTop[i] = sections[i] ? sections[i].getBoundingClientRect().top : Infinity;
+    }
+    for (i = 0, n = parallax.length; i < n; i++) pRect[i] = parallax[i].el.getBoundingClientRect();
+    for (i = 0, n = readers.length; i < n; i++) rRect[i] = readers[i].el.getBoundingClientRect();
+
+    /* write phase */
     if (top) top.classList.toggle('scrolled', y > 24);
     var current = -1;
-    sections.forEach(function (s, i) {
-      if (s && s.getBoundingClientRect().top <= vh * 0.4) current = i;
-    });
-    links.forEach(function (a, i) { a.classList.toggle('active', i === current); });
+    for (i = 0, n = sections.length; i < n; i++) if (secTop[i] <= vh * 0.4) current = i;
+    for (i = 0, n = links.length; i < n; i++) links[i].classList.toggle('active', i === current);
     if (reduced) return;
 
     // hero copy drifts up and fades as the sheet slides over it
     if (hero && heroInner) {
-      var p = clamp(y / Math.max(1, hero.offsetHeight), 0, 1.2);
+      var p = clamp(y / Math.max(1, heroH), 0, 1.2);
       heroInner.style.transform = 'translate3d(0,' + (-y * 0.32).toFixed(1) + 'px,0)';
       heroInner.style.opacity = clamp(1 - p * 1.35, 0, 1);
       if (heroFoot) heroFoot.style.opacity = clamp(1 - p * 2.2, 0, 1);
@@ -179,26 +208,50 @@
     // scroll-velocity skew, eased back to zero
     skew += (clamp(vel * 0.045, -3.5, 3.5) - skew) * 0.14;
 
-    parallax.forEach(function (el) {
-      var r = el.getBoundingClientRect();
-      if (r.bottom < -240 || r.top > vh + 240) return;
-      var c = r.top + r.height / 2 - vh / 2;
-      var sp = parseFloat(el.dataset.parallax) || 0;
-      var v = (-c * sp).toFixed(1);
-      var t = el.dataset.axis === 'x' ? 'translate3d(' + v + 'px,0,0)' : 'translate3d(0,' + v + 'px,0)';
-      if (el.dataset.skew !== undefined) t += ' skewY(' + skew.toFixed(2) + 'deg)';
-      el.style.transform = t;
-    });
+    for (i = 0, n = parallax.length; i < n; i++) {
+      var px = parallax[i], r = pRect[i];
+      if (r.bottom < -240 || r.top > vh + 240) continue;
+      var off = (-(r.top + r.height / 2 - vh / 2) * px.sp).toFixed(1);
+      var tr = px.xAxis ? 'translate3d(' + off + 'px,0,0)' : 'translate3d(0,' + off + 'px,0)';
+      if (px.skew) tr += ' skewY(' + skew.toFixed(2) + 'deg)';
+      px.el.style.transform = tr;
+    }
 
-    readers.forEach(function (rd) {
-      var r = rd.el.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > vh) return;
-      var prog = clamp((vh * 0.82 - r.top) / (r.height + vh * 0.22), 0, 1);
+    for (i = 0, n = readers.length; i < n; i++) {
+      var rd = readers[i], rr = rRect[i];
+      if (rr.bottom < 0 || rr.top > vh) continue;
+      var prog = clamp((vh * 0.82 - rr.top) / (rr.height + vh * 0.22), 0, 1);
       var lit = prog * (rd.spans.length + 2);
-      rd.spans.forEach(function (s, i) { s.style.opacity = clamp(lit - i, 0.18, 1).toFixed(2); });
-    });
+      for (var j = 0; j < rd.spans.length; j++) {
+        var o = clamp(lit - j, 0.18, 1);
+        if (Math.abs(o - rd.last[j]) < 0.02) continue;   // a change nobody could see
+        rd.last[j] = o;
+        rd.spans[j].style.opacity = o.toFixed(2);
+      }
+    }
   }
   requestAnimationFrame(frame);
+
+  /* ---- optional frame-time meter: ?perf=1 ---- */
+  if (/[?&]perf=1/.test(location.search)) {
+    var box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:9999;font:12px/1.4 ui-monospace,monospace;' +
+      'background:rgba(0,0,0,.78);color:#f3f1eb;padding:6px 10px;border:1px solid rgba(255,255,255,.22);' +
+      'border-radius:4px;pointer-events:none;white-space:pre';
+    document.body.appendChild(box);
+    var samples = [], prev = performance.now(), shown = 0;
+    requestAnimationFrame(function meter(now) {
+      requestAnimationFrame(meter);
+      samples.push(now - prev); prev = now;
+      if (samples.length > 90) samples.shift();
+      if (now - shown < 500 || samples.length < 15) return;
+      shown = now;
+      var s = samples.slice().sort(function (a, b) { return a - b; });
+      var p50 = s[s.length >> 1], p90 = s[Math.floor(s.length * 0.9)];
+      box.textContent = 'fps ' + Math.round(1000 / p50) +
+        '   frame p50 ' + p50.toFixed(1) + 'ms   p90 ' + p90.toFixed(1) + 'ms';
+    });
+  }
 
   /* ---- footer clock, Santiago time ---- */
   var clock = document.getElementById('clock');
