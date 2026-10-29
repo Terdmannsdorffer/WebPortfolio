@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tomás Erdmannsdörffer, ML engineer</title>
-<meta name="description" content="Machine learning engineer from Santiago, Chile. Physics-informed neural networks for cardiac mechanics, model compression, and five ML demos that run in your browser.">
+<meta name="description" content="Machine learning engineer in Santiago, Chile. Physics-informed neural networks for cardiac mechanics, model compression, and five ML demos that run in your browser.">
 <link rel="canonical" href="https://tdorffer.com/">
 <meta name="theme-color" content="#0a0a0c">
 <meta property="og:type" content="website">
@@ -23,15 +23,17 @@
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js"}}
 </script>
-<noscript><style>.rv-clip,.hero .lede,.hero .cta,.hero-foot{opacity:1;transform:none;clip-path:none}.hero h1 .line>span{transform:none}</style></noscript>
+<script>document.documentElement.classList.add('js');setTimeout(function(){if(!window.__siteReady)document.documentElement.classList.add('reveal-all')},3000)</script>
 </head>
-<body data-sky="ecg" data-backdrop="contours" data-grain="on">
+<body data-grain="on">
+
+<a class="skip" href="#main">Skip to content</a>
 
 <header class="top" id="top">
-  <a href="#hero" class="brand">Tomás Erdmannsdörffer</a>
+  <a href="#hero" class="brand" translate="no">Tomás Erdmannsdörffer</a>
   <nav class="nav" id="siteNav" aria-label="Site">
+    <a href="#research">Research</a>
     <a href="#demos">Demos</a>
-    <a href="#about">About</a>
     <a href="#work">Work</a>
     <a href="#contact">Contact</a>
   </nav>
@@ -41,369 +43,277 @@
   </div>
 </header>
 
-<!-- HERO: pinned under the page; the rest slides over it -->
-<section class="hero" id="hero">
-  <canvas id="heroCanvas" aria-hidden="true"></canvas>
-  <div class="hero-inner" id="heroInner">
-    <h1>
+<!-- THE STAGE: the heart, pinned beside everything that follows -->
+<div class="stage" id="stage">
+  <canvas id="stageCanvas" aria-hidden="true"></canvas>
+  <p class="stage-cap" id="stageCap">
+    <span>The average adult heart, from CT scans (Rodero et al. 2021).</span>
+    <button type="button" id="paceBtn">Click it to raise the pace.</button>
+    <span class="bpm" id="bpm" aria-live="off">52 bpm</span>
+    <button type="button" class="motion" id="motionBtn" aria-pressed="false">Pause the motion</button>
+  </p>
+</div>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero col" id="hero">
+  <div class="hero-in">
+    <h1 class="mask-lines">
       <span class="line"><span>I teach physics</span></span>
       <span class="line"><span>to neural networks.</span></span>
     </h1>
-    <p class="lede">
-      I'm Tomás, a machine learning engineer in Santiago, Chile. I build physics-informed
-      neural networks for the mechanics of heart tissue, and compressed versions of them
-      that still get the answer right. MSc student at PUC Chile; visiting researcher at the
-      University of Graz until August 2026, still working with the group from here.
+    <p class="lede rise">
+      I’m Tomás, an ML engineer in Santiago, Chile. I build physics-informed neural networks
+      for heart mechanics, and compressed versions that still get the answer right.
     </p>
-    <p class="cta">
-      <a href="#demos">See the five demos</a>
-      <a href="./cv.pdf" target="_blank" rel="noopener">Read the CV</a>
-    </p>
-  </div>
-  <div class="hero-foot" id="heroFoot">
-    <p class="fig">
-      <em>Fig. 1</em> The average adult heart of Rodero et al. (2021), a four-chamber
-      simulation mesh built from CT scans, decimated for the browser. Roughly the geometry
-      my networks learn to deform.
-      <button type="button" id="paceBtn">Click anywhere to pace it</button>
-      <span class="readout" id="readout" aria-hidden="true">58 bpm</span>
+    <p class="actions rise">
+      <a class="button" href="#demos">See the demos</a>
+      <a class="link" href="./cv.pdf" target="_blank" rel="noopener">Read the CV</a>
     </p>
   </div>
 </section>
 
-<main class="sheet">
-
-<!-- DEMOS -->
-<section class="sec" id="demos">
-  <div class="sec-in">
-    <aside class="sec-aside"><span class="label">Demos</span></aside>
-    <div class="sec-body">
-      <div class="sec-head">
-        <h2 data-split>Five demos that run in your browser.</h2>
-        <p class="sec-note">
-          No backend, nothing pre-rendered. Each page is a solver or a model running on your
-          own machine while you watch. The only thing that leaves the page is the answering
-          step of the RAG demo, and that uses a key you bring.
-        </p>
-      </div>
-
-      <div class="demo-list">
-
-        <a href="./projects/pinn-playground/" class="demo d1 featured">
-          <div class="body">
-            <h3 class="t-pinn" data-split>PINN Playground</h3>
-            <p>Train a physics-informed network on the 1D Burgers equation, live. There's no
-               dataset: the loss is the PDE residual, computed with automatic differentiation on
-               your GPU. Give it two minutes and a shock forms.</p>
-            <p class="tags">TensorFlow.js, WebGL, automatic differentiation</p>
-            <span class="open">Open the demo</span>
-          </div>
-          <div class="preview rv-clip" data-parallax="0.06" data-skew>
-            <canvas data-scene="wave" aria-hidden="true"></canvas>
-            <span class="tag">∂u/∂t + u·∂u/∂x = ν·∂²u/∂x²</span>
-          </div>
-        </a>
-
-        <a href="./projects/rag-scientific-ml/" class="demo d2">
-          <div class="body">
-            <h3 class="t-rag" data-split>Ask Research</h3>
-            <p>Retrieval-augmented answers over a corpus of 24 scientific ML papers. BM25
-               retrieval runs in the page; plug in any OpenAI-compatible key (Groq's free tier
-               works) and a model answers from the passages it found.</p>
-            <p class="tags">BM25, retrieval-augmented generation</p>
-            <span class="open">Open the demo</span>
-          </div>
-          <div class="preview rv-clip" data-parallax="0.06" data-skew>
-            <canvas data-scene="rag" aria-hidden="true"></canvas>
-            <span class="tag">query → retrieve → answer</span>
-          </div>
-        </a>
-
-        <a href="./projects/fno-vs-solver/" class="demo d3">
-          <div class="body">
-            <h3 class="t-fno" data-split>FNO vs. Solver</h3>
-            <p>A neural operator and a finite-difference solver get the same Burgers problem.
-               The solver marches through every time step; the operator answers in one call.
-               The speed-up on screen is measured on your machine, not quoted from a paper.</p>
-            <p class="tags">Neural operator, Cole-Hopf transform</p>
-            <span class="open">Open the demo</span>
-          </div>
-          <div class="preview rv-clip" data-parallax="0.06" data-skew>
-            <canvas data-scene="race" aria-hidden="true"></canvas>
-            <span class="tag">solver, every step</span>
-            <span class="tag br">operator, one call</span>
-          </div>
-        </a>
-
-        <a href="./projects/fluid-playground/" class="demo d4">
-          <div class="body">
-            <h3 class="t-fluid" data-split>Fluid Playground</h3>
-            <p>Jos Stam's stable-fluids solver in plain JavaScript. Drag to stir ink through a
-               divergence-free velocity field that gets re-solved every frame.</p>
-            <p class="tags">Navier-Stokes, canvas 2D</p>
-            <span class="open">Open the demo</span>
-          </div>
-          <div class="preview rv-clip" data-parallax="0.06" data-skew>
-            <canvas data-scene="fluid" aria-hidden="true"></canvas>
-            <span class="tag">∇·u = 0</span>
-          </div>
-        </a>
-
-        <a href="./projects/optimizer-race/" class="demo d5">
-          <div class="body">
-            <h3 class="t-optim" data-split>Optimizer Race</h3>
-            <p>SGD, momentum, RMSProp and Adam dropped onto the same 3D loss landscape. Click
-               the surface to move the starting point and see which ones get stuck.</p>
-            <p class="tags">Adam, three.js</p>
-            <span class="open">Open the demo</span>
-          </div>
-          <div class="preview rv-clip" data-parallax="0.06" data-skew>
-            <canvas data-scene="optim" aria-hidden="true"></canvas>
-            <span class="tag">θ ← θ − η·∇L</span>
-          </div>
-        </a>
-
-      </div>
-    </div>
+<!-- RESEARCH: three frames; the scroll walks the stage from the organ to its fibres and back -->
+<section class="research col" id="research" aria-label="Research">
+  <div class="frame" data-frame="1">
+    <h2 class="mask-lines" data-reveal><span class="line"><span>A heart is a pump</span></span><span class="line"><span>made of fibres.</span></span></h2>
+    <p>
+      Its muscle cells run in sheets that wind around the ventricles. When they shorten together
+      the wall thickens, the base pulls down toward the apex and the whole organ wrings itself
+      out. The light that crosses it before each beat is the electrical wave that sets it off.
+    </p>
+    <figure class="plate">
+      <img src="./media/lower-1669.jpg" width="1200" height="418" loading="lazy"
+           alt="Engraving of three hearts with their great vessels, the muscle fibres drawn across their surfaces">
+      <figcaption>Richard Lower drew the fibres on the surface of the heart in 1669, in Tractatus de Corde. Wellcome Collection, CC BY 4.0.</figcaption>
+    </figure>
+  </div>
+  <div class="frame" data-frame="2">
+    <h2 class="mask-lines" data-reveal><span class="line"><span>+60° inside,</span></span><span class="line"><span>−60° outside.</span></span></h2>
+    <p>
+      Through the thickness of the wall the fibre angle turns by about 120 degrees. The lines
+      on the right are traced through the fibre field of this exact mesh, the one a simulation
+      of it would use. My MSc at PUC Chile, with Francisco Sahli, is about cardiac fibre
+      mechanics with physics-informed networks.
+    </p>
+    <figure class="plate">
+      <img src="./media/pettigrew-1860.jpg" width="502" height="324" loading="lazy"
+           alt="Two drawings of the apex of a left ventricle, its fibres whirling into a vortex, beside a diagram of their spiral paths">
+      <figcaption>James Bell Pettigrew dissected the vortex at the apex in 1860 and drew its spirals by hand. Public domain.</figcaption>
+    </figure>
+  </div>
+  <div class="frame" data-frame="3">
+    <h2 class="mask-lines" data-reveal><span class="line"><span>From images</span></span><span class="line"><span>to motion.</span></span></h2>
+    <p>
+      In Graz, from February to August 2026, I worked with Federica Caforio’s group on PINN
+      architectures that estimate how the heart moves, in JAX. We still work together. This is
+      the kind of data it starts from: a cine MRI, four chambers in one slice.
+    </p>
+    <figure class="plate mri">
+      <video id="mri" src="./media/mri-4ch.mp4" poster="./media/mri-4ch.jpg" width="458" height="414"
+             muted loop playsinline preload="metadata" aria-label="Cine MRI of a beating heart, four-chamber view"></video>
+      <figcaption>Cine MRI, four-chamber view, one beat. Doregan, Wikimedia Commons, CC BY-SA 4.0.</figcaption>
+    </figure>
   </div>
 </section>
 
-<!-- ABOUT -->
-<section class="sec" id="about">
-  <div class="sec-in">
-    <aside class="sec-aside"><span class="label">About</span></aside>
-    <div class="sec-body">
-      <div class="sec-head">
-        <h2 data-split>Scientific computing first, machine learning second.</h2>
-      </div>
-
-      <div class="about">
-        <div class="about-text">
-          <div class="byline">
-            <img class="avatar" src="./me.jpg" alt="Tomás, in a cap and round glasses" width="64" height="64" loading="lazy">
-            <span>Tomás, Graz, winter 2026</span>
-          </div>
-          <p class="lead" data-read>I got into ML through scientific computing, and most of what I've done since has
-             been about making neural networks respect the physics they're approximating.</p>
-          <p>My undergraduate thesis at Universidad de los Andes compressed physics-informed
-             networks (distillation, pruning, quantization) for non-Newtonian fluid simulation;
-             the manuscript is in preparation. Since 2025 I've been doing an MSc at PUC Chile
-             with Francisco Sahli, on PINNs for cardiac fiber mechanics. That work took me to
-             the University of Graz for the first half of 2026, where I worked with Federica
-             Caforio's group on PINN architectures for cardiac mechanics in JAX. I'm back in
-             Santiago now and the collaboration continues remotely.</p>
-          <p>The rest of the time I build things to find out whether they work: the demos above,
-             a series of language models under 16 MB, a file-transfer system that's still
-             running at a mining company.</p>
-          <dl class="facts">
-            <div><dt>Based</dt><dd>Santiago, Chile</dd></div>
-            <div><dt>Languages</dt><dd>Spanish (native), English (C2), German (A1)</dd></div>
-            <div><dt>Status</dt><dd>Open to ML/AI roles, remote or on-site</dd></div>
-          </dl>
-        </div>
-
-        <div class="now-wrap">
-          <p class="label">Right now</p>
-          <ul class="now">
-            <li><span class="k">Research</span>Cardiac motion estimation with PINNs in JAX, with the Graz group.</li>
-            <li><span class="k">Exploring</span>Language models under 16 MB: custom tokenizers, quantization.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- WORK -->
-<section class="sec" id="work">
-  <div class="sec-in">
-    <aside class="sec-aside"><span class="label">Work</span></aside>
-    <div class="sec-body">
-      <div class="sec-head">
-        <h2 data-split>Where I've been.</h2>
-      </div>
-
-      <ol class="rows">
-        <li class="row">
-          <span class="when">Feb – Aug 2026</span>
-          <div class="what">
-            <h3>Visiting researcher</h3>
-            <p class="where">University of Graz, Dr. Federica Caforio's group</p>
-            <p>PINN architectures for high-dimensional PDEs in cardiac fiber mechanics, in JAX:
-               differentiable PDE simulation and multi-view reconstruction scored with MSE and
-               SSIM. We still work together remotely.</p>
-          </div>
-          <span class="tags">JAX, PINNs, finite elasticity, MRI</span>
-        </li>
-
-        <li class="row">
-          <span class="when">2025 – present</span>
-          <div class="what">
-            <h3>MSc in Engineering Sciences</h3>
-            <p class="where">Pontificia Universidad Católica de Chile, advised by Prof. Francisco Sahli</p>
-            <p>PINNs for cardiac fiber modeling. Grew out of the undergraduate thesis on
-               compressing them.</p>
-          </div>
-          <span class="tags">JAX, PyTorch, PDEs, biomechanics</span>
-        </li>
-
-        <li class="row">
-          <span class="when">Jan – Feb 2025</span>
-          <div class="what">
-            <h3>DevOps intern</h3>
-            <p class="where">Citi, Chile Tech Center</p>
-            <p>Kept three legacy applications running and reworked the production CI/CD pipeline
-               so deployments took less time and fewer steps.</p>
-          </div>
-          <span class="tags">Jenkins, Bitbucket, Docker</span>
-        </li>
-
-        <li class="row">
-          <span class="when">2024 – 2025</span>
-          <div class="what">
-            <h3>Undergraduate thesis</h3>
-            <p class="where">Universidad de los Andes, manuscript in preparation</p>
-            <p>Knowledge distillation, pruning and quantization applied to PINN surrogates of
-               Carbopol (non-Newtonian) flow. Built the baseline PINN, then measured what each
-               technique costs in accuracy.</p>
-          </div>
-          <span class="tags">PyTorch, PINNs, quantization-aware training, CFD</span>
-        </li>
-
-        <li class="row">
-          <span class="when">Jun 2023 – Dec 2024</span>
-          <div class="what">
-            <h3>Teaching assistant, six courses</h3>
-            <p class="where">Universidad de los Andes, CS department</p>
-            <p>Operating systems, low-level programming in C/C++, mobile apps, web technologies,
-               automata and computability, programming fundamentals. About thirty students a
-               semester.</p>
-          </div>
-          <span class="tags">C/C++, Python, Linux</span>
-        </li>
-
-        <li class="row">
-          <span class="when">Dec 2023 – Feb 2024</span>
-          <div class="what">
-            <h3>AI research intern</h3>
-            <p class="where">Falabella Retail</p>
-            <p>Prototyped automated product descriptions with LLMs, replacing a manual process.
-               The proposal kept being developed after I left.</p>
-          </div>
-          <span class="tags">LLMs, Python, prompt design</span>
-        </li>
-
-        <li class="row">
-          <span class="when">2020 – 2025</span>
-          <div class="what">
-            <h3>BSc Civil Engineering in Computer Science</h3>
-            <p class="where">Universidad de los Andes, minor in innovation</p>
-            <p>Coursework in AI, LLMs, computer vision, algorithms and competitive programming,
-               databases and web technologies.</p>
-          </div>
-          <span class="tags">Python, C/C++, PyTorch, SQL</span>
-        </li>
+<!-- DEMOS: full width, over the stage -->
+<section class="demos" id="demos" aria-label="Demos">
+  <div class="demos-intro">
+    <h2 class="mega mask-lines" data-reveal><span class="line"><span>Five demos that run</span></span><span class="line"><span>in your browser.</span></span></h2>
+    <div class="intro-foot">
+      <p class="lead">
+        No backend, nothing pre-rendered. Each is a solver or a model running on your machine while
+        you watch. Below, each one’s own physics, running now.
+      </p>
+      <ol class="demo-index" aria-label="The five demos">
+        <li><a href="#demo-pinn">PINN Playground</a></li>
+        <li><a href="#demo-rag">Ask Research</a></li>
+        <li><a href="#demo-fno">FNO vs. Solver</a></li>
+        <li><a href="#demo-fluid">Fluid Playground</a></li>
+        <li><a href="#demo-optim">Optimizer Race</a></li>
       </ol>
     </div>
   </div>
-</section>
 
-<!-- PROJECTS -->
-<section class="sec" id="projects">
-  <div class="sec-in">
-    <aside class="sec-aside"><span class="label">Projects</span></aside>
-    <div class="sec-body">
-      <div class="sec-head">
-        <h2 data-split>Beyond the demos.</h2>
-      </div>
-
-      <ol class="rows">
-        <li class="row">
-          <span class="when">2025 – present</span>
-          <div class="what">
-            <h3>Cardiac motion with PINNs</h3>
-            <p class="where">Lab work</p>
-            <p>Physics-informed networks for cardiac biomechanics, built on jaxpi. The research
-               behind the heart at the top of this page.</p>
-          </div>
-          <span class="tags">JAX, PINNs, jaxpi</span>
-        </li>
-
-        <li class="row">
-          <span class="when">2025 – present</span>
-          <div class="what">
-            <h3>Tiny language models</h3>
-            <p class="where">Exploration</p>
-            <p>Transformers under 16 MB: custom tokenizers and quantized weights, scored by
-               bits-per-byte on FineWeb. Trained at home on an RTX 5060, which meant living on
-               PyTorch nightlies for a while.</p>
-          </div>
-          <span class="tags">PyTorch, CUDA, quantization, tokenizers</span>
-        </li>
-
-        <li class="row">
-          <span class="when">Sep 2024</span>
-          <div class="what">
-            <h3>Turbo Files</h3>
-            <p class="where">In production at a mining company</p>
-            <p>Fault-tolerant transfer of large files in Django: files travel as fragments so an
-               intermittent connection doesn't kill the transfer. Google Drive and S3 as backends.</p>
-          </div>
-          <span class="tags">Django, AWS S3, Drive API</span>
-        </li>
-      </ol>
-    </div>
-  </div>
-</section>
-
-<!-- STACK -->
-<section class="sec" id="stack">
-  <div class="sec-in">
-    <aside class="sec-aside"><span class="label">Tools</span></aside>
-    <div class="sec-body">
-      <div class="sec-head">
-        <h2 data-split>What I work with.</h2>
-      </div>
-      <div class="stack">
-        <p><strong>Day to day:</strong> Python, PyTorch, JAX and PINNs, with CUDA when it matters.
-           HuggingFace and TensorFlow when a project already lives there; RAG pipelines and
-           agents; quantization and distillation for making models small.</p>
-        <p><strong>Also fluent in:</strong> JavaScript, C and C++, C#, SQL. Django, Node.js, React,
-           REST APIs, Ruby on Rails. Docker, Git, AWS (S3, Lambda), Jenkins, CI/CD, Linux and WSL2.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CONTACT -->
-<section class="sec contact" id="contact">
-  <div class="sec-in">
-    <aside class="sec-aside"><span class="label">Contact</span></aside>
-    <div class="sec-body">
-      <h2 data-split data-parallax="0.08" data-axis="x">Write to me.</h2>
-      <p class="intro">
-        For roles, collaborations, or questions about any of the demos. Part-time while I finish
-        the MSc, full-time after; remote or on-site anywhere.
+  <article class="chapter" id="demo-pinn">
+    <canvas class="chapter-canvas" data-chapter="pinn" aria-hidden="true"></canvas>
+    <div class="chapter-copy">
+      <h3 class="mega mask-lines" data-reveal><span class="line"><span>PINN Playground</span></span></h3>
+      <p class="lead">
+        A network learns the 1D Burgers equation with no data at all: the loss is the PDE itself,
+        differentiated on your GPU. Behind this text, the exact solution it is trained to find,
+        shock and all.
       </p>
-      <a class="email" href="mailto:terdmannsdorffer@gmail.com">terdmannsdorffer@gmail.com</a>
-      <p class="links">
-        <a href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://www.linkedin.com/in/tomas-erdmannsdorffer" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="./cv.pdf" target="_blank" rel="noopener">CV</a>
-      </p>
+      <p class="tools">TensorFlow.js, WebGL, automatic differentiation</p>
+      <a class="link open" href="./projects/pinn-playground/">Open the demo</a>
     </div>
+  </article>
+
+  <article class="chapter" id="demo-rag">
+    <canvas class="chapter-canvas" data-chapter="rag" aria-hidden="true"></canvas>
+    <div class="chapter-copy">
+      <h3 class="mega mask-lines" data-reveal><span class="line"><span>Ask Research</span></span></h3>
+      <p class="lead">
+        Answers over 24 passages from the scientific ML papers I read. BM25 retrieval runs in the
+        page, as it does behind this text; bring any OpenAI-compatible key and a model answers
+        from what it found.
+      </p>
+      <p class="tools">BM25, retrieval-augmented generation</p>
+      <a class="link open" href="./projects/rag-scientific-ml/">Open the demo</a>
+    </div>
+  </article>
+
+  <article class="chapter" id="demo-fno">
+    <canvas class="chapter-canvas" data-chapter="fno" aria-hidden="true"></canvas>
+    <div class="chapter-copy">
+      <h3 class="mega mask-lines" data-reveal><span class="line"><span>FNO vs. Solver</span></span></h3>
+      <p class="lead">
+        Same Burgers problem, two methods. The solver marches through every time step; the
+        operator answers in one call. The demo times both on your machine instead of quoting a paper.
+      </p>
+      <p class="tools">Neural operator, Cole-Hopf transform, finite differences</p>
+      <a class="link open" href="./projects/fno-vs-solver/">Open the demo</a>
+    </div>
+  </article>
+
+  <article class="chapter" id="demo-fluid">
+    <canvas class="chapter-canvas" data-chapter="fluid" aria-label="Fluid simulation; drag to stir it"></canvas>
+    <div class="chapter-copy">
+      <h3 class="mega mask-lines" data-reveal><span class="line"><span>Fluid Playground</span></span></h3>
+      <p class="lead">
+        Jos Stam’s stable fluids in plain JavaScript. Drag across this screen to stir it: the
+        velocity field is made divergence-free again every frame.
+      </p>
+      <p class="tools">Navier-Stokes, canvas 2D</p>
+      <a class="link open" href="./projects/fluid-playground/">Open the demo</a>
+    </div>
+  </article>
+
+  <article class="chapter" id="demo-optim">
+    <canvas class="chapter-canvas" data-scene="optim" aria-hidden="true"></canvas>
+    <ul class="legend" aria-label="Line colours">
+      <li class="sgd">SGD</li><li class="mom">Momentum</li><li class="rms">RMSProp</li><li class="adam">Adam</li>
+    </ul>
+    <div class="chapter-copy">
+      <h3 class="mega mask-lines" data-reveal><span class="line"><span>Optimizer Race</span></span></h3>
+      <p class="lead">
+        SGD, momentum, RMSProp and Adam dropped on one loss surface from the same start. Momentum
+        is the one that rolls out of the first dip.
+      </p>
+      <p class="tools">Adam, three.js</p>
+      <a class="link open" href="./projects/optimizer-race/">Open the demo</a>
+    </div>
+  </article>
+</section>
+
+<!-- ABOUT: a letter -->
+<section class="about col" id="about" aria-labelledby="aboutTitle">
+  <h2 id="aboutTitle" class="sr-only">About</h2>
+  <div class="letter">
+    <img class="avatar" src="./me.jpg" alt="Tomás, in a cap and round glasses" width="56" height="56" loading="lazy">
+    <p>
+      I got into machine learning through scientific computing, and most of what I’ve done since
+      has been about making neural networks respect the physics they approximate.
+    </p>
+    <p>
+      My undergraduate thesis at Universidad de los Andes compressed physics-informed networks
+      (distillation, pruning, quantization) for non-Newtonian flow; the manuscript is in
+      preparation. Since 2025 I’ve been doing an MSc at PUC Chile with Francisco Sahli, which
+      took me to Federica Caforio’s group in Graz for the first half of 2026.
+    </p>
+    <p>
+      The rest of the time I build things to find out whether they work: the demos above, a
+      series of language models under 16&nbsp;MB, a file-transfer system that is still running at a
+      mining company.
+    </p>
+    <p>
+      I’m open to ML and AI roles, remote or on-site: part-time while I finish the MSc,
+      full-time after. Spanish is my first language and English my second; my German is just starting.
+    </p>
+    <p class="sign">Tomás<span>Santiago, Chile</span></p>
   </div>
 </section>
 
-<footer>
-  <span>© 2026 Tomás Erdmannsdörffer</span>
-  <span>Heart: average four-chamber mesh from Rodero et al. 2021, <a href="https://doi.org/10.5281/zenodo.4593738" target="_blank" rel="noopener">Zenodo</a>, CC BY 4.0.</span>
-  <a href="#hero">Back to top</a>
-</footer>
+<!-- WORK: one compact index -->
+<section class="work col" id="work" aria-labelledby="workTitle">
+  <h2 id="workTitle" class="mask-lines" data-reveal><span class="line"><span>Where I’ve been.</span></span></h2>
+  <ol class="index">
+    <li>
+      <span class="when">Feb to Aug 2026</span>
+      <div><h3>Visiting researcher</h3><p class="where">University of Graz, Federica Caforio’s group</p>
+      <p>PINN architectures for cardiac mechanics in JAX: differentiable PDE simulation and multi-view reconstruction scored with MSE and SSIM.</p></div>
+    </li>
+    <li>
+      <span class="when">Since 2025</span>
+      <div><h3>MSc in Engineering Sciences</h3><p class="where">Pontificia Universidad Católica de Chile, advised by Francisco Sahli</p>
+      <p>PINNs for cardiac fibre modelling. Grew out of the undergraduate thesis on compressing them.</p></div>
+    </li>
+    <li>
+      <span class="when">Since 2025</span>
+      <div><h3>Tiny language models</h3><p class="where">Exploration</p>
+      <p>Transformers under 16&nbsp;MB with custom tokenizers and quantized weights, scored by bits per byte on FineWeb, trained at home on an RTX&nbsp;5060.</p></div>
+    </li>
+    <li>
+      <span class="when">Jan to Feb 2025</span>
+      <div><h3>DevOps intern</h3><p class="where">Citi, Chile Tech Center</p>
+      <p>Kept three legacy applications running and reworked the production CI/CD pipeline so deployments took less time and fewer steps.</p></div>
+    </li>
+    <li>
+      <span class="when">2024 to 2025</span>
+      <div><h3>Undergraduate thesis</h3><p class="where">Universidad de los Andes, manuscript in preparation</p>
+      <p>Distillation, pruning and quantization applied to PINN surrogates of Carbopol flow, measuring what each technique costs in accuracy.</p></div>
+    </li>
+    <li>
+      <span class="when">Sep 2024</span>
+      <div><h3>Turbo Files</h3><p class="where">In production at a mining company</p>
+      <p>Fault-tolerant transfer of large files in Django: files travel as fragments, so a flaky connection doesn’t kill the transfer.</p></div>
+    </li>
+    <li>
+      <span class="when">2023 to 2024</span>
+      <div><h3>Teaching assistant, six courses</h3><p class="where">Universidad de los Andes, computer science</p></div>
+    </li>
+    <li>
+      <span class="when">Dec 2023 to Feb 2024</span>
+      <div><h3>AI research intern</h3><p class="where">Falabella Retail</p></div>
+    </li>
+    <li>
+      <span class="when">2020 to 2025</span>
+      <div><h3>BSc in Computer Science engineering</h3><p class="where">Universidad de los Andes, minor in innovation</p></div>
+    </li>
+  </ol>
+  <p class="tools-line">
+    <strong>Day to day:</strong> Python, PyTorch, JAX, CUDA; HuggingFace and TensorFlow when a project lives there.
+    <strong>Also:</strong> JavaScript, C and C++, SQL, Django, React, Docker, AWS, Linux.
+  </p>
+</section>
+
+<!-- CONTACT: the closing scene -->
+<section class="contact" id="contact" aria-label="Contact">
+  <ul class="rows">
+    <li><h2>Write to me.</h2></li>
+    <li><a class="mail" href="mailto:terdmannsdorffer@gmail.com" translate="no">terdmannsdorffer@gmail.com</a></li>
+    <li><a href="https://github.com/Terdmannsdorffer" target="_blank" rel="noopener">GitHub</a></li>
+    <li><a href="https://www.linkedin.com/in/tomas-erdmannsdorffer" target="_blank" rel="noopener">LinkedIn</a></li>
+    <li><a href="./cv.pdf" target="_blank" rel="noopener">CV</a></li>
+  </ul>
+  <footer class="end">
+    <p class="credits">
+      © 2026 Tomás Erdmannsdörffer. Heart: average four-chamber mesh of Rodero et al. 2021,
+      <a href="https://doi.org/10.5281/zenodo.4593739" target="_blank" rel="noopener">Zenodo</a>, CC BY 4.0.
+      MRI: Doregan, <a href="https://commons.wikimedia.org/wiki/File:4CH_cine_infarct.gif" target="_blank" rel="noopener">Wikimedia Commons</a>, CC BY-SA 4.0.
+      Engravings: Richard Lower, 1669, <a href="https://commons.wikimedia.org/wiki/File:R._Lower,_Tractatus_de_Corde,_1669_Wellcome_L0020408.jpg" target="_blank" rel="noopener">Wellcome Collection</a>, CC BY 4.0;
+      James Bell Pettigrew, 1860, public domain.
+      <a href="#hero">Back to top</a>
+    </p>
+    <p class="name" aria-hidden="true" translate="no"><span id="bigName">Erdmannsdörffer</span></p>
+  </footer>
+</section>
 
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js" integrity="sha384-jqpi9VmOdhyLoLURgjCn7EpnG9BbnHW57ibIZoeaIU+erWDH3k8fQQg0xH2ySjnw" crossorigin="anonymous" defer></script>
 <script src="./js/site.js" defer></script>
 <script type="module" src="./js/main.js"></script>
 

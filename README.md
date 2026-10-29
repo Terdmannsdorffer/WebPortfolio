@@ -8,14 +8,15 @@ Personal site: a landing page and five ML demos that run in the browser. Static 
 index.html              landing page
 css/main.css            landing page styles
 css/demo.css            shared styles for the demo pages
-js/hero.js              the heart in the hero (three.js, its own WebGL context)
-js/scenes.js            the five demo previews on the landing page (one shared WebGL context)
-js/main.js              module entry: one render loop for the hero and the previews
-js/site.js              smooth scroll, nav, reveals, scroll-linked motion (plain script)
-js/sky.js               the occasional light across the background (meteor / ecg / glint)
-js/backdrop.js          the faint layer that keeps the dark from reading flat
-heart.bin               the heart surface, ~40k triangles, quantised (see below)
-tools/heartmesh.py      makes heart.bin from a tetrahedral cardiac mesh
+js/main.js              module entry: one render loop for everything that moves
+js/figure.js            the heart on the stage: the beat, the fibres, the scan plane (its own WebGL context)
+js/chapters.js          four demo chapters drawn in plain 2D canvas, each running its demo's own physics
+js/scenes.js            the optimizer chapter, through one shared WebGL context
+js/site.js              smooth scroll, nav, heading reveals, the stage's scroll state (plain script)
+heart.bin               the heart's surface, ~40k triangles, with ventricular coordinates per vertex
+fibres.bin              1,154 streamlines of the heart's fibre field
+tools/heartfibres.py    makes heart.bin and fibres.bin from the Rodero et al. mesh
+media/                  the cine MRI loop and two engravings used in Research
 fonts/                  Bricolage Grotesque (display) and Source Serif 4 (text), self-hosted
 projects/
   pinn-playground/      PINN for 1D Burgers, trained live with TensorFlow.js
@@ -24,11 +25,12 @@ projects/
   fluid-playground/     Stam's stable fluids in plain JS
   optimizer-race/       SGD, momentum, RMSProp and Adam on a 3D loss surface
 me.jpg, og.jpg, cv.pdf
+_og.html                renders og.jpg (screenshot .card at 1200x630 once the fibres have loaded)
 ```
 
 ## Running it locally
 
-Any static server works. The RAG demo fetches `corpus.json`, which browsers block on `file://`, so don't just double-click `index.html`.
+Any static server works. The RAG demo and the landing page fetch `corpus.json`, which browsers block on `file://`, so don't just double-click `index.html`.
 
 ```
 python -m http.server 5173
@@ -40,56 +42,65 @@ Then open http://localhost:5173.
 
 Cloudflare Pages, connected to this repo: production branch `main`, no build command, output directory `/`. A push to `main` is live in about half a minute.
 
-## The heart in the hero
+## The page
 
-A real one. `heart.bin` is the surface of the *average* four-chamber heart from Rodero et al. 2021, "Linking statistical shape models and simulated function in the healthy adult human heart" (Zenodo record 4593738, CC BY 4.0): a tetrahedral simulation mesh built from CT scans of healthy adults. `tools/heartmesh.py` reads the legacy VTK (or CARP `.pts/.elem`), keeps the faces that belong to a single tetrahedron (the boundary), orients them outward, carries the region tags through a quadric decimation to ~40k triangles, and writes a small binary with 16-bit positions. In the page the regions are tinted (chambers, arteries, veins, valves), the mesh is lit as a solid with its own wireframe faintly over it, and the beat is a global contraction paced by clicking. Attribution is in the footer; keep it if you keep the mesh.
+A split stage. The heart is pinned on the right half for the whole visit; the left half is a reading column. The demos break the split and run full width over it, and the page ends on a red field with the name set across its whole width. Below 900px the stage moves to the top half of the screen and lets go after Research.
 
-To rebuild it: download `average.tar.gz` from the record, extract, then
+The scroll has one idea: in Research, a scan plane square to the heart's long axis rises from the apex, and below it the muscle is shown as its own fibre field. `STATES` in `js/figure.js` holds the four states (the organ, half muscle and half fibres, the fibres alone, the organ again from the left); `js/site.js` turns the scroll position into a progress between them and publishes it on `window.__stage`, and the figure eases toward it every frame.
+
+Only headings move as they arrive (a masked line rise, once). Body text, figures and lists are simply there.
+
+## The heart
+
+A real one. `heart.bin` is the surface of the *average* four-chamber heart from Rodero et al. 2021, "Linking statistical shape models and simulated function in the healthy adult human heart" (Zenodo record 4593739, CC BY 4.0): a tetrahedral mesh built from CT scans of healthy adults for electro-mechanics simulations. Because it was built for simulation it carries more than its shape: a rule-based fibre direction per element and universal ventricular coordinates per point (Z from apex to base, RHO from the inner wall to the outer one). `tools/heartfibres.py` keeps all of it:
+
+- the boundary surface, oriented outward and decimated to ~40k triangles, with each vertex's region, Z, RHO and an activation time, plus the long axis;
+- streamlines traced through the ventricular wall along the fibre field (vectorised RK2, 0.55 mm steps, stopping where they leave the wall or kink), seeded evenly through the wall's thickness, so every layer of the helix shows.
+
+The beat is a kinematic model in the vertex shader, not a simulation, but every term is something a ventricle does: an activation front runs from the apical endocardium up and out (it lights the surface as it passes), then the base pulls toward the apex by 13% of the long axis, the wall thickens inward (more inside than out), and apex and base twist in opposite directions, the wringing of systole. The atria squeeze first, and everything above the valve plane is carried by it. Clicking the stage raises the pace from 52 to 112 bpm, decaying over 4.5 s.
+
+To rebuild the data: download `average.tar.gz` from the record, extract, then
 
 ```
-pip install numpy fast-simplification
-python tools/heartmesh.py average.vtk heart.bin 40000
+pip install numpy scipy fast-simplification
+python tools/heartfibres.py average.vtk . 40000 1200
 ```
 
-`?yaw=&tilt=&rx=` on the URL override the resting orientation while tuning.
+`?yaw=&tilt=&rx=` on the URL override the resting orientation while tuning; `?wire=0` drops the faint wireframe pass.
 
-## What fills the dark
+## The demo chapters
 
-A flat near-black page reads as empty, so two layers sit over it, both fixed and both blended so they only lift the black and leave near-white text alone (this is also the only way to sit above `.sheet`, which is opaque so it can slide over the hero).
+Each chapter's background is its demo's own physics, not an illustration of it:
 
-`data-backdrop` on `<body>` picks the pattern, `?bg=` previews another:
+- PINN Playground: the exact viscous Burgers solution (Cole-Hopf transform, nu = 0.008) the network is trained toward, sampled at 4,600 random collocation points and swept through time, with the slice u(x, t) drawn at the sweep.
+- Ask Research: the 24 passages as a wall of text; the demo's own tokenizer and BM25 (same boosts) run on four of the demo's suggested questions and light up what they retrieve.
+- FNO vs. Solver: the demo's finite-difference solver marching step by step against the Cole-Hopf operator answering in one call.
+- Fluid Playground: Stam's stable fluids on a 128x128 grid, stirred by two slow emitters and by dragging.
+- Optimizer Race: the demo's bumpy bowl with its four optimizers, same update rules, same start.
 
-- `contours` (default) two fields of iso-lines, drawn with marching squares into two offscreen tiles and then never repainted. Each tile's vertical frequencies are snapped to multiples of its own base frequency, so it is exactly periodic and repeats with no seam. The two tiles have different periods and drift continuously in opposite directions at different rates (one also sways sideways), so the pattern where they cross keeps changing and never settles. The only per-frame work is two `translate3d` values, which the compositor applies without repainting: measured idle, the whole thing costs 0.1 ms per frame, i.e. nothing.
-- `points` a sparse scatter of sample points at three depths, each parallaxing differently.
-- `wash` broad, barely-there variation in the lighting, so the black is not one flat value across the screen.
-- `off` nothing.
+A returning visitor sees their own numbers from the demos under the matching chapter (the demos keep them in `localStorage` under `demoStats`).
 
-`data-grain="on"` adds film grain on top: one fixed tiled `feTurbulence` layer as a data URI, no image request. This is the recipe from illoca.unseen.co (Awwwards Site of the Day, Sep 2026), which does the same thing with a tiled JPEG at `opacity:.2` and `mix-blend-mode:overlay`; on a dark ground the noise is desaturated and kept at ~5% instead. `?grain=off` turns it off.
+## Keeping it smooth
 
-## The light in the background
+- Chapters build one screen early and run only while on screen. The PINN and RAG chapters are capped at 30 fps; they change slowly and were the two most expensive per frame.
+- The heart stops rendering while the demos or the closing scene cover the stage.
+- Two WebGL contexts in total: the stage, and the shared renderer in `scenes.js`. `fibres.bin` is fetched after first paint.
+- Measured on an RTX 3090 at 1440x900: 4.2 ms per frame on the stage and most chapters; PINN and RAG were 8.3 and 12.4 ms before the 30 fps cap.
+- `?fx=off` turns off WebGL and the chapters in one go, `?grain=off` the film grain.
 
-A few seconds after load and then every 16–30 seconds, something crosses the dark: `data-sky` on `<body>` picks which. The default `ecg` is a heartbeat trace that draws itself across and fades; `meteor` is a thin warm streak that flies and burns out; `glint` a distant point that brightens with a soft flare and dies; `off` nothing. `?sky=meteor` on the URL previews another; `window.__sky.fire()` in the console triggers one. The canvas is blended with `screen`, so the light passes behind white text. The canvas is fixed but each event is anchored to the page at the scroll position it started from, so it stays over the content and scrolls away rather than riding along with the viewport. Off under `prefers-reduced-motion`.
+## Motion and accessibility
 
-## Scroll behaviour
+Under `prefers-reduced-motion` nothing moves: the heart is still, the scroll states snap, the chapters draw one frame and the MRI shows its poster. "Pause the motion" in the stage's caption stops everything that moves by itself for anyone, and the scroll still turns the stage's states, so the figure always matches the text beside it.
 
-Lenis (from jsdelivr) smooths wheel scrolling; if it fails to load the page falls back to native smooth scrolling. The hero is `position: sticky` on desktop so the rest of the page slides over it as a sheet while the heart drifts off and fades. Headings reveal word by word through overflow masks, demo previews clip-reveal, the section label in the left column is sticky, and the lead paragraph in About lights up word by word as you read down. All of it is in `js/site.js` and switched off under `prefers-reduced-motion`.
+## Credits and licences
 
-## Keeping the scroll smooth
+- Heart mesh and fibres: Rodero et al. 2021, Zenodo 4593739, CC BY 4.0.
+- Cine MRI, four-chamber view: Doregan, Wikimedia Commons, CC BY-SA 4.0 (re-encoded from GIF to MP4).
+- Engravings: Richard Lower, Tractatus de Corde, 1669, Wellcome Collection, CC BY 4.0; James Bell Pettigrew, 1860, public domain.
 
-Anything on screen while you scroll competes with the scroll. All the numbers below are medians under software rendering, which is pessimistic in absolute terms but fine for attribution. Fast scrolling went from 158 ms per frame to 16.7 ms, and sitting still at the hero from 254 ms to 71 ms.
-
-What fixed it:
-
-- the background is painted once into two periodic tiles and then only ever moved with `translate3d`. Nothing about it repaints, on scroll or otherwise. Measured idle mid-page: 37.6 ms per frame with it, 37.5 ms without.
-- the backdrop dropped `mix-blend-mode`. Over a black sheet it composites identically, but a full-screen blended layer forces a repaint of the whole viewport every frame. The sky canvas is `display:none` while idle for the same reason.
-- `js/site.js` takes every layout measurement in one pass before writing any styles, caches per-element parallax settings, skips opacity writes below 0.02, and stops entirely once the page settles.
-
-The hero is deliberately left as it is. It is the most expensive thing on the page under software rendering, mostly because the faint wireframe is a second full pass over the same 40k triangles (75 ms of 162 ms when measured), but it is fine on a real GPU. `?wire=0` drops that pass if a slow machine ever needs it.
-
-Switches for measuring on a real machine: `?perf=1` shows a live frame-time meter, `?fx=off` disables every optional effect in one go, `?wire=0` drops the heart's wireframe pass, `?bg=off` and `?grain=off` isolate the background layers. If you add anything that paints on scroll, measure it before keeping it.
+Attribution is in the footer; keep it if you keep the pictures and the mesh.
 
 ## Notes
 
-- The demo pages keep a few numbers in `localStorage` (last measured speed-up, best PINN loss, fluid frame rate) and the landing page shows them on the matching card, so a returning visitor sees their own results.
-- The RAG demo's API key also lives in `localStorage` and is only ever sent to the endpoint you configure.
-- `og.jpg` is rendered from `_og.html`; regenerate it after changing the hero.
+- The RAG demo's API key lives in `localStorage` and is only ever sent to the endpoint you configure.
+- `og.jpg` is rendered from `_og.html`; regenerate it after changing the stage.

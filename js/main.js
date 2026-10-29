@@ -1,68 +1,67 @@
-/* main.js - module entry. Two moving parts:
-   - hero.js:   the heart in the hero, its own WebGL context
-   - scenes.js: the five demo previews, one shared WebGL context
-   If WebGL is unavailable the page silently stays static: the hero
-   canvas stays blank and every preview shows its CSS backdrop. */
+/* main.js - module entry, one render loop for everything that moves:
+   - figure.js:   the heart on the stage, its own WebGL context
+   - chapters.js: four demo chapters in plain 2D canvas
+   - scenes.js:   the optimizer chapter, through one shared WebGL context
+   site.js (a plain script) owns scrolling; it publishes window.__stage with
+   the figure's scroll state and whether an opaque section covers the stage.
+   Without WebGL the page stays readable: the stage and the optimizer stay blank. */
 
 import { initScenes, renderScenes, webglOK } from './scenes.js';
-import { initHero } from './hero.js';
-import { initSky } from './sky.js';
-import { initBackdrop } from './backdrop.js';
+import { initFigure } from './figure.js';
+import { initChapters } from './chapters.js';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// the occasional light in the background: data-sky on <body> picks the kind,
-// ?sky= on the URL overrides it while trying them out
 const q = new URLSearchParams(location.search);
-// ?fx=off kills every optional effect at once, so a slow machine can be
-// bisected in one reload instead of five
+// ?fx=off: no WebGL and no chapters, to bisect a slow machine in one reload
 const fxOff = q.get('fx') === 'off';
-if (fxOff) document.body.dataset.grain = 'off';
 const grain = q.get('grain');
 if (grain) document.body.dataset.grain = grain;
 
-const skyMode = q.get('sky') || document.body.dataset.sky || 'ecg';
-window.__sky = fxOff ? null : initSky({ mode: skyMode });
+const stageEl = document.getElementById('stage');
+const lite = Math.min(innerWidth, innerHeight) < 700;
+const figure = !fxOff && webglOK() ? initFigure(document.getElementById('stageCanvas'), { reduced, lite }) : null;
+const chapters = fxOff ? null : initChapters({ reduced });
+if (!fxOff && webglOK()) initScenes();
 
-// the faint layer behind the page: data-backdrop on <body>, ?bg= to try another
-window.__bg = fxOff ? null : initBackdrop({ mode: q.get('bg') || document.body.dataset.backdrop || 'contours' });
-
-if (!fxOff && webglOK()) {
+if (figure) {
   document.documentElement.classList.add('webgl');
-  initScenes();
-  const hero = initHero(document.getElementById('heroCanvas'), { reduced });
-
-  if (hero) {
-    const heroEl = document.getElementById('hero');
-    // click anywhere in the hero that isn't a link or button = pace the heart
-    heroEl.addEventListener('click', e => {
-      if (e.target.closest('a, button')) return;
-      hero.pace();
-    });
-    const paceBtn = document.getElementById('paceBtn');
-    if (paceBtn) paceBtn.addEventListener('click', () => hero.pace());
-
-    // the heart drifts off and fades as the page slides over the hero
-    const onScroll = () => {
-      const p = scrollY / Math.max(1, heroEl.offsetHeight);
-      hero.setScroll(p);
-      hero.setFade(1 - p * 1.15);
-    };
-    addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-
-    const readout = document.getElementById('readout');
-    if (readout) setInterval(() => { readout.textContent = hero.bpm() + ' bpm'; }, 250);
-  }
-
-  let last = performance.now(), t = 0;
-  (function frame() {
-    requestAnimationFrame(frame);
-    const now = performance.now();
-    let dt = (now - last) / 1000; last = now;
-    if (dt > .05) dt = .05;
-    t += dt;
-    if (hero) hero.render(t, dt);
-    renderScenes(t, dt, reduced);
-  })();
+  figure.onReady(() => stageEl.classList.add('ready'));
+  // click anywhere on the stage that isn't a link = pace the heart
+  stageEl.addEventListener('click', e => { if (!e.target.closest('a')) figure.pace(); });
+  const bpm = document.getElementById('bpm');
+  setInterval(() => { bpm.textContent = figure.bpm() + ' bpm'; }, 250);
+} else {
+  stageEl.querySelector('.stage-cap button').hidden = true;
 }
+
+// everything on the page that moves by itself (the beat, the chapters, the MRI loop) stops on
+// one switch, for anyone, not only under prefers-reduced-motion (WCAG 2.2.2)
+let paused = false;
+const motionBtn = document.getElementById('motionBtn');
+if (reduced || fxOff) motionBtn.hidden = true;
+motionBtn.addEventListener('click', () => {
+  paused = !paused;
+  window.__motionPaused = paused;
+  motionBtn.setAttribute('aria-pressed', String(paused));
+  motionBtn.textContent = paused ? 'Play the motion' : 'Pause the motion';
+  if (figure) figure.setPaused(paused);
+  const mri = document.getElementById('mri');
+  if (mri) { if (paused) mri.pause(); else mri.play().catch(() => {}); }
+});
+
+let last = performance.now(), t = 0;
+(function frame() {
+  requestAnimationFrame(frame);
+  const now = performance.now();
+  let dt = (now - last) / 1000; last = now;
+  if (dt > 0.05) dt = 0.05;
+  t += dt;
+  const st = window.__stage || { progress: 0, covered: false };
+  if (figure && !st.covered) {
+    figure.setProgress(st.progress);
+    figure.render(t, dt);
+  }
+  if (paused) return;                 // the chapters keep their last frame
+  if (chapters) chapters.render(t, dt);
+  renderScenes(t, dt, reduced);
+})();
